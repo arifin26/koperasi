@@ -85,8 +85,8 @@
                                             Maksimal: 2048KB
                                         </div>
                                     </div>
-                                    <img src="<?= asset('swamitra.jpeg') ?>" class="img-thumbnail img-preview"
-                                         style="width: 100%;" alt="Foto">
+                                    {{-- <img src="<?= asset('swamitra.jpeg') ?>" class="img-thumbnail img-preview"
+                                         style="width: 100%;" alt="Foto"> --}}
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>

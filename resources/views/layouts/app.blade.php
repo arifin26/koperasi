@@ -80,9 +80,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <aside class="main-sidebar sidebar-light-success elevation-2">
             <!-- Brand Logo -->
             <a href="/" class="brand-link">
-                <img src="{{ asset('swamitra.jpeg') }}" alt="{{ config('app.name') }}" class="brand-image"
-                    style="opacity: .8">
-                <span class="brand-text font-weight-light">SWAMITRA <strong>APP</strong></span>
+                {{-- <img src="{{ asset('swamitra.jpeg') }}" alt="{{ config('app.name') }}" class="brand-image"
+                    style="opacity: .8"> --}}
+                <span class="brand-text font-weight-light">KARYA <strong>DEV</strong></span>
             </a>
 
             <!-- Sidebar -->

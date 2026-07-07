@@ -74,13 +74,13 @@
 <body class="hold-transition login-page">
     <div class="login-box">
         <div class="login-logo">
-            <a href="/">{{ config('app.name') }}</a>
+            <a href="/">KOPERASI</a>
         </div>
         <!-- /.login-logo -->
         <div class="card">
             <div class="card-body login-card-body">
-                <img src="{{ asset('swamitra.jpeg') }}" width="20%" alt="{{ config('app.name') }}"
-                    class="brand-image mx-auto d-block mb-4" style="opacity: .8">
+                {{-- <img src="{{ asset('swamitra.jpeg') }}" width="20%" alt="{{ config('app.name') }}"
+                    class="brand-image mx-auto d-block mb-4" style="opacity: .8"> --}}
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="input-group mb-3">

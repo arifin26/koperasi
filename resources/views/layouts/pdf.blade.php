@@ -12,7 +12,7 @@
 
 <body style="font-family: sans-serif;">
     <header>
-        <img src="{{ public_path('swamitra.jpeg') }}" alt="{{ $title }}" width="50px" class="mb-2" srcset="">
+        {{-- <img src="{{ public_path('swamitra.jpeg') }}" alt="{{ $title }}" width="50px" class="mb-2" srcset=""> --}}
         <span class="d-block h3 mb-0">{{ strtoupper(config('app.name')) }}</span>
         <span class="d-block">Jl. Sesama No. 47 RT. 16</span>
         <span class="d-block">Telp. 62 851-4306-4088</span>
