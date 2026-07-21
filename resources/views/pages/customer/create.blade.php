@@ -31,11 +31,6 @@
                                         <span class="error invalid-feedback">{{ $errors->first('joined_at') }}</span>
                                     </div>
                                     <div class="form-group">
-                                        <label>Deposito Awal (Rp)</label>
-                                        <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Pinjaman">
-                                        <span class="error invalid-feedback">{{ $errors->first('amount') }}</span>
-                                    </div>
-                                    <div class="form-group">
                                         <label>Jenis Kelamin</label>
                                         <select class="form-control @error('gender') is-invalid @enderror" name="gender">
                                             <option value="L" {{ old('gender') == 'L' ? 'selected' : '' }}>Laki-laki</option>

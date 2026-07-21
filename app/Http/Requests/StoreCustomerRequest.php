@@ -35,8 +35,6 @@ class StoreCustomerRequest extends FormRequest
             'last_education' => 'required',
             'profession' => 'required',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-
-            'amount' => ['required', 'numeric', 'gt:0'],
         ];
     }
 }

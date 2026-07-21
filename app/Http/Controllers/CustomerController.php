@@ -82,14 +82,7 @@ class CustomerController extends Controller
 
             $data = $request->except('amount');
             $data['photo'] = $this->storeImage($request);
-            $customer = Customer::create($data);
-            Deposit::create([
-                'created_at' => $request->joined_at,
-                'amount' => $request->get('amount'),
-                'current_balance' => $request->get('amount'),
-                'type' => 'pokok',
-                'customer_id' => $customer->id,
-            ]);
+            Customer::create($data);
 
             DB::commit();
             return redirect()->route('customer.index')->with('success', 'Berhasil menambahkan nasabah!');

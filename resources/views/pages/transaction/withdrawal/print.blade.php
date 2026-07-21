@@ -25,8 +25,8 @@
             <th scope="col">Tgl Penarikan</th>
             <th scope="col">No Rek</th>
             <th scope="col">Nama Nasabah</th>
-            <th scope="col">Saldo</th>
-            <th scope="col">Penarikan</th>
+            <th scope="col">Nominal Saldo</th>
+            <th scope="col">Nominal Keluar</th>
             <th scope="col">Sisa Saldo</th>
         </tr>
     </thead>

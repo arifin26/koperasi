@@ -44,7 +44,7 @@
             <th scope="col">Simpanan Wajib</th>
             <th scope="col">Simpanan Sukarela</th>
             <th scope="col">Simpanan Pokok</th>
-            <th scope="col">Total</th>
+            <th scope="col">Nominal Total</th>
         </tr>
     </thead>
     <tbody>
@@ -60,7 +60,7 @@
             </tr>
         @endforeach
         <tr>
-            <th colspan="5">Total</th>
+            <th colspan="5">Total Nominal</th>
             <td class="text-right">Rp{{ number_format($total, 2, ',', '.') }}</td>
         </tr>
     </tbody>

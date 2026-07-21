@@ -26,9 +26,9 @@
             <th scope="col">No Rek</th>
             <th scope="col">Nama Nasabah</th>
             <th scope="col">Jaminan</th>
-            <th scope="col">Nominal</th>
+            <th scope="col">Nominal Keluar</th>
             <th scope="col">Jangka Waktu</th>
-            <th scope="col">Total</th>
+            <th scope="col">Nominal Total</th>
         </tr>
     </thead>
     <tbody>

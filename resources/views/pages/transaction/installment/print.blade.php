@@ -25,9 +25,9 @@
             <th scope="col">Tgl Pembayaran</th>
             <th scope="col">No Rek</th>
             <th scope="col">Nama Nasabah</th>
-            <th scope="col">Total Pinjaman</th>
-            <th scope="col">Sudah Dibayar</th>
-            <th scope="col">Sisa</th>
+            <th scope="col">Nominal Keluar</th>
+            <th scope="col">Nominal Masuk</th>
+            <th scope="col">Sisa Pembayaran</th>
         </tr>
     </thead>
     <tbody>
