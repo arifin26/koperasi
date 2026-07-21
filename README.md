@@ -10,8 +10,6 @@ Adalah sistem manajemen koperasi berbasis web yang dibangun dengan framework Lar
 
 ## 🛢️ Skema Database
 
-![Database Schema](docs/ERD.png)
-
 File database bisa didownload di [sini](docs/swamitra.sql).
 
 ## ⚡ Instalasi Super Cepat
