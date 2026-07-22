@@ -28,7 +28,7 @@ class ForeclosureController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Foreclosure::with(['customer', 'loan', 'collateral']);
+            $data = Foreclosure::with(['customer', 'visit', 'collateral']);
 
             if ($request->from) {
                 $data = $data->whereDate('date', '>=', $request->from);
@@ -57,9 +57,9 @@ class ForeclosureController extends Controller
                         <button type="submit" class="btn btn-danger btn-xs px-2 delete-data"> Hapus </button>
                     </form>';
                 })
-                ->addColumn('loan', function($row) {
-                    if ($row->loan) {
-                        return 'Rp' . number_format($row->loan->amount, 2, ',', '.') . '<small class="small d-block">Kode Transaksi: PI-' . sprintf('%05d', $row->loan_id) . '</small>';
+                ->addColumn('visit', function($row) {
+                    if ($row->visit) {
+                        return 'Rp' . number_format($row->visit->loan_amount, 2, ',', '.') . '<small class="small d-block">Kode Transaksi: ' . $row->visit->loan_code . '</small>';
                     }
 
                     return 'Rp0';
@@ -100,7 +100,7 @@ class ForeclosureController extends Controller
                 ->editColumn('collateral_amount', function($row) {
                     return 'Rp' . number_format($row->collateral_amount, 2, ',', '.');
                 })
-                ->rawColumns(['action', 'customer', 'loan', 'collateral'])
+                ->rawColumns(['action', 'customer', 'visit', 'collateral'])
                 ->make(true);
         }
         return view('pages.collection.foreclosure.index', [
@@ -132,7 +132,7 @@ class ForeclosureController extends Controller
         try {
             DB::beginTransaction();
             Customer::find($request->customer_id)->update(['status' => 'blacklist']);
-            Foreclosure::create($request->only(['date', 'collateral_amount', 'remaining_amount', 'return_amount', 'customer_id', 'loan_id', 'collateral_id']));
+            Foreclosure::create($request->only(['date', 'collateral_amount', 'remaining_amount', 'return_amount', 'customer_id', 'visit_id', 'collateral_id']));
             DB::commit();
             return redirect()->route('collection.foreclosure.index')->with('success', 'Berhasil menarik jaminan pinjaman nasabah!');
         } catch (\Throwable $th) {

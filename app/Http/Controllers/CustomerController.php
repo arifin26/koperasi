@@ -6,7 +6,6 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
-use App\Models\Loan;
 use App\Models\User;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -159,7 +158,6 @@ class CustomerController extends Controller
             $nasabah->visits()->delete();
             $nasabah->foreclosures()->delete();
             $nasabah->deposits()->delete();
-            $nasabah->loans()->delete();
             $nasabah->collaterals()->delete();
             $nasabah->delete();
             DB::commit();
@@ -195,23 +193,6 @@ class CustomerController extends Controller
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download($filename);
-    }
-
-    public function loan($id)
-    {
-        try {
-            $data = Loan::with(['collateral'])->where('customer_id', $id)->get();
-            return response()->json([
-                'status' => 'success',
-                'data' => $data,
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => 'error',
-                'code' => $th->getCode(),
-                'message' => $th->getMessage()
-            ]);
-        }
     }
 
     public function currentBalanceByDeposit($id)

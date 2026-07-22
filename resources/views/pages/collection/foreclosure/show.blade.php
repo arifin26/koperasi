@@ -19,25 +19,19 @@
                                         value="{{ $foreclosure->customer->number . ' - ' . $foreclosure->customer->name }}"
                                         disabled>
                                 </div>
-                                <div class="form-group">
-                                    <label>Kode Transaksi Pinjaman</label>
-                                    <input type="text" class="form-control-plaintext"
-                                        value="PI-{{ sprintf('%05d', $foreclosure->loan->id) }} (Rp{{ number_format($foreclosure->loan->amount, 2, ',', '.') }})"
-                                        disabled>
-                                </div>
-                                <div class="form-group">
-                                    <label>Jaminan</label>
+                                 <div class="form-group">
+                                     <label>Jaminan</label>
                                     <input type="text" class="form-control-plaintext"
                                         value="{{ $foreclosure->collateral->name }} (Rp{{ number_format($foreclosure->collateral->value, 2, ',', '.') }})"
                                         disabled>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label>Sudah Dibayar (Rp)</label>
-                                    <input type="text" class="form-control-plaintext"
-                                        value="Rp{{ number_format($foreclosure->loan->paid, 2, ',', '.') }}" disabled>
-                                </div>
+                                 <div class="form-group">
+                                     <label>Sudah Dibayar (Rp)</label>
+                                     <input type="text" class="form-control-plaintext"
+                                         value="Rp{{ number_format($foreclosure->paid_amount ?? 0, 2, ',', '.') }}" disabled>
+                                 </div>
                                 <div class="form-group">
                                     <label>Sisa Pembayaran (Rp)</label>
                                     <input type="text" class="form-control-plaintext"

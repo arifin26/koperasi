@@ -41,19 +41,13 @@
                                 </div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <div class="form-group">
-                                    <label>Jenis Simpanan</label>
-                                    <input type="text" class="form-control-plaintext"
-                                        value="{{ ucfirst($deposit->type) }}"
-                                        placeholder="Jenis Simpanan" disabled>
-                                </div>
-                                @if ($deposit->loan && $deposit->type == 'wajib')
-                                <div class="form-group">
-                                    <label>Kode Transaksi Pinjaman</label>
-                                    <input type="text" class="form-control-plaintext" value="PI-{{ sprintf("%05d", $deposit->loan->id) }} (Rp{{ number_format($deposit->loan->amount) }})" disabled>
-                                </div>
-                                @endif
-                            </div>
+                                 <div class="form-group">
+                                     <label>Jenis Simpanan</label>
+                                     <input type="text" class="form-control-plaintext"
+                                         value="{{ ucfirst($deposit->type) }}"
+                                         placeholder="Jenis Simpanan" disabled>
+                                 </div>
+                             </div>
                         </div>
                     </div>
                 </div>

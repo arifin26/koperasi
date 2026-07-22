@@ -29,7 +29,7 @@ class VisitController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Visit::with(['customer', 'loan', 'user']);
+            $data = Visit::with(['customer', 'user']);
 
             if ($request->from) {
                 $data = $data->whereDate('created_at', '>=', $request->from);
@@ -58,13 +58,6 @@ class VisitController extends Controller
                         <button type="submit" class="btn btn-danger btn-xs px-2 delete-data"> Hapus </button>
                     </form>';
                 })
-                ->addColumn('loan', function($row) {
-                    if ($row->loan) {
-                        return 'Rp' . number_format($row->loan->amount, 2, ',', '.') . '<small class="small d-block">Kode Transaksi: PI-' . sprintf('%05d', $row->loan_id) . '</small>';
-                    }
-
-                    return 'Rp0';
-                })
                 ->editColumn('id', function($row) {
                     return $this->buildTransactionCode($row->id);
                 })
@@ -88,7 +81,7 @@ class VisitController extends Controller
                 ->editColumn('remaining_amount', function($row) {
                     return 'Rp' . number_format($row->remaining_amount, 2, ',', '.');
                 })
-                ->rawColumns(['action', 'customer', 'loan'])
+                ->rawColumns(['action', 'customer'])
                 ->make(true);
         }
         return view('pages.collection.visit.index', [
@@ -194,7 +187,7 @@ class VisitController extends Controller
 
     public function print(Request $request)
     {
-        $data = Visit::with(['customer', 'user', 'loan'])->get();
+        $data = Visit::with(['customer', 'user'])->get();
         $manager = User::where('role', 'manager')->first();
         $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_-_laporan_kolektor_-_nasabah_bermasalah_' . time() . '.pdf';
         $pdf = PDF::loadView('pages.collection.visit.print', [

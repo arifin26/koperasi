@@ -142,10 +142,10 @@
                         orderable: false,
                         searchable: false
                     },
-                    {
-                        data: 'loan',
-                        name: 'loan'
-                    },
+                        {
+                            data: 'visit',
+                            name: 'visit'
+                        },
                     {
                         data: 'remaining_amount',
                         name: 'remaining_amount'

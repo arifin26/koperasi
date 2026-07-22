@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateDepositRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\User;
-use App\Traits\LoanTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,7 +16,6 @@ use Yajra\DataTables\DataTables;
 class DepositController extends Controller
 {
 
-    use LoanTrait;
 
     public function __construct()
     {
@@ -33,7 +31,7 @@ class DepositController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Deposit::with(['customer', 'loan'])->whereNot('type', 'penarikan')->orderBy('created_at');
+            $data = Deposit::with('customer')->whereNot('type', 'penarikan')->orderBy('created_at');
 
             if ($request->customer) {
                 $data = $data->where('customer_id', $request->customer);
@@ -131,9 +129,7 @@ class DepositController extends Controller
             $data['previous_balance'] = $simpanan->current_balance ?? 0;
             $data['current_balance'] = $data['previous_balance'] + $request->amount;
             Deposit::create($data);
-            if ($simpanan && $request->type == 'wajib' && $request->loan_id) {
-                $this->paidLoan($request->loan_id);
-            }
+            // Loan payment logic removed
             DB::commit();
             return redirect()->route('transaction.deposit.index')->with('success', 'Berhasil menambahkan simpanan nasabah!');
         } catch (\Throwable $th) {
@@ -185,9 +181,7 @@ class DepositController extends Controller
         try {
             DB::beginTransaction();
             $simpanan->update($request->all());
-            if ($simpanan && $request->type == 'wajib' && $request->loan_id) {
-                $this->paidLoan($request->loan_id);
-            }
+            // Loan payment logic removed
             DB::commit();
             return back()->with('success', 'Berhasil mengedit simpanan nasabah!');
         } catch (\Throwable $th) {
@@ -206,12 +200,8 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
-            $type = $simpanan->type;
-            $id = $simpanan->loan_id;
             $simpanan->delete();
-            if ($type == 'wajib' && $id) {
-                $this->paidLoan($id);
-            }
+            // Loan payment logic removed
             DB::commit();
             return back()->with('success', 'Berhasil menghapus simpanan nasabah!');
         } catch (\Throwable $th) {

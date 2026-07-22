@@ -15,13 +15,14 @@ class Foreclosure extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function loan()
-    {
-        return $this->belongsTo(Loan::class);
-    }
-
     public function collateral()
     {
         return $this->belongsTo(Collateral::class);
     }
+
+    public function visit()
+    {
+        return $this->belongsTo(Visit::class);
+    }
+
 }

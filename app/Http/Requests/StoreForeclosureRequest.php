@@ -28,7 +28,7 @@ class StoreForeclosureRequest extends FormRequest
             'remaining_amount' => ['required', 'numeric', 'gte:0'],
             'return_amount' => ['required', 'numeric', 'gte:0'],
             'customer_id' => 'required',
-            'loan_id' => 'required',
+            'visit_id' => 'required',
             'collateral_id' => 'required',
         ];
     }

@@ -19,14 +19,8 @@
                                         value="{{ $visit->customer->number . ' - ' . $visit->customer->name }}"
                                         placeholder="Nasabah" disabled>
                                 </div>
-                                <div class="form-group">
-                                    <label>Kode Transaksi Pinjaman</label>
-                                    <input type="text" class="form-control-plaintext"
-                                        value="PI-{{ sprintf('%05d', $visit->loan->id) }} (Rp{{ number_format($visit->loan->amount) }})"
-                                        disabled>
-                                </div>
-                                <div class="form-group">
-                                    <label>Sisa Pembayaran (Rp)</label>
+                                 <div class="form-group">
+                                     <label>Sisa Pembayaran (Rp)</label>
                                     <input type="text" class="form-control-plaintext"
                                         value="Rp{{ number_format($visit->remaining_amount, 2, ',', '.') }}" disabled>
                                 </div>

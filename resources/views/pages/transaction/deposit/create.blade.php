@@ -45,11 +45,6 @@
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('type') }}</span>
                                     </div>
-                                    <div class="form-group" id="customer">
-                                        <label>Kode Transaksi Pinjaman</label>
-                                        <select class="form-control" name="loan_id">
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>
@@ -67,55 +62,14 @@
 @push('script')
 <script>
     $(function() {
-        let customerId = $('select[name=customer_id]').val();
-        $('#customer').hide();
-
-        populateLoanOption(customerId);
-
-        $('select[name=customer_id]').on('change', function() {
-            customerId = $(this).val();
-            populateLoanOption(customerId);
-        });
-
         $('select[name=type]').on('change', function() {
-            setInstallment();
             const type = $(this).val();
             if (type == 'wajib') {
-                $('#customer').show();
-            } else {
-                $('#customer').hide();
+                $('input[name=amount]').val(0);
             }
         });
-
-
-        $('select[name=loan_id]').on('change', function() {
-            setInstallment();
-        })
     });
 
-    function populateLoanOption(customerId) {
-        const _select = $('select[name=loan_id]');
-        const currencyFormat = Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-        })
-        fetch(`/api/nasabah/${customerId}/pinjaman`)
-            .then(response => response.json())
-            .then(data => {
-                let element = ``;
-                data.data.forEach(el => {
-                    const price = currencyFormat.format(el.amount);
-                    const noTrans = `PI-${el.id.toString().padStart(5, '0')}`
-                    element += `<option data-installment="${el.installment}" value="${el.id}">${noTrans} (${price})</option>`;
-                });
-                _select.html(element);
-                setInstallment();
-            });
-    }
-
-    function setInstallment() {
-        if ($('select[name=type]').val() == 'wajib') $('input[name=amount]').val($('select[name=loan_id] > option:selected').data('installment'));
-    }
 </script>
 @endpush
 

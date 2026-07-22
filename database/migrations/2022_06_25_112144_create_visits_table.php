@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('remaining_amount')->default(0);
             $table->text('description');
-            $table->foreignId('loan_id')->nullable()->constrained('loans')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();

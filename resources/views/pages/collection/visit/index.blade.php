@@ -27,7 +27,6 @@
                                     <th style="width: 25px">No</th>
                                     <th style="width: 70px;">Tanggal</th>
                                     <th>Nasabah</th>
-                                    <th>Pinjaman</th>
                                     <th>Sisa</th>
                                     <th>Kolektor</th>
                                     <th>Keterangan</th>
@@ -119,12 +118,6 @@
                     {
                         data: 'customer',
                         name: 'customer',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'loan',
-                        name: 'loan',
                         orderable: false,
                         searchable: false
                     },

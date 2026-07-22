@@ -22,11 +22,6 @@
                                         <input type="text" class="form-control" value="{{ $visit->customer->number . ' - ' . $visit->customer->name }}" placeholder="Nasabah" disabled>
                                     </div>
                                     <div class="form-group">
-                                        <label>Kode Transaksi Pinjaman</label>
-                                        <input type="hidden" name="loan_id" value="{{ $visit->loan_id }}">
-                                        <input type="text" class="form-control" value="PI-{{ sprintf("%05d", $visit->loan->id) }} (Rp{{ number_format($visit->loan->amount) }})" disabled>
-                                    </div>
-                                    <div class="form-group">
                                         <label>Sisa Pembayaran (Rp)</label>
                                         <input type="number" min="0" class="form-control @error('remaining_amount') is-invalid @enderror" name="remaining_amount" value="{{ old('remaining_amount', $visit->remaining_amount) }}" placeholder="Sisa Pembayaran">
                                         <span class="error invalid-feedback">{{ $errors->first('remaining_amount') }}</span>

@@ -20,7 +20,6 @@ return new class extends Migration
             $table->unsignedInteger('previous_balance')->default(0);
             $table->unsignedInteger('current_balance')->default(0);
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('loan_id')->nullable()->constrained('loans')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();
         });
     }

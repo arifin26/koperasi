@@ -49,13 +49,6 @@
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('type') }}</span>
                                     </div>
-                                    @if ($deposit->loan && $deposit->type == 'wajib')
-                                    <div class="form-group">
-                                        <label>Kode Transaksi Pinjaman</label>
-                                        <input type="hidden" name="loan_id" value="{{ $deposit->loan->id }}">
-                                        <input type="text" class="form-control" value="PI-{{ sprintf("%05d", $deposit->loan->id) }} (Rp{{ number_format($deposit->loan->amount) }})" disabled>
-                                    </div>
-                                    @endif
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>

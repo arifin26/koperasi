@@ -24,12 +24,6 @@
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
                                     </div>
-                                    <div class="form-group" id="customer">
-                                        <label>Kode Transaksi Pinjaman</label>
-                                        <select class="form-control" name="loan_id" required>
-                                        </select>
-                                        <span class="error invalid-feedback">{{ $errors->first('loan_id') }}</span>
-                                    </div>
                                     <div class="form-group">
                                         <label>Sisa Pembayaran (Rp)</label>
                                         <input type="number" min="0" class="form-control change-installment @error('remaining_amount') is-invalid @enderror" name="remaining_amount" value="{{ old('remaining_amount', 0) }}" placeholder="Sisa Pembayaran">
@@ -68,45 +62,9 @@
 @push('script')
 <script>
     $(function() {
-        let customerId = $('select[name=customer_id]').val();
-
-        populateLoanOption(customerId);
-
         $('select[name=customer_id]').on('change', function() {
             customerId = $(this).val();
-            populateLoanOption(customerId);
         });
-
-        $('select[name=loan_id]').on('change', function() {
-            setRemaining();
-        })
-
     });
-
-    function populateLoanOption(customerId) {
-        const _select = $('select[name=loan_id]');
-        const currencyFormat = Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-        })
-        fetch(`/api/nasabah/${customerId}/pinjaman`)
-            .then(response => response.json())
-            .then(data => {
-                let element = ``;
-                data.data.forEach(el => {
-                    const price = currencyFormat.format(el.amount);
-                    const noTrans = `PI-${el.id.toString().padStart(5, '0')}`
-                    element += `<option data-remaining="${el.amount - el.paid}" value="${el.id}">${noTrans} (${price})</option>`;
-                });
-                _select.html(element);
-                setRemaining();
-            });
-    }
-
-    function setRemaining() {
-        const amount = $('select[name=loan_id] > option:selected').data('remaining');
-        console.log(amount);
-        $('input[name=remaining_amount]').val(amount);
-    }
 </script>
 @endpush

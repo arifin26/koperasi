@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('remaining_amount')->default(0);
             $table->unsignedInteger('return_amount')->default(0);
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('loan_id')->constrained('loans')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('visit_id')->constrained('visits')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('collateral_id')->constrained('collaterals')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();
         });

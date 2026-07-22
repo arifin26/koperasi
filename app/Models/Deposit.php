@@ -16,8 +16,4 @@ class Deposit extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function loan()
-    {
-        return $this->belongsTo(Loan::class);
-    }
 }
