@@ -114,16 +114,15 @@ class DepositController extends Controller
      */
     public function create()
     {
-        $activeRate = \App\Models\InterestRate::where('is_active', 1)
-            ->where('type', 'tabungan_sukarela')
-            ->first();
-            
-        $rateInfo = $activeRate ? $activeRate->rate_percent . '% p.a.' : 'Belum diatur';
+        $rates = \App\Models\InterestRate::where('type', 'tabungan_sukarela')
+            ->orderBy('effective_date', 'desc')
+            ->get();
 
         return view('pages.transaction.deposit.create', [
             'title' => $this->buildTitle('baru'),
             'customers' => Customer::where('status', 'active')->get(),
-            'types' => ['sukarela' => 'Simpanan Harian (Bunga: ' . $rateInfo . ')']
+            'rates' => $rates,
+            'types' => ['sukarela' => 'Simpanan Harian']
         ]);
     }
 
@@ -137,13 +136,19 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
-            $data = $request->all();
+            $data = $request->except(['interest_rate_id']);
             $data['previous_balance'] = 0;
             $data['current_balance'] = 0;
             $data['created_by'] = auth()->id();
             
             Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
+            
+            if ($request->filled('interest_rate_id')) {
+                Customer::where('id', $request->customer_id)->update([
+                    'interest_rate_id' => $request->interest_rate_id
+                ]);
+            }
             
             DB::commit();
             return redirect()->route('transaction.deposit.index')->with('success', 'Berhasil menambahkan simpanan nasabah!');

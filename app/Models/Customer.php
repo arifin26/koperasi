@@ -11,9 +11,19 @@ class Customer extends Model
 
     protected $guarded = [];
 
+    public function interestRate()
+    {
+        return $this->belongsTo(InterestRate::class, 'interest_rate_id');
+    }
+
     public function deposits()
     {
         return $this->hasMany(Deposit::class);
+    }
+
+    public function fixedDeposits()
+    {
+        return $this->hasMany(FixedDeposit::class);
     }
 
     public function collaterals()

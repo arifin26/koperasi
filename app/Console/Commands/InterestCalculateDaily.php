@@ -70,7 +70,7 @@ class InterestCalculateDaily extends Command
         $totalInterestCalculated = 0;
 
         // 4. Proses per nasabah menggunakan chunk (batch processing)
-        Customer::where('status', 'active')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $sukarelaRate, $wajibRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
+        Customer::where('status', 'active')->with('interestRate')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $sukarelaRate, $wajibRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
             $inserts = [];
 
             foreach ($customers as $customer) {
@@ -90,16 +90,19 @@ class InterestCalculateDaily extends Command
                 $saldoSukarela = ($balances->sum_sukarela ?? 0) - ($balances->sum_penarikan ?? 0);
                 $saldoWajib = $balances->sum_wajib ?? 0;
 
+                // Tentukan rate untuk nasabah ini (Gunakan rate pribadi jika ada, jika tidak fallback ke global)
+                $customerSukarelaRate = $customer->interestRate ?? $sukarelaRate;
+
                 // Hitung bunga sukarela
-                if ($saldoSukarela > 0 && $sukarelaRate) {
-                    $bungaSukarela = floor(($saldoSukarela * ($sukarelaRate->rate_percent / 100)) / $workdayCount);
+                if ($saldoSukarela > 0 && $customerSukarelaRate) {
+                    $bungaSukarela = floor(($saldoSukarela * ($customerSukarelaRate->rate_percent / 100)) / $workdayCount);
                     if ($bungaSukarela > 0) {
                         $inserts[] = [
                             'customer_id' => $customer->id,
                             'savings_type' => 'sukarela',
                             'calculation_date' => $dateStr,
                             'base_balance' => $saldoSukarela,
-                            'rate_percent' => $sukarelaRate->rate_percent,
+                            'rate_percent' => $customerSukarelaRate->rate_percent,
                             'interest_amount' => $bungaSukarela,
                             'created_at' => now(),
                             'updated_at' => now(),

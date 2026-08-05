@@ -43,6 +43,16 @@
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('type') }}</span>
                                     </div>
+                                    <div class="form-group">
+                                        <label>Pilihan Rate Bunga Simpanan <small class="text-info">(Otomatis tertanam pada profil nasabah)</small></label>
+                                        <select class="form-control @error('interest_rate_id') is-invalid @enderror" name="interest_rate_id">
+                                            <option value="">-- Abaikan (Gunakan Rate Sebelumnya/Global) --</option>
+                                            @foreach ($rates as $rate)
+                                            <option value="{{ $rate->id }}">Simpanan Harian — {{ $rate->rate_percent }}% p.a. (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})</option>
+                                            @endforeach
+                                        </select>
+                                        <span class="error invalid-feedback">{{ $errors->first('interest_rate_id') }}</span>
+                                    </div>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>
