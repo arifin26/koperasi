@@ -27,20 +27,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Tenor <span class="text-danger">*</span></label>
-                        @php $tenors = [3,6,12]; @endphp
-                        @foreach($tenors as $t)
-                            @php
-                                $rateKey = 'deposito_'.$t.'_bulan';
-                                $rateValue = isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : '-';
-                            @endphp
-                            <div class="custom-control custom-radio">
-                                <input class="custom-control-input tenor-radio" type="radio" name="tenor_months" id="tenor_{{ $t }}" value="{{ $t }}" data-rate="{{ $rateValue }}" {{ old('tenor_months') == $t ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="tenor_{{ $t }}">
-                                    {{ $t }} Bulan — <strong>{{ $rateValue }}% p.a.</strong>
-                                </label>
-                            </div>
-                        @endforeach
+                        <label>Tenor & Pilihan Bunga <span class="text-danger">*</span></label>
+                        <select class="form-control tenor-select @error('tenor_months') is-invalid @enderror" name="tenor_months" id="tenor_months">
+                            <option value="">-- Pilih Tenor --</option>
+                            @php $tenors = [3,6,12]; @endphp
+                            @foreach($tenors as $t)
+                                @php
+                                    $rateKey = 'deposito_'.$t.'_bulan';
+                                    $rateValue = isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : '-';
+                                @endphp
+                                <option value="{{ $t }}" data-rate="{{ $rateValue }}" {{ old('tenor_months') == $t ? 'selected' : '' }}>
+                                    Deposito {{ $t }} Bulan — {{ $rateValue }}% p.a.
+                                </option>
+                            @endforeach
+                        </select>
                         @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
@@ -107,15 +107,16 @@ $(document).ready(function() {
     // Auto-calculate maturity & interest
     function recalculate() {
         var amount = parseInt($('input[name="amount"]').val()) || 0;
-        var checked = $('input[name="tenor_months"]:checked');
-        if (checked.length === 0 || amount < 1000000) {
+        var selected = $('#tenor_months').find(':selected');
+        
+        if (selected.val() === "" || amount < 1000000) {
             $('#maturity_display').val('-');
             $('#monthly_interest_display').val('-');
             return;
         }
 
-        var tenor = parseInt(checked.val());
-        var rate = parseFloat(checked.data('rate'));
+        var tenor = parseInt(selected.val());
+        var rate = parseFloat(selected.data('rate'));
 
         // Maturity date
         var maturity = new Date();
@@ -129,7 +130,7 @@ $(document).ready(function() {
     }
 
     $('input[name="amount"]').on('input', recalculate);
-    $('.tenor-radio').on('change', recalculate);
+    $('#tenor_months').on('change', recalculate);
     recalculate();
 });
 </script>

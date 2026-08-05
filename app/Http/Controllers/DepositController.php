@@ -114,10 +114,16 @@ class DepositController extends Controller
      */
     public function create()
     {
+        $activeRate = \App\Models\InterestRate::where('is_active', 1)
+            ->where('type', 'tabungan_sukarela')
+            ->first();
+            
+        $rateInfo = $activeRate ? $activeRate->rate_percent . '% p.a.' : 'Belum diatur';
+
         return view('pages.transaction.deposit.create', [
             'title' => $this->buildTitle('baru'),
             'customers' => Customer::where('status', 'active')->get(),
-            'types' => ['sukarela' => 'Simpanan Harian']
+            'types' => ['sukarela' => 'Simpanan Harian (Bunga: ' . $rateInfo . ')']
         ]);
     }
 
