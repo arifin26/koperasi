@@ -25,10 +25,8 @@
                                 <div class="col-12 col-md-6">
                                     <div class="form-group">
                                         <label>Nasabah</label>
-                                        <select class="form-control @error('customer_id') is-invalid @enderror" name="customer_id">
-                                            @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->number . ' - ' . $customer->name }}</option>
-                                            @endforeach
+                                        <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
+                                            <!-- AJAX loaded options -->
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
                                     </div>
@@ -38,8 +36,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Nominal Penarikan (Rp)</label>
-                                        <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Pinjaman">
-                                        <span class="error invalid-feedback">{{ $errors->first('amount') }}</span>
+                                        <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Penarikan">
+                                        <span class="error invalid-feedback" id="amount-error">{{ $errors->first('amount') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -55,17 +53,50 @@
     <!-- /.content -->
 @endsection
 
+@push('style')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+@endpush
+
 @push('script')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(function() {
-        let customerId = $('select[name=customer_id]').val();
-        getCurrentBalance(customerId);
+        $('#customer_id').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Cari Nama atau Nomor Rekening...',
+            ajax: {
+                url: '/api/nasabah/search',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data.results };
+                }
+            }
+        });
 
-        $('select[name=customer_id]').on('change', function() {
-            customerId = $(this).val();
+        $('#customer_id').on('select2:select', function (e) {
+            let customerId = e.params.data.id;
             getCurrentBalance(customerId);
         });
 
+        $('#amount').on('input', function() {
+            let max = parseFloat($(this).attr('max')) || 0;
+            let val = parseFloat($(this).val()) || 0;
+            
+            if (val > max) {
+                $(this).addClass('is-invalid');
+                $('#amount-error').text('Nominal penarikan tidak boleh melebihi saldo.').show();
+                $('button[type=submit]').prop('disabled', true);
+            } else {
+                $(this).removeClass('is-invalid');
+                $('#amount-error').hide();
+                $('button[type=submit]').prop('disabled', false);
+            }
+        });
     });
 
     function getCurrentBalance(id) {
@@ -74,8 +105,9 @@
         fetch(`/api/nasabah/${id}/saldo`)
             .then(response => response.json())
             .then(data => {
-                _withdrawal.attr('max', data.data.current_balance)
+                _withdrawal.attr('max', data.data.current_balance);
                 _balance.val(data.data.current_balance_formatted);
+                _withdrawal.trigger('input'); // re-trigger validation
             });
     }
 

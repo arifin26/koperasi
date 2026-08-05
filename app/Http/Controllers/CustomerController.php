@@ -216,4 +216,27 @@ class CustomerController extends Controller
             ]);
         }
     }
+
+    public function search(Request $request)
+    {
+        $search = $request->q;
+        $customers = Customer::where('status', 'active')
+            ->where(function ($query) use ($search) {
+                $query->where('name', 'LIKE', "%$search%")
+                      ->orWhere('number', 'LIKE', "%$search%");
+            })
+            ->limit(20)
+            ->get(['id', 'name', 'number']);
+
+        $formatted = $customers->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'text' => $item->number . ' - ' . $item->name
+            ];
+        });
+
+        return response()->json([
+            'results' => $formatted
+        ]);
+    }
 }

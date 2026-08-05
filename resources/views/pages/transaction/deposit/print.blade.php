@@ -48,6 +48,7 @@
         </tr>
     </thead>
     <tbody>
+        @php($total = 0)
         @foreach ($data as $item)
             @php($total += $item->saldo)
             <tr>

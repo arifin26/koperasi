@@ -35,7 +35,8 @@
                                     <th style="width: 60px">#</th>
                                     <th style="width: 70px;">Tanggal</th>
                                     <th>Nasabah</th>
-                                    <th>Nominal</th>
+                                    <th>Masuk</th>
+                                    <th>Keluar</th>
                                     <th>Saldo</th>
                                     <th style="width: 150px;">Aksi</th>
                                 </tr>
@@ -145,8 +146,12 @@
                         searchable: false
                     },
                     {
-                        data: 'amount',
-                        name: 'amount'
+                        data: 'masuk',
+                        name: 'masuk'
+                    },
+                    {
+                        data: 'keluar',
+                        name: 'keluar'
                     },
                     {
                         data: 'current_balance',

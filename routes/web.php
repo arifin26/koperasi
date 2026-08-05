@@ -41,6 +41,12 @@ Route::middleware('auth')->group(function() {
 
         Route::post('/simpanan/cetak', [DepositController::class, 'print'])->name('deposit.print');
         Route::post('/penarikan/cetak', [WithdrawalController::class, 'print'])->name('withdrawal.print');
+
+        // Modul 05 & 06 (Phase 3)
+        Route::resource('holiday', App\Http\Controllers\HolidayController::class);
+        
+        Route::get('interest/history', [App\Http\Controllers\InterestRateController::class, 'history'])->name('interest.history');
+        Route::resource('interest', App\Http\Controllers\InterestRateController::class)->only(['index', 'create', 'store']);
     });
 
     Route::as('collection.')->prefix('kolektor')->group(function() {

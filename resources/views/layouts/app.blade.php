@@ -145,6 +145,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </li>
                             </ul>
                         </li>
+                        
+                        <!-- Fase 3 Menus -->
+                        <li class="nav-header">CORE BANKING</li>
+                        <li class="nav-item">
+                            <a href="{{ route('holiday.index') }}" class="nav-link {{ request()->is('holiday*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-alt"></i>
+                                <p>Hari Libur</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('interest.index') }}" class="nav-link {{ request()->is('interest*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-percentage"></i>
+                                <p>Manajemen Bunga</p>
+                            </a>
+                        </li>
                         <li class="nav-item {{ Route::is('collection.*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Route::is('collection.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>

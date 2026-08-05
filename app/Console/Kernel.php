@@ -15,7 +15,20 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Engine Bunga Harian: setiap hari pukul 00:05 WIB
+        $schedule->command('interest:calculate-daily')
+                 ->dailyAt('00:05')
+                 ->timezone('Asia/Jakarta')
+                 ->withoutOverlapping()
+                 ->onFailure(function () {
+                     \Illuminate\Support\Facades\Log::error('interest:calculate-daily FAILED in scheduler');
+                 });
+
+        // Posting Bunga: setiap tanggal 1, pukul 00:30 WIB
+        $schedule->command('interest:post-monthly')
+                 ->monthlyOn(1, '00:30')
+                 ->timezone('Asia/Jakarta')
+                 ->withoutOverlapping();
     }
 
     /**
