@@ -22,6 +22,7 @@ class InterestRateController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('type', function($row) {
+                    if ($row->type == 'tabungan_sukarela') return 'Simpanan Harian';
                     return ucwords(str_replace('_', ' ', $row->type));
                 })
                 ->editColumn('rate_percent', function($row) {
@@ -43,6 +44,7 @@ class InterestRateController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('type', function($row) {
+                    if ($row->type == 'tabungan_sukarela') return 'Simpanan Harian';
                     return ucwords(str_replace('_', ' ', $row->type));
                 })
                 ->editColumn('rate_percent', function($row) {

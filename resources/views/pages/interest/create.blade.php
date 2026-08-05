@@ -16,8 +16,7 @@
                     <div class="form-group">
                         <label>Jenis Simpanan/Deposito <span class="text-danger">*</span></label>
                         <select name="type" class="form-control @error('type') is-invalid @enderror" required>
-                            <option value="tabungan_sukarela">Tabungan Sukarela</option>
-                            <option value="tabungan_wajib">Tabungan Wajib</option>
+                            <option value="tabungan_sukarela">Simpanan Harian</option>
                             <option value="deposito_3_bulan">Deposito 3 Bulan</option>
                             <option value="deposito_6_bulan">Deposito 6 Bulan</option>
                             <option value="deposito_12_bulan">Deposito 12 Bulan</option>

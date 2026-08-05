@@ -75,6 +75,7 @@ class DepositController extends Controller
                     return Carbon::parse($row->created_at)->isoFormat('DD-MM-Y');
                 })
                 ->editColumn('type', function($row) {
+                    if ($row->type == 'sukarela') return 'Simpanan Harian';
                     return ucfirst($row->type);
                 })
                 ->editColumn('customer', function($row) {
@@ -102,7 +103,7 @@ class DepositController extends Controller
         return view('pages.transaction.deposit.index', [
             'title' => $this->title,
             'customers' => Customer::all(),
-            'types' => ['sukarela', 'wajib', 'pokok']
+            'types' => ['sukarela' => 'Simpanan Harian']
         ]);
     }
 
@@ -116,7 +117,7 @@ class DepositController extends Controller
         return view('pages.transaction.deposit.create', [
             'title' => $this->buildTitle('baru'),
             'customers' => Customer::where('status', 'active')->get(),
-            'types' => ['sukarela', 'wajib']
+            'types' => ['sukarela' => 'Simpanan Harian']
         ]);
     }
 

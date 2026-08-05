@@ -27,7 +27,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('script')
 <script>
 $(document).ready(function() {
     $('#interest-history-table').DataTable({
@@ -45,4 +45,4 @@ $(document).ready(function() {
     });
 });
 </script>
-@endsection
+@endpush

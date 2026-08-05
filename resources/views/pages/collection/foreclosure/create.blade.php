@@ -17,10 +17,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Nasabah</label>
-                                        <select class="form-control @error('customer_id') is-invalid @enderror" name="customer_id">
-                                            @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->number . ' - ' . $customer->name }}</option>
-                                            @endforeach
+                                        <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
+                                            <!-- AJAX loaded options -->
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
                                     </div>
@@ -62,10 +60,32 @@
     <!-- /.content -->
 @endsection
 
+@push('style')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+@endpush
+
 @push('script')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(function() {
-        $('select[name=customer_id]').on('change', function() {
+        $('#customer_id').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Cari Nama atau Nomor Rekening...',
+            ajax: {
+                url: '/api/nasabah/search',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data.results };
+                }
+            }
+        });
+
+        $('#customer_id').on('change', function() {
             customerId = $(this).val();
         });
     });

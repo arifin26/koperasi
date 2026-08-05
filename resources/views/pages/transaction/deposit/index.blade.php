@@ -24,8 +24,8 @@
                                 <div class="col-12 col-md-3">
                                     <select class="form-control" name="type">
                                         <option value="">Semua Jenis</option>
-                                        @foreach ($types as $type)
-                                        <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                                        @foreach ($types as $key => $val)
+                                        <option value="{{ $key }}">{{ $val }}</option>
                                         @endforeach
                                     </select>
                                 </div>

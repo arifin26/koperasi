@@ -81,6 +81,7 @@ class CustomerController extends Controller
 
             $data = $request->except('amount');
             $data['photo'] = $this->storeImage($request);
+            $data['joined_at'] = now();
             Customer::create($data);
 
             DB::commit();
@@ -200,6 +201,10 @@ class CustomerController extends Controller
             
             $data = Deposit::where('customer_id', $id)->latest()->first();
             if ($data) {
+                $data->current_balance = $sukarelaBalance;
+                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
+            } else {
+                $data = new \stdClass();
                 $data->current_balance = $sukarelaBalance;
                 $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
             }

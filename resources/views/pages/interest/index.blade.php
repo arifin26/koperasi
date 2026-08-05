@@ -33,7 +33,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('script')
 <script>
 $(document).ready(function() {
     $('#interest-table').DataTable({
@@ -49,4 +49,4 @@ $(document).ready(function() {
     });
 });
 </script>
-@endsection
+@endpush

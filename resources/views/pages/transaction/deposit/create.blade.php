@@ -37,8 +37,8 @@
                                     <div class="form-group">
                                         <label>Jenis Simpanan</label>
                                         <select class="form-control @error('type') is-invalid @enderror" name="type">
-                                            @foreach ($types as $type)
-                                            <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                                            @foreach ($types as $key => $val)
+                                            <option value="{{ $key }}">{{ $val }}</option>
                                             @endforeach
                                         </select>
                                         <span class="error invalid-feedback">{{ $errors->first('type') }}</span>

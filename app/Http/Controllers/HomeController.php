@@ -19,8 +19,76 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $today = now()->format('Y-m-d');
+        
+        // 1. Widget Stats
+        $nasabahAktif = \App\Models\Customer::where('status', 'active')->count();
+        
+        $masukHariIni = \App\Models\Deposit::whereDate('created_at', $today)
+                            ->whereIn('type', ['pokok', 'wajib', 'sukarela', 'bunga', 'bunga_deposito'])
+                            ->sum('amount');
+                            
+        $keluarHariIni = \App\Models\Deposit::whereDate('created_at', $today)
+                            ->where('type', 'penarikan')
+                            ->sum('amount');
+                            
+        $totalTabungan = \App\Models\Deposit::whereIn('id', function($query) {
+                                $query->select(\Illuminate\Support\Facades\DB::raw('MAX(id)'))
+                                      ->from('deposits')
+                                      ->whereNull('deleted_at')
+                                      ->groupBy('customer_id');
+                            })->sum('current_balance');
+                            
+        // 2. Chart 7 Hari Terakhir
+        $chartData = [
+            'labels' => [],
+            'masuk' => [],
+            'keluar' => []
+        ];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $chartData['labels'][] = now()->subDays($i)->isoFormat('DD MMM');
+            
+            $masuk = \App\Models\Deposit::whereDate('created_at', $date)
+                        ->whereIn('type', ['pokok', 'wajib', 'sukarela', 'bunga', 'bunga_deposito'])
+                        ->sum('amount');
+            $keluar = \App\Models\Deposit::whereDate('created_at', $date)
+                        ->where('type', 'penarikan')
+                        ->sum('amount');
+                        
+            $chartData['masuk'][] = $masuk;
+            $chartData['keluar'][] = $keluar;
+        }
+
+        // 3. 5 Transaksi Terakhir
+        $recentTransactions = \App\Models\Deposit::with('customer')
+                                ->latest()
+                                ->take(5)
+                                ->get();
+                                
+        // 4. Deposito JT 30 Hari
+        $maturedDeposits = \App\Models\FixedDeposit::with('customer')
+                                ->where('status', 'active')
+                                ->whereBetween('maturity_date', [now(), now()->addDays(30)])
+                                ->orderBy('maturity_date')
+                                ->get();
+                                
+        // 5. Engine Bunga Status
+        $lastEngineLog = \Illuminate\Support\Facades\DB::table('interest_engine_logs')
+                            ->latest()
+                            ->first();
+
         return view('pages.dashboard', [
-            'title' => 'Dashboard'
+            'title' => 'Dashboard',
+            'nasabahAktif' => $nasabahAktif,
+            'masukHariIni' => $masukHariIni,
+            'keluarHariIni' => $keluarHariIni,
+            'totalTabungan' => $totalTabungan,
+            'chartData' => json_encode($chartData),
+            'recentTransactions' => $recentTransactions,
+            'maturedDeposits' => $maturedDeposits,
+            'lastEngineLog' => $lastEngineLog
         ]);
     }
 
@@ -49,6 +117,10 @@ class HomeController extends Controller
     {
         if (Auth::user()->role !== 'manager') {
             abort(403, 'Hanya manager yang dapat mereset data.');
+        }
+
+        if (app()->environment('production')) {
+            abort(403, 'Aksi ini tidak diizinkan di environment production.');
         }
         
         try {

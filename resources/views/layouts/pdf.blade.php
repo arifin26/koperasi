@@ -8,31 +8,59 @@
     <title>{{ $title }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
         integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+    <style>
+        body { font-size: 12px; }
+        .signature-table { width: 100%; margin-top: 50px; text-align: center; border: none; }
+        .signature-table td { border: none !important; width: 50%; }
+        .signature-table .name { margin-top: 70px; font-weight: bold; text-decoration: underline; }
+    </style>
 </head>
 
 <body style="font-family: sans-serif;">
-    <header>
-        {{-- <img src="{{ public_path('swamitra.jpeg') }}" alt="{{ $title }}" width="50px" class="mb-2" srcset=""> --}}
-        <span class="d-block h3 mb-0">{{ strtoupper(config('app.name')) }}</span>
-        <span class="d-block">Jl. Sesama No. 47 RT. 16</span>
-        <span class="d-block">Telp. 62 851-4306-4088</span>
-        <hr>
+    <header class="text-center mb-4">
+        <h3 class="mb-0 font-weight-bold">{{ strtoupper(config('app.name')) }}</h3>
+        <p class="mb-0">Jl. Sesama No. 47 RT. 16, Telp. 62 851-4306-4088</p>
+        <hr style="border-top: 2px solid #000;">
     </header>
-    <section>
-        <h2 class="mx-auto d-auto text-center mb-3">{{ $title }}</h2>
+
+    <section class="mb-3">
+        <h4 class="text-center text-uppercase font-weight-bold mb-3">{{ $title }}</h4>
+        <table style="width: 100%; margin-bottom: 15px; border: none;">
+            <tr>
+                <td style="width: 15%; font-weight: bold; border: none; padding: 2px;">Periode</td>
+                <td style="width: 35%; border: none; padding: 2px;">: {{ $filter ?? '-' }}</td>
+                <td style="width: 15%; font-weight: bold; border: none; padding: 2px;">Dicetak Oleh</td>
+                <td style="width: 35%; border: none; padding: 2px;">: {{ $user->name ?? '-' }} ({{ $user->username ?? '-' }})</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; border: none; padding: 2px;">Tanggal Cetak</td>
+                <td style="border: none; padding: 2px;">: {{ $date ?? \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</td>
+                <td style="border: none; padding: 2px;"></td>
+                <td style="border: none; padding: 2px;"></td>
+            </tr>
+        </table>
         @yield('header')
     </section>
-    <section class="mt-3">
+
+    <section>
         @yield('content')
     </section>
-    <section class="mt-4">
-        <div class="float-right">
-            <span class="d-block">Mengetahui</span>
-            <span class="d-block"><span style="margin-left: 150px">{{ date('Y') }}</span></span>
-            <span class="d-block">Manager</span>
-            <span class="d-block" style="margin-top: 75px">{{ $manager->name }}</span>
-        </div>
+
+    <section>
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <span>Dibuat oleh:</span>
+                    <div class="name">{{ $user->name ?? '....................................' }}</div>
+                    <div>{{ ucfirst($user->role ?? 'Teller') }}</div>
+                </td>
+                <td>
+                    <span>Diketahui oleh:</span>
+                    <div class="name">{{ $manager->name ?? '....................................' }}</div>
+                    <div>Manager</div>
+                </td>
+            </tr>
+        </table>
     </section>
 </body>
-
 </html>
