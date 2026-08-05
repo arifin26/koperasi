@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('visits', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('remaining_amount')->default(0);
+            $table->unsignedBigInteger('remaining_amount')->default(0);
             $table->text('description');
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();

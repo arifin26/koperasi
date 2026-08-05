@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('collaterals', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedInteger('value')->default(0);
+            $table->unsignedBigInteger('value')->default(0);
             $table->string('description')->nullable();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();

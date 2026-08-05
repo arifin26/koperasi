@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('foreclosures', function (Blueprint $table) {
             $table->id();
             $table->dateTime('date');
-            $table->unsignedInteger('collateral_amount')->default(0);
-            $table->unsignedInteger('remaining_amount')->default(0);
-            $table->unsignedInteger('return_amount')->default(0);
+            $table->unsignedBigInteger('collateral_amount')->default(0);
+            $table->unsignedBigInteger('remaining_amount')->default(0);
+            $table->unsignedBigInteger('return_amount')->default(0);
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('visit_id')->constrained('visits')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('collateral_id')->constrained('collaterals')->cascadeOnDelete()->cascadeOnUpdate();

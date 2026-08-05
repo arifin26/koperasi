@@ -124,12 +124,14 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
-            $simpanan = Deposit::where('customer_id', $request->customer_id)->where('type', $request->type)->latest()->first();
             $data = $request->all();
-            $data['previous_balance'] = $simpanan->current_balance ?? 0;
-            $data['current_balance'] = $data['previous_balance'] + $request->amount;
+            $data['previous_balance'] = 0;
+            $data['current_balance'] = 0;
+            $data['created_by'] = auth()->id();
+            
             Deposit::create($data);
-            // Loan payment logic removed
+            Deposit::recalculateBalance($request->customer_id);
+            
             DB::commit();
             return redirect()->route('transaction.deposit.index')->with('success', 'Berhasil menambahkan simpanan nasabah!');
         } catch (\Throwable $th) {
@@ -180,9 +182,13 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
-            $simpanan->update($request->all());
-            // Loan payment logic removed
+            $data = $request->all();
+            $data['updated_by'] = auth()->id();
+            $simpanan->update($data);
+            
+            Deposit::recalculateBalance($simpanan->customer_id);
             DB::commit();
+            
             return back()->with('success', 'Berhasil mengedit simpanan nasabah!');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -200,9 +206,12 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
+            $customerId = $simpanan->customer_id;
             $simpanan->delete();
-            // Loan payment logic removed
+            
+            Deposit::recalculateBalance($customerId);
             DB::commit();
+            
             return back()->with('success', 'Berhasil menghapus simpanan nasabah!');
         } catch (\Throwable $th) {
             DB::rollBack();

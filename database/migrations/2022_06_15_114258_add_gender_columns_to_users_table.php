@@ -20,8 +20,10 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('phone')->nullable()->unique();
             $table->dateTime('joined_at')->nullable();
-            $table->enum('role', ['manager', 'teller', 'collector'])->default('collector');
+            $table->enum('role', ['manager', 'teller', 'viewer', 'collector'])->default('teller');
+            $table->boolean('is_active')->default(1);
             $table->string('photo')->nullable();
+            $table->softDeletes();
         });
     }
 

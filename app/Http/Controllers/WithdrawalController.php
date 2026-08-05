@@ -114,11 +114,27 @@ class WithdrawalController extends Controller
     {
         try {
             DB::beginTransaction();
-            $simpanan = Deposit::where('customer_id', $request->customer_id)->whereIn('type', ['sukarela', 'penarikan'])->latest()->first();
+            
+            // Lock the customer to prevent race conditions during concurrent requests
+            Customer::where('id', $request->customer_id)->lockForUpdate()->first();
+            
+            // Get current accurate balance
+            $balances = Deposit::recalculateBalance($request->customer_id);
+            $sukarelaBalance = $balances['sukarela'] ?? 0;
+            
+            if ($request->amount > $sukarelaBalance) {
+                DB::rollBack();
+                return back()->with('error', 'Saldo tidak mencukupi. Saldo tersedia: Rp ' . number_format($sukarelaBalance, 0, ',', '.'));
+            }
+
             $data = $request->all();
-            $data['previous_balance'] = $simpanan->current_balance ?? 0;
-            $data['current_balance'] = $data['previous_balance'] - $request->amount;
+            $data['previous_balance'] = 0;
+            $data['current_balance'] = 0;
+            $data['created_by'] = auth()->id();
+            
             Deposit::create($data);
+            Deposit::recalculateBalance($request->customer_id);
+            
             DB::commit();
             return redirect()->route('transaction.withdrawal.index')->with('success', 'Berhasil menarik simpanan nasabah!');
         } catch (\Throwable $th) {
@@ -167,9 +183,22 @@ class WithdrawalController extends Controller
     public function update(UpdateDepositRequest $request, Deposit $penarikan)
     {
         try {
-            $penarikan->update($request->all());
+            DB::beginTransaction();
+            $data = $request->all();
+            $data['updated_by'] = auth()->id();
+            $penarikan->update($data);
+            
+            // Check if after update, the balance becomes negative
+            $balances = Deposit::recalculateBalance($penarikan->customer_id);
+            if ($balances['sukarela'] < 0) {
+                DB::rollBack();
+                return back()->with('error', 'Update dibatalkan karena menyebabkan saldo akhir menjadi negatif.');
+            }
+            
+            DB::commit();
             return back()->with('success', 'Berhasil mengedit penarikan simpanan nasabah!');
         } catch (\Throwable $th) {
+            DB::rollBack();
             return back()->with('error', $th->getMessage());
         }
     }
@@ -183,9 +212,16 @@ class WithdrawalController extends Controller
     public function destroy(Deposit $penarikan)
     {
         try {
+            DB::beginTransaction();
+            $customerId = $penarikan->customer_id;
             $penarikan->delete();
+            
+            Deposit::recalculateBalance($customerId);
+            DB::commit();
+            
             return back()->with('success', 'Berhasil menghapus penarikan simpanan nasabah!');
         } catch (\Throwable $th) {
+            DB::rollBack();
             return back()->with('error', $th->getMessage());
         }
     }

@@ -47,6 +47,10 @@ class HomeController extends Controller
 
     public function truncate()
     {
+        if (Auth::user()->role !== 'manager') {
+            abort(403, 'Hanya manager yang dapat mereset data.');
+        }
+        
         try {
             Artisan::call('migrate:fresh --seed');
             Auth::logout();
