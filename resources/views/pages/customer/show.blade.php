@@ -82,6 +82,47 @@
             <!-- /.col-md-6 -->
         </div>
         <!-- /.row -->
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0"><i class="fas fa-wallet mr-2"></i> Ringkasan Saldo Simpanan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="border p-3 rounded">
+                                    <h6 class="text-muted mb-2">Simpanan Pokok</h6>
+                                    <h4 class="mb-0 text-dark">Rp {{ number_format($balances['pokok'] ?? 0, 0, ',', '.') }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="border p-3 rounded">
+                                    <h6 class="text-muted mb-2">Simpanan Wajib</h6>
+                                    <h4 class="mb-0 text-dark">Rp {{ number_format($balances['wajib'] ?? 0, 0, ',', '.') }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="border p-3 rounded">
+                                    <h6 class="text-muted mb-2">Simpanan Sukarela</h6>
+                                    <h4 class="mb-0 text-success">Rp {{ number_format($balances['sukarela'] ?? 0, 0, ',', '.') }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="border p-3 rounded bg-light">
+                                    <h6 class="text-muted mb-2">Total Saldo</h6>
+                                    <h4 class="mb-0 font-weight-bold text-primary">
+                                        Rp {{ number_format(($balances['pokok'] ?? 0) + ($balances['wajib'] ?? 0) + ($balances['sukarela'] ?? 0) + ($balances['bunga'] ?? 0), 0, ',', '.') }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /.container-fluid -->
     <!-- /.content -->
 @endsection

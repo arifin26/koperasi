@@ -16,6 +16,7 @@ class UserController extends Controller
     public function __construct()
     {
         $this->title = 'Karyawan';
+        $this->middleware('role:manager');
     }
 
     /**
@@ -144,7 +145,7 @@ class UserController extends Controller
     public function destroy(User $karyawan)
     {
         try {
-            $this->deleteImage($karyawan->photo);
+            // $this->deleteImage($karyawan->photo); // Do not physical delete on soft delete
             $karyawan->delete();
             return back()->with('success', 'Berhasil menghapus karyawan!');
         } catch (\Throwable $th) {

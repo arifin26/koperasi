@@ -26,15 +26,15 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'username' => ['required', 'string', Rule::unique('users', 'username')],
+            'username' => ['required', 'string', Rule::unique('users', 'username')->whereNull('deleted_at')],
             'password' => ['required'],
             'gender' => ['required', Rule::in(['L', 'P'])],
-            'role' => ['required', Rule::in(['manager', 'teller', 'collector'])],
+            'role' => ['required', Rule::in(['manager', 'teller', 'collector', 'viewer'])],
             'birth' => 'required',
             'last_education' => 'required',
             'joined_at' => 'required',
             'address' => 'required',
-            'phone' => ['required', Rule::unique('users', 'phone')],
+            'phone' => ['required', Rule::unique('users', 'phone')->whereNull('deleted_at')],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }

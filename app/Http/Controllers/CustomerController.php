@@ -99,15 +99,12 @@ class CustomerController extends Controller
      */
     public function show(Customer $nasabah)
     {
-        // $data = Deposit::selectRaw("customer_id, DATE(created_at) as tanggal, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) AS saldo")->where('customer_id', 5)->groupByRaw('customer_id, DATE(created_at)')->orderByRaw('DATE(created_at) DESC')->get();
-        // dd($data);
-        // SELECT SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END)  AS saldo FROM deposits WHERE customer_id = 5;
-        // SELECT customer_id, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END)  AS saldo FROM deposits GROUP By customer_id;
-        // SELECT DATE(created_at) as tanggal, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END)  AS saldo FROM deposits WHERE customer_id = 5 GROUP BY DATE(created_at);
-        // SELECT customer_id, DATE(created_at) as tanggal, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END)  AS saldo FROM deposits GROUP BY customer_id, DATE(created_at);
+        $balances = Deposit::recalculateBalance($nasabah->id);
+        
         return view('pages.customer.show', [
             'title' => $this->buildTitle('detail'),
-            'user' => $nasabah
+            'user' => $nasabah,
+            'balances' => $balances
         ]);
     }
 
@@ -154,7 +151,7 @@ class CustomerController extends Controller
     {
         try {
             DB::beginTransaction();
-            $this->deleteImage($nasabah->photo);
+            // $this->deleteImage($nasabah->photo); // Do not delete photo on soft delete
             $nasabah->visits()->delete();
             $nasabah->foreclosures()->delete();
             $nasabah->deposits()->delete();
@@ -198,11 +195,15 @@ class CustomerController extends Controller
     public function currentBalanceByDeposit($id)
     {
         try {
-            $savings = Deposit::where('customer_id', $id)->where('type', 'sukarela')->sum('amount');
-            $withdrawal = Deposit::where('customer_id', $id)->where('type', 'penarikan')->sum('amount');
+            $balances = Deposit::recalculateBalance($id);
+            $sukarelaBalance = $balances['sukarela'] ?? 0;
+            
             $data = Deposit::where('customer_id', $id)->latest()->first();
-            $data->current_balance = $savings - $withdrawal;
-            $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, '2', ',', '.');
+            if ($data) {
+                $data->current_balance = $sukarelaBalance;
+                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
+            }
+            
             return response()->json([
                 'status' => 'success',
                 'data' => $data,

@@ -26,13 +26,13 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'username' => ['required', 'string', Rule::unique('users', 'username')->ignore($this->id)],
+            'username' => ['required', 'string', Rule::unique('users', 'username')->ignore($this->id)->whereNull('deleted_at')],
             // 'password' => ['nullable'],
             'gender' => ['required', Rule::in(['L', 'P'])],
             'birth' => 'required',
             'last_education' => 'nullable',
             'address' => 'required',
-            'phone' => ['required', Rule::unique('users', 'phone')->ignore($this->id)],
+            'phone' => ['required', Rule::unique('users', 'phone')->ignore($this->id)->whereNull('deleted_at')],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }

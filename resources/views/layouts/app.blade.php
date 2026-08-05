@@ -103,6 +103,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             </a>
                         </li>
                         <li class="nav-header">DATA MASTER</li>
+                        @if(auth()->user()->role == 'manager')
                         <li class="nav-item">
                             <a href="{{ route('user.index') }}" class="nav-link {{ Route::is('user.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-briefcase"></i>
@@ -111,6 +112,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </p>
                             </a>
                         </li>
+                        @endif
                         <li class="nav-item">
                             <a href="{{ route('customer.index') }}" class="nav-link {{ Route::is('customer.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-users"></i>
