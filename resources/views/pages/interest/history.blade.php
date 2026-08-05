@@ -18,6 +18,7 @@
                             <th>Tanggal Berlaku</th>
                             <th>Status</th>
                             <th>Keterangan</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -52,7 +53,8 @@ $(document).ready(function() {
             {data: 'rate_percent', name: 'rate_percent'},
             {data: 'effective_date', name: 'effective_date'},
             {data: 'is_active', name: 'is_active'},
-            {data: 'notes', name: 'notes'}
+            {data: 'notes', name: 'notes'},
+            {data: 'action', name: 'action', orderable: false, searchable: false}
         ]
     });
 });

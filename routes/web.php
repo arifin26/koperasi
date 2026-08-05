@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function() {
     // Modul 05 & 06 (Hari Libur & Bunga)
     Route::resource('holiday', App\Http\Controllers\HolidayController::class);
     Route::get('interest/history', [App\Http\Controllers\InterestRateController::class, 'history'])->name('interest.history');
-    Route::resource('interest', App\Http\Controllers\InterestRateController::class)->only(['index', 'create', 'store']);
+    Route::resource('interest', App\Http\Controllers\InterestRateController::class);
 
     // Modul 09 — Deposito
     Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, ['names' => 'fixed-deposit'])->except(['edit', 'update']);

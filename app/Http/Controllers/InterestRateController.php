@@ -31,6 +31,18 @@ class InterestRateController extends Controller
                 ->editColumn('effective_date', function($row) {
                     return Carbon::parse($row->effective_date)->isoFormat('DD MMMM Y');
                 })
+                ->addColumn('action', function($row) {
+                    if (auth()->user()->role == 'manager') {
+                        return '<a href="'.route('interest.edit', $row).'" class="btn btn-primary btn-xs px-2 mx-1">Edit</a>
+                                <form class="d-inline" method="POST" action="'.route('interest.destroy', $row).'">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <input type="hidden" name="_token" value="'.csrf_token().'" />
+                                    <button type="submit" class="btn btn-danger btn-xs px-2 delete-data">Hapus</button>
+                                </form>';
+                    }
+                    return '-';
+                })
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
@@ -56,7 +68,18 @@ class InterestRateController extends Controller
                 ->editColumn('is_active', function($row) {
                     return $row->is_active ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-secondary">Nonaktif</span>';
                 })
-                ->rawColumns(['is_active'])
+                ->addColumn('action', function($row) {
+                    if (auth()->user()->role == 'manager') {
+                        return '<a href="'.route('interest.edit', $row).'" class="btn btn-primary btn-xs px-2 mx-1">Edit</a>
+                                <form class="d-inline" method="POST" action="'.route('interest.destroy', $row).'">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <input type="hidden" name="_token" value="'.csrf_token().'" />
+                                    <button type="submit" class="btn btn-danger btn-xs px-2 delete-data">Hapus</button>
+                                </form>';
+                    }
+                    return '-';
+                })
+                ->rawColumns(['is_active', 'action'])
                 ->make(true);
         }
 
@@ -94,6 +117,56 @@ class InterestRateController extends Controller
         });
 
         return redirect()->route('interest.index')->with('success', 'Rate Bunga berhasil ditambahkan dan diaktifkan.');
+    }
+
+    public function edit(InterestRate $interest)
+    {
+        return view('pages.interest.edit', [
+            'title' => 'Edit Rate Bunga',
+            'interest' => $interest
+        ]);
+    }
+
+    public function update(Request $request, InterestRate $interest)
+    {
+        $request->validate([
+            'type' => 'required|in:tabungan_sukarela,tabungan_wajib,deposito_3_bulan,deposito_6_bulan,deposito_12_bulan',
+            'rate_percent' => 'required|numeric|between:0.01,100',
+            'effective_date' => 'required|date',
+        ]);
+
+        $interest->update([
+            'type' => $request->type,
+            'rate_percent' => $request->rate_percent,
+            'effective_date' => $request->effective_date,
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->route('interest.index')->with('success', 'Rate Bunga berhasil diperbarui.');
+    }
+
+    public function destroy(InterestRate $interest)
+    {
+        $type = $interest->type;
+        $isActive = $interest->is_active;
+        
+        DB::transaction(function () use ($interest, $type, $isActive) {
+            $interest->delete();
+            
+            // If we deleted the active rate, make the previous one active
+            if ($isActive) {
+                $previousRate = InterestRate::where('type', $type)
+                    ->orderBy('effective_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                    
+                if ($previousRate) {
+                    $previousRate->update(['is_active' => 1]);
+                }
+            }
+        });
+
+        return back()->with('success', 'Rate Bunga berhasil dihapus.');
     }
 
     // API ENDPOINT

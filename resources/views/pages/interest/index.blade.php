@@ -24,6 +24,7 @@
                             <th>Jenis Simpanan/Deposito</th>
                             <th>Rate (% p.a.)</th>
                             <th>Berlaku Sejak</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -56,7 +57,8 @@ $(document).ready(function() {
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
             {data: 'type', name: 'type'},
             {data: 'rate_percent', name: 'rate_percent'},
-            {data: 'effective_date', name: 'effective_date'}
+            {data: 'effective_date', name: 'effective_date'},
+            {data: 'action', name: 'action', orderable: false, searchable: false}
         ]
     });
 });
