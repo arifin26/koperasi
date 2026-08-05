@@ -29,6 +29,12 @@ class Kernel extends ConsoleKernel
                  ->monthlyOn(1, '00:30')
                  ->timezone('Asia/Jakarta')
                  ->withoutOverlapping();
+
+        // Transfer Bunga Deposito: setiap hari pukul 01:00 WIB
+        $schedule->command('deposit:pay-interest')
+                 ->dailyAt('01:00')
+                 ->timezone('Asia/Jakarta')
+                 ->withoutOverlapping();
     }
 
     /**

@@ -122,8 +122,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
                             </a>
                         </li>
                         <li class="nav-header">DATA TRANSAKSI</li>
-                        <li class="nav-item {{ Route::is('transaction.*') ? 'menu-open' : '' }}">
-                            <a href="#" class="nav-link {{ Route::is('transaction.*') ? 'active' : '' }}">
+                        <li class="nav-item {{ Route::is('transaction.*') || Route::is('fixed-deposit.*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ Route::is('transaction.*') || Route::is('fixed-deposit.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-invoice-dollar"></i>
                                 <p>
                                     Transaksi
@@ -143,10 +143,16 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                         <p>Penarikan</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('fixed-deposit.index') }}" class="nav-link {{ Route::is('fixed-deposit.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Deposito</p>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         
-                        <!-- Fase 3 Menus -->
+                        <!-- Core Banking -->
                         <li class="nav-header">CORE BANKING</li>
                         <li class="nav-item">
                             <a href="{{ route('holiday.index') }}" class="nav-link {{ request()->is('holiday*') ? 'active' : '' }}">
@@ -160,6 +166,27 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 <p>Manajemen Bunga</p>
                             </a>
                         </li>
+
+                        <!-- Laporan -->
+                        <li class="nav-header">LAPORAN</li>
+                        <li class="nav-item">
+                            <a href="{{ route('report.daily') }}" class="nav-link {{ request()->is('laporan*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                <p>Laporan Harian</p>
+                            </a>
+                        </li>
+
+                        <!-- Utility -->
+                        @if(auth()->user()->role == 'manager')
+                        <li class="nav-header">UTILITY</li>
+                        <li class="nav-item">
+                            <a href="{{ route('trash.index') }}" class="nav-link {{ request()->is('utility*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-recycle"></i>
+                                <p>Data Terhapus</p>
+                            </a>
+                        </li>
+                        @endif
+
                         <li class="nav-item {{ Route::is('collection.*') ? 'menu-open' : '' }}">
                             <a href="#" class="nav-link {{ Route::is('collection.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>

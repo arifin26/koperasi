@@ -41,13 +41,29 @@ Route::middleware('auth')->group(function() {
 
         Route::post('/simpanan/cetak', [DepositController::class, 'print'])->name('deposit.print');
         Route::post('/penarikan/cetak', [WithdrawalController::class, 'print'])->name('withdrawal.print');
-
-        // Modul 05 & 06 (Phase 3)
-        Route::resource('holiday', App\Http\Controllers\HolidayController::class);
-        
-        Route::get('interest/history', [App\Http\Controllers\InterestRateController::class, 'history'])->name('interest.history');
-        Route::resource('interest', App\Http\Controllers\InterestRateController::class)->only(['index', 'create', 'store']);
     });
+
+    // Modul 05 & 06 (Hari Libur & Bunga)
+    Route::resource('holiday', App\Http\Controllers\HolidayController::class);
+    Route::get('interest/history', [App\Http\Controllers\InterestRateController::class, 'history'])->name('interest.history');
+    Route::resource('interest', App\Http\Controllers\InterestRateController::class)->only(['index', 'create', 'store']);
+
+    // Modul 09 — Deposito
+    Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, ['names' => 'fixed-deposit'])->except(['edit', 'update']);
+    Route::get('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extendForm'])->name('fixed-deposit.extend.form');
+    Route::post('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extend'])->name('fixed-deposit.extend');
+    Route::get('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidateForm'])->name('fixed-deposit.liquidate.form');
+    Route::post('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidate'])->name('fixed-deposit.liquidate');
+    Route::post('deposito/cetak', [App\Http\Controllers\FixedDepositController::class, 'print'])->name('fixed-deposit.print');
+
+    // Laporan
+    Route::get('/laporan/harian', [App\Http\Controllers\ReportController::class, 'dailyTransaction'])->name('report.daily');
+    Route::post('/laporan/harian/cetak', [App\Http\Controllers\ReportController::class, 'dailyTransactionPrint'])->name('report.daily.print');
+
+    // Utility — Trash
+    Route::get('/utility/trash', [App\Http\Controllers\TrashController::class, 'index'])->name('trash.index');
+    Route::post('/utility/trash/{module}/{id}/restore', [App\Http\Controllers\TrashController::class, 'restore'])->name('trash.restore');
+    Route::delete('/utility/trash/{module}/{id}', [App\Http\Controllers\TrashController::class, 'forceDelete'])->name('trash.force-delete');
 
     Route::as('collection.')->prefix('kolektor')->group(function() {
         Route::resource('/nasabah-bermasalah', VisitController::class, ['names' => 'visit']);
