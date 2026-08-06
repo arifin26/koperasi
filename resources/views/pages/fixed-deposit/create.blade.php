@@ -41,25 +41,26 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Rate Bunga (% p.a.) <span class="text-danger">*</span></label>
-                                @if($activeRate)
-                                    <div class="input-group">
-                                        <input type="number" step="0.01" min="0" max="100"
-                                            name="rate_percent" id="rate_percent"
-                                            class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
-                                            value="{{ old('rate_percent', $activeRate->rate_percent) }}"
-                                            required readonly>
-                                        <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
-                                    </div>
+                                @if($rates->isNotEmpty())
+                                    <select name="rate_percent" id="rate_percent"
+                                        class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
+                                        required>
+                                        @foreach($rates as $rate)
+                                        <option value="{{ $rate->rate_percent }}"
+                                            {{ old('rate_percent', $activeRate?->rate_percent) == $rate->rate_percent ? 'selected' : '' }}>
+                                            {{ $rate->rate_percent }}% p.a.
+                                            (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
+                                        </option>
+                                        @endforeach
+                                    </select>
                                     <small class="form-text text-muted">
                                         <i class="fas fa-info-circle text-primary"></i>
-                                        Dari Manajemen Bunga: <strong>{{ $activeRate->rate_percent }}%</strong>
-                                        (berlaku sejak {{ \Carbon\Carbon::parse($activeRate->effective_date)->isoFormat('D MMM Y') }}).
-                                        <a href="#" id="overrideRateLink">Ubah manual?</a>
+                                        Rate dari Manajemen Bunga. Rate aktif otomatis dipilih.
                                     </small>
                                 @else
                                     <div class="alert alert-warning py-1 mb-1" style="font-size:.85rem">
                                         <i class="fas fa-exclamation-triangle"></i>
-                                        Rate bunga Deposito belum diatur.
+                                        Rate Deposito belum diatur.
                                         <a href="{{ route('interest.create') }}" target="_blank">Tambah sekarang</a>
                                     </div>
                                     <div class="input-group">
@@ -132,7 +133,7 @@ $(document).ready(function() {
         allowClear: true,
         minimumInputLength: 2,
         ajax: {
-            url: '/api/nasabah/search',
+            url: '{{ route("customer.search") }}',
             dataType: 'json',
             delay: 300,
             data: function(params) { return { q: params.term }; },
@@ -176,26 +177,6 @@ $(document).ready(function() {
 
     $('input[name="amount"], #tenor_months, #rate_percent').on('input change', recalculate);
     recalculate();
-
-    // Override rate link toggle
-    $('#overrideRateLink').on('click', function(e) {
-        e.preventDefault();
-        var field = $('#rate_percent');
-        if (field.prop('readonly')) {
-            field.prop('readonly', false).focus().removeClass('font-weight-bold').addClass('border-warning');
-            $(this).text('Gunakan dari Manajemen Bunga');
-        } else {
-            field.prop('readonly', true).addClass('font-weight-bold').removeClass('border-warning');
-            field.val(field.data('system-rate'));
-            $(this).text('Ubah manual?');
-            recalculate();
-        }
-    });
-
-    // Store the system rate as data attribute for reset
-    @if(isset($activeRate))
-    $('#rate_percent').data('system-rate', {{ $activeRate->rate_percent }});
-    @endif
 });
 </script>
 @endsection

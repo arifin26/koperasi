@@ -66,7 +66,7 @@
             theme: 'bootstrap4',
             placeholder: 'Cari Nama atau Nomor Rekening...',
             ajax: {
-                url: '/api/nasabah/search',
+                url: '{{ route("customer.search") }}',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -102,7 +102,7 @@
     function getCurrentBalance(id) {
         const _balance = $('input:text[name=balance]');
         const _withdrawal = $('input[name=amount]');
-        fetch(`/api/nasabah/${id}/saldo`)
+        fetch(`{{ url('/api/nasabah') }}/${id}/saldo`)
             .then(response => response.json())
             .then(data => {
                 _withdrawal.attr('max', data.data.current_balance);

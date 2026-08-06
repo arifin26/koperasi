@@ -70,7 +70,7 @@
             theme: 'bootstrap4',
             placeholder: 'Cari Nama atau Nomor Rekening...',
             ajax: {
-                url: '/api/nasabah/search',
+                url: '{{ route("customer.search") }}',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
