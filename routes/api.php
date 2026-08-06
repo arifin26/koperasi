@@ -19,11 +19,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
-    Route::get('/nasabah/search', [CustomerController::class, 'search'])->name('customer.search');
-    Route::get('/nasabah/{id}/saldo', [CustomerController::class, 'currentBalanceByDeposit'])->name('customer.balance');
-
-    // Modul 05 & 06
-    Route::get('/hari-libur/cek', [\App\Http\Controllers\HolidayController::class, 'check'])->name('holiday.check');
-    Route::get('/bunga/rate-aktif', [\App\Http\Controllers\InterestRateController::class, 'activeRates'])->name('interest.active');
 });
+
