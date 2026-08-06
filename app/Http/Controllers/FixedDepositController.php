@@ -83,14 +83,12 @@ class FixedDepositController extends Controller
 
     public function create()
     {
-        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
+        $activeRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
             ?? InterestRate::where('type', 'deposito_3_bulan')->where('is_active', 1)->first();
-
-        $defaultRate = $generalRate ? $generalRate->rate_percent : 5.00;
 
         return view('pages.fixed-deposit.create', [
             'title' => 'Buka Deposito Baru',
-            'defaultRate' => $defaultRate
+            'activeRate' => $activeRate
         ]);
     }
 
@@ -146,13 +144,12 @@ class FixedDepositController extends Controller
             return back()->with('error', 'Hanya deposito aktif yang dapat diperpanjang.');
         }
 
-        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first();
-        $defaultRate = $generalRate ? $generalRate->rate_percent : $fixed_deposit->rate_percent;
+        $activeRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first();
 
         return view('pages.fixed-deposit.extend', [
             'title' => 'Perpanjang Deposito ' . $fixed_deposit->number,
             'deposit' => $fixed_deposit,
-            'defaultRate' => $defaultRate
+            'activeRate' => $activeRate
         ]);
     }
 

@@ -114,14 +114,19 @@ class DepositController extends Controller
      */
     public function create()
     {
-        $rates = \App\Models\InterestRate::where('type', 'tabungan_sukarela')
+        // Ambil dari Manajemen Bunga: jenis 'simpanan' (baru) atau fallback 'tabungan_sukarela' (lama)
+        $rates = \App\Models\InterestRate::whereIn('type', ['simpanan', 'tabungan_sukarela'])
             ->orderBy('effective_date', 'desc')
             ->get();
+
+        // Rate simpanan aktif (terbaru) sebagai default
+        $activeRate = $rates->where('is_active', 1)->first();
 
         return view('pages.transaction.deposit.create', [
             'title' => $this->buildTitle('baru'),
             'customers' => Customer::where('status', 'active')->get(),
             'rates' => $rates,
+            'activeRate' => $activeRate,
             'types' => ['sukarela' => 'Simpanan Harian']
         ]);
     }

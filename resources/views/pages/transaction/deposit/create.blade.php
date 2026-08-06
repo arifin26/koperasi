@@ -48,9 +48,29 @@
                                         <select class="form-control @error('interest_rate_id') is-invalid @enderror" name="interest_rate_id">
                                             <option value="">-- Abaikan (Gunakan Rate Sebelumnya/Global) --</option>
                                             @foreach ($rates as $rate)
-                                            <option value="{{ $rate->id }}">Simpanan Harian — {{ $rate->rate_percent }}% p.a. (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})</option>
+                                            @php
+                                                $label = in_array($rate->type, ['simpanan','tabungan_sukarela']) ? 'Simpanan Harian' : ucfirst($rate->type);
+                                                $isActive = $rate->is_active ? ' ✔ (Aktif)' : '';
+                                                $selected = ($activeRate && $activeRate->id == $rate->id) ? 'selected' : '';
+                                            @endphp
+                                            <option value="{{ $rate->id }}" {{ $selected }}>
+                                                {{ $label }} — {{ $rate->rate_percent }}% p.a. (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }}){{ $isActive }}
+                                            </option>
                                             @endforeach
                                         </select>
+                                        @if($activeRate)
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle text-primary"></i>
+                                            Rate aktif dari Manajemen Bunga: <strong>{{ $activeRate->rate_percent }}% p.a.</strong>
+                                            (berlaku sejak {{ \Carbon\Carbon::parse($activeRate->effective_date)->isoFormat('D MMM Y') }}) telah dipilih otomatis.
+                                        </small>
+                                        @else
+                                        <small class="form-text text-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Rate Simpanan belum diatur di
+                                            <a href="{{ route('interest.create') }}" target="_blank">Manajemen Bunga</a>.
+                                        </small>
+                                        @endif
                                         <span class="error invalid-feedback">{{ $errors->first('interest_rate_id') }}</span>
                                     </div>
                                 </div>

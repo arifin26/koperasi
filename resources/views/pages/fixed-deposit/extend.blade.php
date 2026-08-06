@@ -31,10 +31,39 @@
 
                     <div class="form-group">
                         <label>Rate Bunga Baru (% p.a.) <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="number" step="0.01" min="0" max="100" name="rate_percent" id="rate_percent" class="form-control @error('rate_percent') is-invalid @enderror" value="{{ old('rate_percent', $defaultRate) }}" required placeholder="Contoh: 5.00">
-                            <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
-                        </div>
+                        @php
+                            $rateDefault = $activeRate ? $activeRate->rate_percent : $deposit->rate_percent;
+                        @endphp
+                        @if($activeRate)
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" max="100"
+                                    name="rate_percent" id="rate_percent"
+                                    class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
+                                    value="{{ old('rate_percent', $activeRate->rate_percent) }}"
+                                    required readonly>
+                                <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
+                            </div>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle text-primary"></i>
+                                Dari Manajemen Bunga: <strong>{{ $activeRate->rate_percent }}%</strong>
+                                (berlaku sejak {{ \Carbon\Carbon::parse($activeRate->effective_date)->isoFormat('D MMM Y') }}).
+                                <a href="#" id="overrideRateLink">Ubah manual?</a>
+                            </small>
+                        @else
+                            <div class="alert alert-warning py-1 mb-1" style="font-size:.85rem">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Rate Deposito belum diatur di Manajemen Bunga.
+                                <a href="{{ route('interest.create') }}" target="_blank">Tambah sekarang</a>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" max="100"
+                                    name="rate_percent" id="rate_percent"
+                                    class="form-control @error('rate_percent') is-invalid @enderror"
+                                    value="{{ old('rate_percent', $deposit->rate_percent) }}"
+                                    required placeholder="Masukkan rate bunga">
+                                <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
+                            </div>
+                        @endif
                         @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -48,4 +77,28 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+$(document).ready(function() {
+    // Override rate link toggle
+    $('#overrideRateLink').on('click', function(e) {
+        e.preventDefault();
+        var field = $('#rate_percent');
+        if (field.prop('readonly')) {
+            field.prop('readonly', false).focus().removeClass('font-weight-bold').addClass('border-warning');
+            $(this).text('Gunakan dari Manajemen Bunga');
+        } else {
+            field.prop('readonly', true).addClass('font-weight-bold').removeClass('border-warning');
+            field.val(field.data('system-rate'));
+            $(this).text('Ubah manual?');
+        }
+    });
+
+    @if($activeRate)
+    $('#rate_percent').data('system-rate', {{ $activeRate->rate_percent }});
+    @endif
+});
+</script>
 @endsection
