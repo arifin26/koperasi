@@ -21,21 +21,21 @@
                     </table>
 
                     <div class="form-group">
-                        <label>Tenor Baru <span class="text-danger">*</span></label>
-                        @php $tenors = [3,6,12]; @endphp
-                        @foreach($tenors as $t)
-                            @php
-                                $rateKey = 'deposito_'.$t.'_bulan';
-                                $rateValue = isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : '-';
-                            @endphp
-                            <div class="custom-control custom-radio">
-                                <input class="custom-control-input" type="radio" name="tenor_months" id="tenor_{{ $t }}" value="{{ $t }}" {{ $t == $deposit->tenor_months ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="tenor_{{ $t }}">
-                                    {{ $t }} Bulan — <strong>{{ $rateValue }}% p.a.</strong>
-                                </label>
-                            </div>
-                        @endforeach
+                        <label>Tenor Baru (Bulan) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" min="1" max="120" name="tenor_months" id="tenor_months" class="form-control @error('tenor_months') is-invalid @enderror" value="{{ old('tenor_months', $deposit->tenor_months) }}" required placeholder="Contoh: 3, 6, 12">
+                            <div class="input-group-append"><span class="input-group-text">Bulan</span></div>
+                        </div>
                         @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rate Bunga Baru (% p.a.) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" max="100" name="rate_percent" id="rate_percent" class="form-control @error('rate_percent') is-invalid @enderror" value="{{ old('rate_percent', $defaultRate) }}" required placeholder="Contoh: 5.00">
+                            <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
+                        </div>
+                        @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="card-footer">

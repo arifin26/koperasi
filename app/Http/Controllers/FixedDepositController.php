@@ -83,17 +83,14 @@ class FixedDepositController extends Controller
 
     public function create()
     {
-        $rates = InterestRate::where('is_active', 1)
-            ->whereIn('type', ['deposito', 'deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
-            ->get()
-            ->keyBy('type');
+        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
+            ?? InterestRate::where('type', 'deposito_3_bulan')->where('is_active', 1)->first();
 
-        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first();
+        $defaultRate = $generalRate ? $generalRate->rate_percent : 5.00;
 
         return view('pages.fixed-deposit.create', [
             'title' => 'Buka Deposito Baru',
-            'rates' => $rates,
-            'generalRate' => $generalRate
+            'defaultRate' => $defaultRate
         ]);
     }
 
@@ -102,7 +99,8 @@ class FixedDepositController extends Controller
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'amount' => 'required|integer|min:1000000',
-            'tenor_months' => 'required|in:3,6,12',
+            'tenor_months' => 'required|integer|min:1|max:120',
+            'rate_percent' => 'required|numeric|between:0,100',
         ]);
 
         $customer = Customer::findOrFail($request->customer_id);
@@ -110,24 +108,15 @@ class FixedDepositController extends Controller
             return back()->withErrors(['customer_id' => 'Nasabah tidak aktif.'])->withInput();
         }
 
-        // Get locked rate (prefer general deposito rate, fallback to tenor rate)
-        $rateType = 'deposito_' . $request->tenor_months . '_bulan';
-        $rate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
-            ?? InterestRate::where('type', $rateType)->where('is_active', 1)->first();
-
-        if (!$rate) {
-            return back()->withErrors(['tenor_months' => 'Rate bunga deposito belum diatur.'])->withInput();
-        }
-
         $startDate = Carbon::today();
-        $maturityDate = $startDate->copy()->addMonths($request->tenor_months);
+        $maturityDate = $startDate->copy()->addMonths((int)$request->tenor_months);
 
         FixedDeposit::create([
             'number' => FixedDeposit::generateNumber(),
             'customer_id' => $request->customer_id,
             'amount' => $request->amount,
             'tenor_months' => $request->tenor_months,
-            'rate_percent' => $rate->rate_percent,
+            'rate_percent' => $request->rate_percent,
             'start_date' => $startDate,
             'maturity_date' => $maturityDate,
             'status' => 'active',
@@ -157,37 +146,28 @@ class FixedDepositController extends Controller
             return back()->with('error', 'Hanya deposito aktif yang dapat diperpanjang.');
         }
 
-        $rates = InterestRate::where('is_active', 1)
-            ->whereIn('type', ['deposito', 'deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
-            ->get()
-            ->keyBy('type');
+        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first();
+        $defaultRate = $generalRate ? $generalRate->rate_percent : $fixed_deposit->rate_percent;
 
         return view('pages.fixed-deposit.extend', [
             'title' => 'Perpanjang Deposito ' . $fixed_deposit->number,
             'deposit' => $fixed_deposit,
-            'rates' => $rates
+            'defaultRate' => $defaultRate
         ]);
     }
 
     public function extend(Request $request, FixedDeposit $fixed_deposit)
     {
         $request->validate([
-            'tenor_months' => 'required|in:3,6,12',
+            'tenor_months' => 'required|integer|min:1|max:120',
+            'rate_percent' => 'required|numeric|between:0,100',
         ]);
 
         if ($fixed_deposit->status !== 'active') {
             return back()->with('error', 'Hanya deposito aktif yang dapat diperpanjang.');
         }
 
-        $rateType = 'deposito_' . $request->tenor_months . '_bulan';
-        $rate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
-            ?? InterestRate::where('type', $rateType)->where('is_active', 1)->first();
-
-        if (!$rate) {
-            return back()->withErrors(['tenor_months' => 'Rate bunga deposito belum diatur.'])->withInput();
-        }
-
-        DB::transaction(function () use ($fixed_deposit, $request, $rate) {
+        DB::transaction(function () use ($fixed_deposit, $request) {
             // Mark old deposit as extended
             $fixed_deposit->update([
                 'status' => 'extended',
@@ -201,9 +181,9 @@ class FixedDepositController extends Controller
                 'customer_id' => $fixed_deposit->customer_id,
                 'amount' => $fixed_deposit->amount,
                 'tenor_months' => $request->tenor_months,
-                'rate_percent' => $rate->rate_percent,
+                'rate_percent' => $request->rate_percent,
                 'start_date' => $startDate,
-                'maturity_date' => $startDate->copy()->addMonths($request->tenor_months),
+                'maturity_date' => $startDate->copy()->addMonths((int)$request->tenor_months),
                 'status' => 'active',
                 'extended_from_id' => $fixed_deposit->id,
                 'notes' => 'Perpanjangan dari ' . $fixed_deposit->number,

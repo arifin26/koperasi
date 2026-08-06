@@ -29,33 +29,24 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Pilih Tenor <span class="text-danger">*</span></label>
-                                <select class="form-control tenor-select @error('tenor_months') is-invalid @enderror" name="tenor_months" id="tenor_months" required>
-                                    <option value="">-- Pilih Tenor --</option>
-                                    @php 
-                                        $tenors = [3, 6, 12]; 
-                                        $genRate = isset($generalRate) ? $generalRate->rate_percent : null;
-                                    @endphp
-                                    @foreach($tenors as $t)
-                                        @php
-                                            $rateKey = 'deposito_'.$t.'_bulan';
-                                            $rateValue = $genRate ?? (isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : 0);
-                                        @endphp
-                                        <option value="{{ $t }}" data-rate="{{ $rateValue }}" {{ old('tenor_months') == $t ? 'selected' : '' }}>
-                                            {{ $t }} Bulan
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label>Tenor Deposito <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" min="1" max="120" name="tenor_months" id="tenor_months" class="form-control @error('tenor_months') is-invalid @enderror" value="{{ old('tenor_months', 3) }}" required placeholder="Contoh: 3, 6, 12">
+                                    <div class="input-group-append"><span class="input-group-text">Bulan</span></div>
+                                </div>
+                                <small class="form-text text-muted">Bebas menginputkan durasi tenor dalam bulan.</small>
                                 @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Rate Bunga (% p.a.)</label>
+                                <label>Rate Bunga (% p.a.) <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="text" id="rate_display" class="form-control font-weight-bold" disabled value="-">
+                                    <input type="number" step="0.01" min="0" max="100" name="rate_percent" id="rate_percent" class="form-control @error('rate_percent') is-invalid @enderror" value="{{ old('rate_percent', $defaultRate) }}" required placeholder="Contoh: 5.00">
                                     <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
                                 </div>
+                                <small class="form-text text-muted">Rate default dari sistem, dapat diubah (custom).</small>
+                                @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
@@ -133,20 +124,15 @@ $(document).ready(function() {
     // Auto-calculate maturity & interest
     function recalculate() {
         var amount = parseInt($('input[name="amount"]').val()) || 0;
-        var selected = $('#tenor_months').find(':selected');
+        var tenor = parseInt($('#tenor_months').val()) || 0;
+        var rate = parseFloat($('#rate_percent').val()) || 0;
         
-        if (selected.val() === "") {
-            $('#rate_display').val('-');
+        if (tenor <= 0) {
             $('#maturity_display').val('-');
             $('#monthly_interest_display').val('-');
             $('#total_interest_display').val('-');
             return;
         }
-
-        var tenor = parseInt(selected.val());
-        var rate = parseFloat(selected.data('rate')) || 0;
-        
-        $('#rate_display').val(rate ? rate.toFixed(2) : '-');
 
         // Maturity date calculation
         var maturity = new Date();
@@ -167,8 +153,7 @@ $(document).ready(function() {
         }
     }
 
-    $('input[name="amount"]').on('input', recalculate);
-    $('#tenor_months').on('change', recalculate);
+    $('input[name="amount"], #tenor_months, #rate_percent').on('input change', recalculate);
     recalculate();
 });
 </script>
