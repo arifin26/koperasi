@@ -98,11 +98,11 @@
                         @enderror
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" class="form-control @error('password') is-invalid @enderror"
+                        <input type="password" id="password" class="form-control @error('password') is-invalid @enderror"
                             name="password" placeholder="Password">
                         <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-lock"></span>
+                            <div class="input-group-text toggle-password" style="cursor: pointer;" title="Tampilkan / Sembunyikan Password">
+                                <span class="fas fa-eye" id="togglePasswordIcon"></span>
                             </div>
                         </div>
                         @error('password')
@@ -144,6 +144,19 @@
             @elseif(session('error'))
                 notification('error', '{{ session('error') }}')
             @endif
+
+            // Toggle show/hide password
+            $('.toggle-password').on('click', function() {
+                var passwordInput = $('#password');
+                var icon = $('#togglePasswordIcon');
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
 
         });
 
