@@ -137,11 +137,7 @@ $(document).ready(function() {
             delay: 300,
             data: function(params) { return { q: params.term }; },
             processResults: function(data) {
-                return {
-                    results: data.map(function(item) {
-                        return { id: item.id, text: item.number + ' — ' + item.name };
-                    })
-                };
+                return { results: data.results };
             }
         }
     });
