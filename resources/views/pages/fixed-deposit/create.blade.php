@@ -26,22 +26,38 @@
                         @error('amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="form-group">
-                        <label>Tenor & Pilihan Bunga <span class="text-danger">*</span></label>
-                        <select class="form-control tenor-select @error('tenor_months') is-invalid @enderror" name="tenor_months" id="tenor_months">
-                            <option value="">-- Pilih Tenor --</option>
-                            @php $tenors = [3,6,12]; @endphp
-                            @foreach($tenors as $t)
-                                @php
-                                    $rateKey = 'deposito_'.$t.'_bulan';
-                                    $rateValue = isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : '-';
-                                @endphp
-                                <option value="{{ $t }}" data-rate="{{ $rateValue }}" {{ old('tenor_months') == $t ? 'selected' : '' }}>
-                                    Deposito {{ $t }} Bulan — {{ $rateValue }}% p.a.
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Pilih Tenor <span class="text-danger">*</span></label>
+                                <select class="form-control tenor-select @error('tenor_months') is-invalid @enderror" name="tenor_months" id="tenor_months" required>
+                                    <option value="">-- Pilih Tenor --</option>
+                                    @php 
+                                        $tenors = [3, 6, 12]; 
+                                        $genRate = isset($generalRate) ? $generalRate->rate_percent : null;
+                                    @endphp
+                                    @foreach($tenors as $t)
+                                        @php
+                                            $rateKey = 'deposito_'.$t.'_bulan';
+                                            $rateValue = $genRate ?? (isset($rates[$rateKey]) ? $rates[$rateKey]->rate_percent : 0);
+                                        @endphp
+                                        <option value="{{ $t }}" data-rate="{{ $rateValue }}" {{ old('tenor_months') == $t ? 'selected' : '' }}>
+                                            {{ $t }} Bulan
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Rate Bunga (% p.a.)</label>
+                                <div class="input-group">
+                                    <input type="text" id="rate_display" class="form-control font-weight-bold" disabled value="-">
+                                    <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -56,14 +72,24 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tanggal Jatuh Tempo</label>
-                                <input type="text" id="maturity_display" class="form-control" disabled value="-">
+                                <input type="text" id="maturity_display" class="form-control font-weight-bold text-primary" disabled value="-">
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Estimasi Bunga per Bulan</label>
-                        <input type="text" id="monthly_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Estimasi Bunga per Bulan</label>
+                                <input type="text" id="monthly_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Estimasi Total Bunga (s.d Jatuh Tempo)</label>
+                                <input type="text" id="total_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -109,24 +135,36 @@ $(document).ready(function() {
         var amount = parseInt($('input[name="amount"]').val()) || 0;
         var selected = $('#tenor_months').find(':selected');
         
-        if (selected.val() === "" || amount < 1000000) {
+        if (selected.val() === "") {
+            $('#rate_display').val('-');
             $('#maturity_display').val('-');
             $('#monthly_interest_display').val('-');
+            $('#total_interest_display').val('-');
             return;
         }
 
         var tenor = parseInt(selected.val());
-        var rate = parseFloat(selected.data('rate'));
+        var rate = parseFloat(selected.data('rate')) || 0;
+        
+        $('#rate_display').val(rate ? rate.toFixed(2) : '-');
 
-        // Maturity date
+        // Maturity date calculation
         var maturity = new Date();
         maturity.setMonth(maturity.getMonth() + tenor);
         var options = { day: '2-digit', month: 'long', year: 'numeric' };
         $('#maturity_display').val(maturity.toLocaleDateString('id-ID', options));
 
-        // Monthly interest
-        var monthlyInterest = Math.floor(amount * (rate / 100) / 12);
-        $('#monthly_interest_display').val('Rp ' + monthlyInterest.toLocaleString('id-ID') + ' / bulan');
+        if (amount >= 1000000 && rate > 0) {
+            // Monthly interest
+            var monthlyInterest = Math.floor(amount * (rate / 100) / 12);
+            var totalInterest = monthlyInterest * tenor;
+
+            $('#monthly_interest_display').val('Rp ' + monthlyInterest.toLocaleString('id-ID') + ' / bulan');
+            $('#total_interest_display').val('Rp ' + totalInterest.toLocaleString('id-ID') + ' (selama ' + tenor + ' bulan)');
+        } else {
+            $('#monthly_interest_display').val('-');
+            $('#total_interest_display').val('-');
+        }
     }
 
     $('input[name="amount"]').on('input', recalculate);

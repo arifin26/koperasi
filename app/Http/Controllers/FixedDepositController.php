@@ -84,13 +84,16 @@ class FixedDepositController extends Controller
     public function create()
     {
         $rates = InterestRate::where('is_active', 1)
-            ->whereIn('type', ['deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
+            ->whereIn('type', ['deposito', 'deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
             ->get()
             ->keyBy('type');
 
+        $generalRate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first();
+
         return view('pages.fixed-deposit.create', [
             'title' => 'Buka Deposito Baru',
-            'rates' => $rates
+            'rates' => $rates,
+            'generalRate' => $generalRate
         ]);
     }
 
@@ -107,11 +110,13 @@ class FixedDepositController extends Controller
             return back()->withErrors(['customer_id' => 'Nasabah tidak aktif.'])->withInput();
         }
 
-        // Get locked rate based on tenor
+        // Get locked rate (prefer general deposito rate, fallback to tenor rate)
         $rateType = 'deposito_' . $request->tenor_months . '_bulan';
-        $rate = InterestRate::where('type', $rateType)->where('is_active', 1)->first();
+        $rate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
+            ?? InterestRate::where('type', $rateType)->where('is_active', 1)->first();
+
         if (!$rate) {
-            return back()->withErrors(['tenor_months' => 'Rate bunga untuk tenor ini belum diatur.'])->withInput();
+            return back()->withErrors(['tenor_months' => 'Rate bunga deposito belum diatur.'])->withInput();
         }
 
         $startDate = Carbon::today();
@@ -153,7 +158,7 @@ class FixedDepositController extends Controller
         }
 
         $rates = InterestRate::where('is_active', 1)
-            ->whereIn('type', ['deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
+            ->whereIn('type', ['deposito', 'deposito_3_bulan', 'deposito_6_bulan', 'deposito_12_bulan'])
             ->get()
             ->keyBy('type');
 
@@ -175,9 +180,11 @@ class FixedDepositController extends Controller
         }
 
         $rateType = 'deposito_' . $request->tenor_months . '_bulan';
-        $rate = InterestRate::where('type', $rateType)->where('is_active', 1)->first();
+        $rate = InterestRate::where('type', 'deposito')->where('is_active', 1)->first()
+            ?? InterestRate::where('type', $rateType)->where('is_active', 1)->first();
+
         if (!$rate) {
-            return back()->withErrors(['tenor_months' => 'Rate bunga untuk tenor ini belum diatur.'])->withInput();
+            return back()->withErrors(['tenor_months' => 'Rate bunga deposito belum diatur.'])->withInput();
         }
 
         DB::transaction(function () use ($fixed_deposit, $request, $rate) {

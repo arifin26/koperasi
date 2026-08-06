@@ -16,10 +16,8 @@
                     <div class="form-group">
                         <label>Jenis Simpanan/Deposito <span class="text-danger">*</span></label>
                         <select name="type" class="form-control @error('type') is-invalid @enderror" required>
-                            <option value="tabungan_sukarela">Simpanan Harian</option>
-                            <option value="deposito_3_bulan">Deposito 3 Bulan</option>
-                            <option value="deposito_6_bulan">Deposito 6 Bulan</option>
-                            <option value="deposito_12_bulan">Deposito 12 Bulan</option>
+                            <option value="tabungan_sukarela" {{ old('type') == 'tabungan_sukarela' ? 'selected' : '' }}>Simpanan</option>
+                            <option value="deposito" {{ old('type') == 'deposito' ? 'selected' : '' }}>Deposito</option>
                         </select>
                         @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>

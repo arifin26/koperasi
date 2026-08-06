@@ -14,10 +14,8 @@
                     <div class="form-group">
                         <label>Jenis Simpanan/Deposito <span class="text-danger">*</span></label>
                         <select name="type" class="form-control @error('type') is-invalid @enderror" required>
-                            <option value="tabungan_sukarela" {{ $interest->type == 'tabungan_sukarela' ? 'selected' : '' }}>Simpanan Harian</option>
-                            <option value="deposito_3_bulan" {{ $interest->type == 'deposito_3_bulan' ? 'selected' : '' }}>Deposito 3 Bulan</option>
-                            <option value="deposito_6_bulan" {{ $interest->type == 'deposito_6_bulan' ? 'selected' : '' }}>Deposito 6 Bulan</option>
-                            <option value="deposito_12_bulan" {{ $interest->type == 'deposito_12_bulan' ? 'selected' : '' }}>Deposito 12 Bulan</option>
+                            <option value="tabungan_sukarela" {{ $interest->type == 'tabungan_sukarela' || $interest->type == 'simpanan' ? 'selected' : '' }}>Simpanan</option>
+                            <option value="deposito" {{ $interest->type == 'deposito' || strpos($interest->type, 'deposito_') === 0 ? 'selected' : '' }}>Deposito</option>
                         </select>
                         @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>

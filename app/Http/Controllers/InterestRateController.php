@@ -22,7 +22,8 @@ class InterestRateController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('type', function($row) {
-                    if ($row->type == 'tabungan_sukarela') return 'Simpanan Harian';
+                    if ($row->type == 'tabungan_sukarela' || $row->type == 'simpanan') return 'Simpanan';
+                    if ($row->type == 'deposito') return 'Deposito';
                     return ucwords(str_replace('_', ' ', $row->type));
                 })
                 ->editColumn('rate_percent', function($row) {
@@ -56,7 +57,8 @@ class InterestRateController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('type', function($row) {
-                    if ($row->type == 'tabungan_sukarela') return 'Simpanan Harian';
+                    if ($row->type == 'tabungan_sukarela' || $row->type == 'simpanan') return 'Simpanan';
+                    if ($row->type == 'deposito') return 'Deposito';
                     return ucwords(str_replace('_', ' ', $row->type));
                 })
                 ->editColumn('rate_percent', function($row) {
@@ -94,7 +96,7 @@ class InterestRateController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:tabungan_sukarela,tabungan_wajib,deposito_3_bulan,deposito_6_bulan,deposito_12_bulan',
+            'type' => 'required|in:simpanan,tabungan_sukarela,tabungan_wajib,deposito,deposito_3_bulan,deposito_6_bulan,deposito_12_bulan',
             'rate_percent' => 'required|numeric|between:0.01,100',
             'effective_date' => 'required|date|after_or_equal:today',
         ]);
@@ -130,7 +132,7 @@ class InterestRateController extends Controller
     public function update(Request $request, InterestRate $interest)
     {
         $request->validate([
-            'type' => 'required|in:tabungan_sukarela,tabungan_wajib,deposito_3_bulan,deposito_6_bulan,deposito_12_bulan',
+            'type' => 'required|in:simpanan,tabungan_sukarela,tabungan_wajib,deposito,deposito_3_bulan,deposito_6_bulan,deposito_12_bulan',
             'rate_percent' => 'required|numeric|between:0.01,100',
             'effective_date' => 'required|date',
         ]);
