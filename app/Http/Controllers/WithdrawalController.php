@@ -88,7 +88,7 @@ class WithdrawalController extends Controller
                 ->editColumn('current_balance', function($row) {
                     return 'Rp' . number_format($row->current_balance, 2, ',', '.');
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'customer'])
                 ->make(true);
         }
         return view('pages.transaction.withdrawal.index', [
