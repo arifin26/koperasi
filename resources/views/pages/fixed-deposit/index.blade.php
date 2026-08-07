@@ -80,17 +80,34 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('style')
+    <!-- Datatable -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap4.min.css">
+@endpush
+
+@push('script')
+    <!--Datatable-->
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap4.min.js"></script>
+
 <script>
 $(document).ready(function() {
     var table = $('#deposito-table').DataTable({
         processing: true,
         serverSide: true,
+        autoWidth: false,
+        responsive: true,
         ajax: {
             url: "{{ route('fixed-deposit.index') }}",
             data: function(d) {
                 d.status = $('#filter_status').val();
             }
+        },
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
         },
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
@@ -109,4 +126,4 @@ $(document).ready(function() {
     $('#filter_status').change(function() { table.draw(); });
 });
 </script>
-@endsection
+@endpush

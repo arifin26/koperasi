@@ -124,11 +124,18 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('style')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+@endpush
+
+@push('script')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
     // Select2 AJAX for customer
     $('#customer_id').select2({
+        theme: 'bootstrap4',
         placeholder: 'Ketik Nama / No. Rekening Nasabah...',
         allowClear: true,
         minimumInputLength: 2,
@@ -179,4 +186,4 @@ $(document).ready(function() {
     recalculate();
 });
 </script>
-@endsection
+@endpush
