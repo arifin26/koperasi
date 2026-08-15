@@ -78,9 +78,9 @@ class InterestCalculateDaily extends Command
                 // Calculate real balance up to yesterday
                 $balances = DB::table("deposits")
                     ->selectRaw("
-                        SUM(CASE WHEN type="sukarela" THEN amount ELSE 0 END) as sum_sukarela,
-                        SUM(CASE WHEN type="wajib" THEN amount ELSE 0 END) as sum_wajib,
-                        SUM(CASE WHEN type="penarikan" THEN amount ELSE 0 END) as sum_penarikan
+                        SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sum_sukarela,
+                        SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as sum_wajib,
+                        SUM(CASE WHEN type='penarikan' THEN amount ELSE 0 END) as sum_penarikan
                     ")
                     ->where("customer_id", $customer->id)
                     ->whereDate("created_at", "<", $dateStr)
