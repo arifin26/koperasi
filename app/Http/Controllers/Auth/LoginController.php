@@ -29,6 +29,8 @@ class LoginController extends Controller
      */
     protected function authenticated(\Illuminate\Http\Request $request, $user)
     {
+        // SEMENTARA DIMATIKAN KARENA ERROR DI SERVER
+        /*
         try {
             $syncRun = InterestSyncService::syncOnLogin($user->id);
             Log::info("Interest sync triggered on login", [
@@ -42,5 +44,6 @@ class LoginController extends Controller
                 "user_id" => $user->id,
             ]);
         }
+        */
     }
 }
