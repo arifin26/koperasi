@@ -49,7 +49,7 @@
                 <h5><i class="icon fas fa-info"></i> Status Engine Bunga</h5>
                 @if($lastEngineLog)
                     Terakhir berjalan: {{ \Carbon\Carbon::parse($lastEngineLog->run_date)->isoFormat('dddd, D MMMM Y HH:mm') }}<br>
-                    Status: {{ ucfirst($lastEngineLog->status) }} | Total diproses: {{ $lastEngineLog->total_customers_processed }} nasabah
+                    Status: {{ ucfirst($lastEngineLog->status) }} | Total diproses: {{ $lastEngineLog->total_customers }} nasabah
                 @else
                     Engine belum pernah berjalan.
                 @endif
