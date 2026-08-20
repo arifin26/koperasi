@@ -48,7 +48,7 @@
             @foreach($data as $i => $row)
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</td>
+                <td>{{ (\Carbon\Carbon::parse($row->created_at)->format('H:i:s') === '00:00:00' && $row->updated_at) ? \Carbon\Carbon::parse($row->updated_at)->format('H:i') : \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</td>
                 <td>{{ $row->customer->number ?? '-' }}</td>
                 <td>{{ $row->customer->name ?? '-' }}</td>
                 <td>{{ ucfirst($row->type) }}</td>

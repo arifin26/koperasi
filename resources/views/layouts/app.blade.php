@@ -266,7 +266,37 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <script>
         $(document).ready(function() {
 
-            @if (session('success'))
+            @if (session('receipt_url'))
+                Swal.fire({
+                    title: 'Transaksi Berhasil!',
+                    text: "{{ session('success') }}",
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-print"></i> Cetak Kwitansi',
+                    cancelButtonText: 'Selesai',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open("{{ session('receipt_url') }}", '_blank');
+                    }
+                });
+            @elseif (session('deletion_receipt_url'))
+                Swal.fire({
+                    title: 'Transaksi Berhasil Dihapus',
+                    text: "{{ session('success') }}",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-print"></i> Cetak Kwitansi Penghapusan',
+                    cancelButtonText: 'Selesai',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open("{{ session('deletion_receipt_url') }}", '_blank');
+                    }
+                });
+            @elseif (session('success'))
                 notification('success', '{{ session('success') }}')
             @elseif (session('error'))
                 notification('error', '{{ session('error') }}')

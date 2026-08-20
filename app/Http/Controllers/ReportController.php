@@ -27,7 +27,11 @@ class ReportController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('created_at', function($row) {
-                    return Carbon::parse($row->created_at)->isoFormat('HH:mm');
+                    $createdAt = Carbon::parse($row->created_at);
+                    if ($createdAt->format('H:i:s') === '00:00:00' && $row->updated_at) {
+                        return Carbon::parse($row->updated_at)->format('H:i');
+                    }
+                    return $createdAt->format('H:i');
                 })
                 ->editColumn('customer', function($row) {
                     return $row->customer ? $row->customer->name : '-';

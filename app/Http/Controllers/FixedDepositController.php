@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\InterestRate;
 use App\Models\User;
+use App\Helpers\TerbilangHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,9 +66,10 @@ class FixedDepositController extends Controller
                     return $row->status_label;
                 })
                 ->addColumn('action', function($row) {
-                    $btn = '<a href="'.route('fixed-deposit.show', $row).'" class="btn btn-success btn-xs px-2">Detail</a> ';
+                    $btn = '<a href="'.route('fixed-deposit.receipt', $row).'" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a> ';
+                    $btn .= '<a href="'.route('fixed-deposit.show', $row).'" class="btn btn-success btn-xs px-2 mx-1">Detail</a> ';
                     if ($row->status == 'active') {
-                        $btn .= '<a href="'.route('fixed-deposit.extend.form', $row).'" class="btn btn-info btn-xs px-2 mx-1">Perpanjang</a> ';
+                        $btn .= '<a href="'.route('fixed-deposit.extend.form', $row).'" class="btn btn-info btn-xs px-2 mr-1">Perpanjang</a> ';
                         $btn .= '<a href="'.route('fixed-deposit.liquidate.form', $row).'" class="btn btn-warning btn-xs px-2">Cairkan</a>';
                     }
                     return $btn;
@@ -114,7 +116,7 @@ class FixedDepositController extends Controller
         $startDate = Carbon::today();
         $maturityDate = $startDate->copy()->addMonths((int)$request->tenor_months);
 
-        FixedDeposit::create([
+        $deposit = FixedDeposit::create([
             'number' => FixedDeposit::generateNumber(),
             'customer_id' => $request->customer_id,
             'amount' => $request->amount,
@@ -127,7 +129,9 @@ class FixedDepositController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        return redirect()->route('fixed-deposit.index')->with('success', 'Deposito berhasil dibuka!');
+        return redirect()->route('fixed-deposit.index')
+            ->with('success', 'Deposito berhasil dibuka!')
+            ->with('receipt_url', route('fixed-deposit.receipt', $deposit));
     }
 
     public function show(FixedDeposit $fixed_deposit)
@@ -282,5 +286,57 @@ class FixedDepositController extends Controller
 
         $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_laporan_deposito_' . time() . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function receipt(FixedDeposit $fixed_deposit)
+    {
+        $fixed_deposit->load(['customer', 'creator']);
+        $terbilang = TerbilangHelper::make($fixed_deposit->amount);
+
+        $pdf = Pdf::loadView('pages.fixed-deposit.receipt', [
+            'title' => 'Tanda Terima Deposito ' . $fixed_deposit->number,
+            'fixed_deposit' => $fixed_deposit,
+            'terbilang' => $terbilang,
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Kwitansi_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    public function destroy(FixedDeposit $fixed_deposit)
+    {
+        try {
+            DB::beginTransaction();
+            $deletedId = $fixed_deposit->id;
+            $fixed_deposit->delete();
+            DB::commit();
+
+            return back()
+                ->with('success', 'Berhasil menghapus data deposito nasabah!')
+                ->with('deletion_receipt_url', route('fixed-deposit.destroy-receipt', $deletedId));
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', $th->getMessage());
+        }
+    }
+
+    public function destroyReceipt($id)
+    {
+        $fixed_deposit = FixedDeposit::withTrashed()->with(['customer', 'creator'])->findOrFail($id);
+        abort_if(!$fixed_deposit->trashed(), 403, 'Deposito ini belum dihapus.');
+
+        $terbilang = TerbilangHelper::make($fixed_deposit->amount);
+
+        $pdf = Pdf::loadView('pages.fixed-deposit.destroy-receipt', [
+            'title'         => 'Bukti Penghapusan Deposito ' . $fixed_deposit->number,
+            'fixed_deposit' => $fixed_deposit,
+            'terbilang'     => $terbilang,
+            'deletedBy'     => auth()->user()->name ?? '-',
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Bukti_Hapus_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
     }
 }

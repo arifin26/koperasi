@@ -12,7 +12,8 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label>Nasabah <span class="text-danger">*</span></label>
-                        <select name="customer_id" id="customer_id" class="form-control select2-ajax @error('customer_id') is-invalid @enderror" required>
+                        <select name="customer_id" id="customer_id" data-placeholder="Ketik beberapa kata nama nasabah untuk mencari..." class="form-control select2-ajax @error('customer_id') is-invalid @enderror" required>
+                            <option value=""></option>
                         </select>
                         @error('customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -136,9 +137,14 @@ $(document).ready(function() {
     // Select2 AJAX for customer
     $('#customer_id').select2({
         theme: 'bootstrap4',
-        placeholder: 'Ketik Nama / No. Rekening Nasabah...',
+        placeholder: 'Ketik beberapa kata nama nasabah untuk mencari...',
         allowClear: true,
         minimumInputLength: 2,
+        language: {
+            inputTooShort: function () {
+                return 'Ketik minimal 2 huruf nama nasabah...';
+            }
+        },
         ajax: {
             url: '{{ route("customer.search") }}',
             dataType: 'json',
