@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\WithdrawalController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,6 +43,13 @@ Route::middleware('auth')->group(function() {
     Route::get('/api/bunga/rate-aktif', [App\Http\Controllers\InterestRateController::class, 'activeRates'])->name('interest.active');
 
     Route::as('transaction.')->prefix('transaksi')->group(function() {
+        Route::get('/simpanan/{simpanan}/kwitansi', [DepositController::class, 'receipt'])->name('deposit.receipt');
+        Route::get('/penarikan/{penarikan}/kwitansi', [WithdrawalController::class, 'receipt'])->name('withdrawal.receipt');
+
+        // Kwitansi penghapusan — menggunakan plain {id} karena record sudah soft-deleted
+        Route::get('/simpanan/{id}/kwitansi-hapus', [DepositController::class, 'destroyReceipt'])->name('deposit.destroy-receipt');
+        Route::get('/penarikan/{id}/kwitansi-hapus', [WithdrawalController::class, 'destroyReceipt'])->name('withdrawal.destroy-receipt');
+
         Route::resource('/simpanan', DepositController::class, ['names' => 'deposit']);
         Route::resource('/penarikan', WithdrawalController::class, ['names' => 'withdrawal']);
 
@@ -55,6 +63,9 @@ Route::middleware('auth')->group(function() {
     Route::resource('interest', App\Http\Controllers\InterestRateController::class);
 
     // Modul 09 — Deposito
+    Route::get('deposito/{fixed_deposit}/kwitansi', [App\Http\Controllers\FixedDepositController::class, 'receipt'])->name('fixed-deposit.receipt');
+    // Kwitansi penghapusan — menggunakan plain {id} karena record sudah soft-deleted
+    Route::get('deposito/{id}/kwitansi-hapus', [App\Http\Controllers\FixedDepositController::class, 'destroyReceipt'])->name('fixed-deposit.destroy-receipt');
     Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, ['names' => 'fixed-deposit'])->except(['edit', 'update']);
     Route::get('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extendForm'])->name('fixed-deposit.extend.form');
     Route::post('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extend'])->name('fixed-deposit.extend');

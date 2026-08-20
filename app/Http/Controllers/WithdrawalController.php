@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateDepositRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\User;
+use App\Helpers\TerbilangHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,8 +49,9 @@ class WithdrawalController extends Controller
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
                     if ($row->customer) {
-                        return '<a href="' . route('transaction.withdrawal.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
-                                <a href="' . route('transaction.withdrawal.edit', $row) . '" class="btn btn-primary btn-xs px-2 mx-1"> Edit </a>
+                        return '<a href="' . route('transaction.withdrawal.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a>
+                                <a href="' . route('transaction.withdrawal.show', $row) . '" class="btn btn-success btn-xs px-2 mx-1"> Detail </a>
+                                <a href="' . route('transaction.withdrawal.edit', $row) . '" class="btn btn-primary btn-xs px-2 mr-1"> Edit </a>
                                 <form class="d-inline" method="POST" action="' . route('transaction.withdrawal.destroy', $row) . '">
                                     <input type="hidden" name="_method" value="DELETE">
                                     <input type="hidden" name="_token" value="' . csrf_token() . '" />
@@ -57,7 +59,8 @@ class WithdrawalController extends Controller
                                 </form>';
                     }
 
-                    return '<form class="d-inline" method="POST" action="' . route('transaction.withdrawal.destroy', $row) . '">
+                    return '<a href="' . route('transaction.withdrawal.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1"><i class="fas fa-print"></i> Kwitansi</a>
+                        <form class="d-inline" method="POST" action="' . route('transaction.withdrawal.destroy', $row) . '">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="_token" value="' . csrf_token() . '" />
                         <button type="submit" class="btn btn-danger btn-xs px-2 delete-data"> Hapus </button>
@@ -134,15 +137,20 @@ class WithdrawalController extends Controller
             }
 
             $data = $request->all();
+            if ($request->filled('created_at')) {
+                $data['created_at'] = Carbon::parse($request->created_at)->setTimeFrom(now());
+            }
             $data['previous_balance'] = 0;
             $data['current_balance'] = 0;
             $data['created_by'] = auth()->id();
             
-            Deposit::create($data);
+            $deposit = Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
             
             DB::commit();
-            return redirect()->route('transaction.withdrawal.index')->with('success', 'Berhasil menarik simpanan nasabah!');
+            return redirect()->route('transaction.withdrawal.index')
+                ->with('success', 'Berhasil menarik simpanan nasabah!')
+                ->with('receipt_url', route('transaction.withdrawal.receipt', $deposit));
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());
@@ -219,13 +227,16 @@ class WithdrawalController extends Controller
     {
         try {
             DB::beginTransaction();
+            $deletedId = $penarikan->id;
             $customerId = $penarikan->customer_id;
             $penarikan->delete();
             
             Deposit::recalculateBalance($customerId);
             DB::commit();
             
-            return back()->with('success', 'Berhasil menghapus penarikan simpanan nasabah!');
+            return back()
+                ->with('success', 'Berhasil menghapus penarikan simpanan nasabah!')
+                ->with('deletion_receipt_url', route('transaction.withdrawal.destroy-receipt', $deletedId));
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());
@@ -256,5 +267,44 @@ class WithdrawalController extends Controller
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download($filename);
+    }
+
+    public function receipt(Deposit $penarikan)
+    {
+        $penarikan->load(['customer', 'creator']);
+        $code = $this->buildTransactionCode($penarikan->id);
+        $terbilang = TerbilangHelper::make($penarikan->amount);
+
+        $pdf = Pdf::loadView('pages.transaction.withdrawal.receipt', [
+            'title' => 'Kwitansi Penarikan ' . $code,
+            'deposit' => $penarikan,
+            'code' => $code,
+            'terbilang' => $terbilang,
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Kwitansi_Penarikan_' . $code . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    public function destroyReceipt($id)
+    {
+        $penarikan = Deposit::withTrashed()->with(['customer', 'creator'])->findOrFail($id);
+        abort_if(!$penarikan->trashed(), 403, 'Transaksi ini belum dihapus.');
+
+        $code = $this->buildTransactionCode($penarikan->id);
+        $terbilang = TerbilangHelper::make($penarikan->amount);
+
+        $pdf = Pdf::loadView('pages.transaction.withdrawal.destroy-receipt', [
+            'title'     => 'Bukti Penghapusan Penarikan ' . $code,
+            'deposit'   => $penarikan,
+            'code'      => $code,
+            'terbilang' => $terbilang,
+            'deletedBy' => auth()->user()->name ?? '-',
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Bukti_Hapus_Penarikan_' . $code . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
     }
 }

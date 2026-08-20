@@ -5,6 +5,17 @@
         <div class="row">
             <div class="col">
                 <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title font-weight-bold">Detail Penarikan {{ $code }}</h3>
+                        <div class="ml-auto">
+                            <a href="{{ route('transaction.withdrawal.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-1">
+                                <i class="fas fa-print mr-1"></i> Cetak Kwitansi
+                            </a>
+                            <a href="{{ route('transaction.withdrawal.index') }}" class="btn btn-default btn-sm">
+                                <i class="fas fa-arrow-left mr-1"></i> Kembali
+                            </a>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12 col-md-6">

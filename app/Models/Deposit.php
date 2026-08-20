@@ -16,6 +16,11 @@ class Deposit extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public static function recalculateBalance($customerId)
     {
         $transactions = self::where('customer_id', $customerId)

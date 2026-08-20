@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateDepositRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\User;
+use App\Helpers\TerbilangHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -53,8 +54,9 @@ class DepositController extends Controller
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
                     if ($row->customer) {
-                        return '<a href="' . route('transaction.deposit.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
-                                <a href="' . route('transaction.deposit.edit', $row) . '" class="btn btn-primary btn-xs px-2 mx-1"> Edit </a>
+                        return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a>
+                                <a href="' . route('transaction.deposit.show', $row) . '" class="btn btn-success btn-xs px-2 mx-1"> Detail </a>
+                                <a href="' . route('transaction.deposit.edit', $row) . '" class="btn btn-primary btn-xs px-2 mr-1"> Edit </a>
                                 <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
                                     <input type="hidden" name="_method" value="DELETE">
                                     <input type="hidden" name="_token" value="' . csrf_token() . '" />
@@ -62,7 +64,8 @@ class DepositController extends Controller
                                 </form>';
                     }
 
-                    return '<form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
+                    return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1"><i class="fas fa-print"></i> Kwitansi</a>
+                        <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="_token" value="' . csrf_token() . '" />
                         <button type="submit" class="btn btn-danger btn-xs px-2 delete-data"> Hapus </button>
@@ -142,11 +145,14 @@ class DepositController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->except(['interest_rate_id']);
+            if ($request->filled('created_at')) {
+                $data['created_at'] = Carbon::parse($request->created_at)->setTimeFrom(now());
+            }
             $data['previous_balance'] = 0;
             $data['current_balance'] = 0;
             $data['created_by'] = auth()->id();
             
-            Deposit::create($data);
+            $deposit = Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
             
             if ($request->filled('interest_rate_id')) {
@@ -156,7 +162,9 @@ class DepositController extends Controller
             }
             
             DB::commit();
-            return redirect()->route('transaction.deposit.index')->with('success', 'Berhasil menambahkan simpanan nasabah!');
+            return redirect()->route('transaction.deposit.index')
+                ->with('success', 'Berhasil menambahkan simpanan nasabah!')
+                ->with('receipt_url', route('transaction.deposit.receipt', $deposit));
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());
@@ -229,13 +237,16 @@ class DepositController extends Controller
     {
         try {
             DB::beginTransaction();
+            $deletedId = $simpanan->id;
             $customerId = $simpanan->customer_id;
             $simpanan->delete();
             
             Deposit::recalculateBalance($customerId);
             DB::commit();
             
-            return back()->with('success', 'Berhasil menghapus simpanan nasabah!');
+            return back()
+                ->with('success', 'Berhasil menghapus simpanan nasabah!')
+                ->with('deletion_receipt_url', route('transaction.deposit.destroy-receipt', $deletedId));
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());
@@ -266,5 +277,44 @@ class DepositController extends Controller
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download($filename);
+    }
+
+    public function receipt(Deposit $simpanan)
+    {
+        $simpanan->load(['customer', 'creator']);
+        $code = $this->buildTransactionCode($simpanan->id);
+        $terbilang = TerbilangHelper::make($simpanan->amount);
+
+        $pdf = Pdf::loadView('pages.transaction.deposit.receipt', [
+            'title' => 'Kwitansi Simpanan ' . $code,
+            'deposit' => $simpanan,
+            'code' => $code,
+            'terbilang' => $terbilang,
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Kwitansi_Simpanan_' . $code . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    public function destroyReceipt($id)
+    {
+        $simpanan = Deposit::withTrashed()->with(['customer', 'creator'])->findOrFail($id);
+        abort_if(!$simpanan->trashed(), 403, 'Transaksi ini belum dihapus.');
+
+        $code = $this->buildTransactionCode($simpanan->id);
+        $terbilang = TerbilangHelper::make($simpanan->amount);
+
+        $pdf = Pdf::loadView('pages.transaction.deposit.destroy-receipt', [
+            'title'     => 'Bukti Penghapusan Simpanan ' . $code,
+            'deposit'   => $simpanan,
+            'code'      => $code,
+            'terbilang' => $terbilang,
+            'deletedBy' => auth()->user()->name ?? '-',
+        ]);
+        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+
+        $filename = 'Bukti_Hapus_Simpanan_' . $code . '_' . time() . '.pdf';
+        return $pdf->stream($filename);
     }
 }
