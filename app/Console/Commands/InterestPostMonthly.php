@@ -72,8 +72,7 @@ class InterestPostMonthly extends Command
                 ]);
 
                 // Recalculate balance for the customer (using the model's helper)
-                // Note: The model Deposit might have recalculateBalance method
-                Deposit::recalculateBalance($acc->customer_id, Carbon::createFromFormat('Y-m', $periodStr)->endOfMonth()->setTime(23,59,59));
+                Deposit::recalculateBalance($acc->customer_id);
             }
 
             // Mark as posted

@@ -78,8 +78,7 @@ class DepositController extends Controller
                     return Carbon::parse($row->created_at)->isoFormat('DD-MM-Y');
                 })
                 ->editColumn('type', function($row) {
-                    if ($row->type == 'sukarela') return 'Simpanan Harian';
-                    return ucfirst($row->type);
+                    return $row->type == 'bunga' ? 'Bunga' : 'Simpanan';
                 })
                 ->editColumn('customer', function($row) {
                     if ($row->customer) {
@@ -106,7 +105,7 @@ class DepositController extends Controller
         return view('pages.transaction.deposit.index', [
             'title' => $this->title,
             'customers' => Customer::all(),
-            'types' => ['sukarela' => 'Simpanan Harian']
+            'types' => ['simpanan' => 'Simpanan', 'bunga' => 'Bunga']
         ]);
     }
 
@@ -117,8 +116,8 @@ class DepositController extends Controller
      */
     public function create()
     {
-        // Ambil dari Manajemen Bunga: jenis 'simpanan' (baru) atau fallback 'tabungan_sukarela' (lama)
-        $rates = \App\Models\InterestRate::whereIn('type', ['simpanan', 'tabungan_sukarela'])
+        // Ambil dari Manajemen Bunga: jenis 'simpanan'
+        $rates = \App\Models\InterestRate::where('type', 'simpanan')
             ->orderBy('effective_date', 'desc')
             ->get();
 
@@ -130,7 +129,7 @@ class DepositController extends Controller
             'customers' => Customer::where('status', 'active')->get(),
             'rates' => $rates,
             'activeRate' => $activeRate,
-            'types' => ['sukarela' => 'Simpanan Harian']
+            'types' => ['simpanan' => 'Simpanan']
         ]);
     }
 
@@ -196,7 +195,7 @@ class DepositController extends Controller
     {
         return view('pages.transaction.deposit.edit', [
             'title' => $this->buildTitle('edit'),
-            'types' => ['sukarela', 'wajib', 'pokok'],
+            'types' => ['simpanan'],
             'code' => $this->buildTransactionCode($simpanan->id),
             'deposit' => $simpanan,
         ]);
@@ -257,8 +256,9 @@ class DepositController extends Controller
     {
         $customer = Customer::find($request->customer_id);
 
-        $data = Deposit::selectRaw("customer_id, DATE(created_at) as tanggal, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) as pokok, SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sukarela, SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as wajib, SUM(CASE WHEN type='pokok' THEN amount ELSE 0 END) + SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) + SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) AS saldo")
+        $data = Deposit::selectRaw("customer_id, DATE(created_at) as tanggal, SUM(CASE WHEN type='simpanan' THEN amount ELSE 0 END) as simpanan, SUM(CASE WHEN type='bunga' THEN amount ELSE 0 END) as bunga, SUM(CASE WHEN type IN ('simpanan', 'bunga') THEN amount ELSE 0 END) AS saldo")
             ->where('customer_id', $request->customer_id)
+            ->whereNot('type', 'penarikan')
             ->groupByRaw('customer_id, DATE(created_at)')
             ->orderByRaw('DATE(created_at) ASC')
             ->get();

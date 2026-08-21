@@ -25,7 +25,7 @@ class HomeController extends Controller
         $nasabahAktif = \App\Models\Customer::where('status', 'active')->count();
         
         $masukHariIni = \App\Models\Deposit::whereDate('created_at', $today)
-                            ->whereIn('type', ['pokok', 'wajib', 'sukarela', 'bunga', 'bunga_deposito'])
+                            ->whereIn('type', ['simpanan', 'bunga'])
                             ->sum('amount');
                             
         $keluarHariIni = \App\Models\Deposit::whereDate('created_at', $today)
@@ -51,7 +51,7 @@ class HomeController extends Controller
             $chartData['labels'][] = now()->subDays($i)->isoFormat('DD MMM');
             
             $masuk = \App\Models\Deposit::whereDate('created_at', $date)
-                        ->whereIn('type', ['pokok', 'wajib', 'sukarela', 'bunga', 'bunga_deposito'])
+                        ->whereIn('type', ['simpanan', 'bunga'])
                         ->sum('amount');
             $keluar = \App\Models\Deposit::whereDate('created_at', $date)
                         ->where('type', 'penarikan')

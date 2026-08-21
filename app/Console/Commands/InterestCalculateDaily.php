@@ -44,18 +44,17 @@ class InterestCalculateDaily extends Command
         }
 
         // 2. Ambil Rate Bunga
-        $sukarelaRate = InterestRate::where('type', 'tabungan_sukarela')->where('is_active', 1)->first();
-        $wajibRate = InterestRate::where('type', 'tabungan_wajib')->where('is_active', 1)->first();
+        $simpananRate = InterestRate::where('type', 'simpanan')->where('is_active', 1)->first();
 
-        if (!$sukarelaRate && !$wajibRate) {
-            $this->error('No active interest rate found for tabungan.');
+        if (!$simpananRate) {
+            $this->error('No active interest rate found for simpanan.');
             if (!$dryRun) {
                 InterestEngineLog::updateOrCreate(
                     ['run_date' => $dateStr],
                     [
                         'status' => 'failed',
                         'reason' => 'No active interest rates found',
-                        'error_message' => 'Both tabungan_sukarela and tabungan_wajib have no active rate.'
+                        'error_message' => 'Jenis rate "simpanan" tidak punya rate aktif.'
                     ]
                 );
             }
@@ -70,66 +69,43 @@ class InterestCalculateDaily extends Command
         $totalInterestCalculated = 0;
 
         // 4. Proses per nasabah menggunakan chunk (batch processing)
-        Customer::where('status', 'active')->with('interestRate')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $sukarelaRate, $wajibRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
+        Customer::where('status', 'active')->with('interestRate')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $simpananRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
             $inserts = [];
 
             foreach ($customers as $customer) {
-                // Hitung saldo riil s.d tanggal kemarin via SQL
+                // Hitung saldo riil s.d tanggal kemarin via SQL.
+                // Saldo = setoran simpanan + bunga yang sudah diposting - penarikan.
                 $balances = DB::table('deposits')
                     ->selectRaw("
-                        SUM(CASE WHEN type='sukarela' THEN amount ELSE 0 END) as sum_sukarela,
-                        SUM(CASE WHEN type='wajib' THEN amount ELSE 0 END) as sum_wajib,
-                        SUM(CASE WHEN type='penarikan' THEN amount ELSE 0 END) as sum_penarikan
+                        SUM(CASE WHEN type IN ('simpanan', 'bunga') THEN amount ELSE 0 END) as sum_masuk,
+                        SUM(CASE WHEN type='penarikan' THEN amount ELSE 0 END) as sum_keluar
                     ")
                     ->where('customer_id', $customer->id)
                     ->whereDate('created_at', '<=', $dateStr)
                     ->whereNull('deleted_at')
                     ->first();
 
-                // Note: Penarikan mengurangi saldo sukarela.
-                $saldoSukarela = ($balances->sum_sukarela ?? 0) - ($balances->sum_penarikan ?? 0);
-                $saldoWajib = $balances->sum_wajib ?? 0;
+                $saldo = ($balances->sum_masuk ?? 0) - ($balances->sum_keluar ?? 0);
 
                 // Tentukan rate untuk nasabah ini (Gunakan rate pribadi jika ada, jika tidak fallback ke global)
-                $customerSukarelaRate = $customer->interestRate ?? $sukarelaRate;
+                $rate = $customer->interestRate ?? $simpananRate;
 
-                // Hitung bunga sukarela
-                if ($saldoSukarela > 0 && $customerSukarelaRate) {
-                    $bungaSukarela = floor(($saldoSukarela * ($customerSukarelaRate->rate_percent / 100)) / $workdayCount);
-                    if ($bungaSukarela > 0) {
+                if ($saldo > 0 && $rate) {
+                    $bunga = floor(($saldo * ($rate->rate_percent / 100)) / $workdayCount);
+                    if ($bunga > 0) {
                         $inserts[] = [
                             'customer_id' => $customer->id,
-                            'savings_type' => 'sukarela',
+                            'savings_type' => 'simpanan',
                             'calculation_date' => $dateStr,
-                            'base_balance' => $saldoSukarela,
-                            'rate_percent' => $customerSukarelaRate->rate_percent,
-                            'interest_amount' => $bungaSukarela,
+                            'base_balance' => $saldo,
+                            'rate_percent' => $rate->rate_percent,
+                            'interest_amount' => $bunga,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];
-                        $totalInterestCalculated += $bungaSukarela;
+                        $totalInterestCalculated += $bunga;
                     }
-                }
 
-                // Hitung bunga wajib
-                if ($saldoWajib > 0 && $wajibRate) {
-                    $bungaWajib = floor(($saldoWajib * ($wajibRate->rate_percent / 100)) / $workdayCount);
-                    if ($bungaWajib > 0) {
-                        $inserts[] = [
-                            'customer_id' => $customer->id,
-                            'savings_type' => 'wajib',
-                            'calculation_date' => $dateStr,
-                            'base_balance' => $saldoWajib,
-                            'rate_percent' => $wajibRate->rate_percent,
-                            'interest_amount' => $bungaWajib,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                        $totalInterestCalculated += $bungaWajib;
-                    }
-                }
-
-                if ($saldoSukarela > 0 || $saldoWajib > 0) {
                     $totalCustomersProcessed++;
                 }
             }

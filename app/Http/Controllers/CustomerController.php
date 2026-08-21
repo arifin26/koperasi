@@ -197,15 +197,15 @@ class CustomerController extends Controller
     {
         try {
             $balances = Deposit::recalculateBalance($id);
-            $sukarelaBalance = $balances['sukarela'] ?? 0;
+            $saldo = $balances['simpanan'] ?? 0;
             
             $data = Deposit::where('customer_id', $id)->latest()->first();
             if ($data) {
-                $data->current_balance = $sukarelaBalance;
+                $data->current_balance = $saldo;
                 $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
             } else {
                 $data = new \stdClass();
-                $data->current_balance = $sukarelaBalance;
+                $data->current_balance = $saldo;
                 $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
             }
             

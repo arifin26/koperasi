@@ -49,7 +49,7 @@
                                             <option value="">-- Abaikan (Gunakan Rate Sebelumnya/Global) --</option>
                                             @foreach ($rates as $rate)
                                             @php
-                                                $label = in_array($rate->type, ['simpanan','tabungan_sukarela']) ? 'Simpanan Harian' : ucfirst($rate->type);
+                                                $label = 'Simpanan';
                                                 $isActive = $rate->is_active ? ' ✔ (Aktif)' : '';
                                                 $selected = ($activeRate && $activeRate->id == $rate->id) ? 'selected' : '';
                                             @endphp
@@ -112,12 +112,6 @@
             }
         });
 
-        $('select[name=type]').on('change', function() {
-            const type = $(this).val();
-            if (type == 'wajib') {
-                $('input[name=amount]').val(0);
-            }
-        });
     });
 
 </script>

@@ -129,11 +129,11 @@ class WithdrawalController extends Controller
             
             // Get current accurate balance
             $balances = Deposit::recalculateBalance($request->customer_id);
-            $sukarelaBalance = $balances['sukarela'] ?? 0;
+            $saldo = $balances['simpanan'] ?? 0;
             
-            if ($request->amount > $sukarelaBalance) {
+            if ($request->amount > $saldo) {
                 DB::rollBack();
-                return back()->with('error', 'Saldo tidak mencukupi. Saldo tersedia: Rp ' . number_format($sukarelaBalance, 0, ',', '.'));
+                return back()->with('error', 'Saldo tidak mencukupi. Saldo tersedia: Rp ' . number_format($saldo, 0, ',', '.'));
             }
 
             $data = $request->all();
@@ -204,7 +204,7 @@ class WithdrawalController extends Controller
             
             // Check if after update, the balance becomes negative
             $balances = Deposit::recalculateBalance($penarikan->customer_id);
-            if ($balances['sukarela'] < 0) {
+            if ($balances['simpanan'] < 0) {
                 DB::rollBack();
                 return back()->with('error', 'Update dibatalkan karena menyebabkan saldo akhir menjadi negatif.');
             }

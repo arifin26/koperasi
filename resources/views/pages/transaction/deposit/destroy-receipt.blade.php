@@ -13,11 +13,8 @@
 @section('content')
 @php
     $typeLabel = match($deposit->type) {
-        'sukarela' => 'Simpanan Harian (Sukarela)',
-        'wajib'    => 'Simpanan Wajib',
-        'pokok'    => 'Simpanan Pokok',
-        'bunga'    => 'Bunga Simpanan',
-        default    => ucfirst($deposit->type),
+        'bunga' => 'Bunga Simpanan',
+        default => 'Simpanan',
     };
 @endphp
 

@@ -14,8 +14,8 @@
                     <div class="form-group">
                         <label>Jenis Simpanan/Deposito <span class="text-danger">*</span></label>
                         <select name="type" class="form-control @error('type') is-invalid @enderror" required>
-                            <option value="tabungan_sukarela" {{ $interest->type == 'tabungan_sukarela' || $interest->type == 'simpanan' ? 'selected' : '' }}>Simpanan</option>
-                            <option value="deposito" {{ $interest->type == 'deposito' || strpos($interest->type, 'deposito_') === 0 ? 'selected' : '' }}>Deposito</option>
+                            <option value="simpanan" {{ $interest->type != 'deposito' ? 'selected' : '' }}>Simpanan</option>
+                            <option value="deposito" {{ $interest->type == 'deposito' ? 'selected' : '' }}>Deposito</option>
                         </select>
                         @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
