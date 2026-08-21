@@ -169,11 +169,34 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                         <!-- Laporan -->
                         <li class="nav-header">LAPORAN</li>
-                        <li class="nav-item">
-                            <a href="{{ route('report.daily') }}" class="nav-link {{ request()->is('laporan*') ? 'active' : '' }}">
+                        <li class="nav-item {{ request()->is('laporan*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('laporan*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>Laporan Harian</p>
+                                <p>
+                                    Laporan
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('report.daily') }}" class="nav-link {{ request()->is('laporan/harian*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Laporan Harian</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('report.savings-recap') }}" class="nav-link {{ request()->is('laporan/rekap-simpanan*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Rekap Simpanan</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('report.deposit-recap') }}" class="nav-link {{ request()->is('laporan/rekap-deposito*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Rekap Deposito</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
                         <!-- Utility -->

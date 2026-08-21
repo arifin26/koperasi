@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function() {
     // Laporan
     Route::get('/laporan/harian', [App\Http\Controllers\ReportController::class, 'dailyTransaction'])->name('report.daily');
     Route::post('/laporan/harian/cetak', [App\Http\Controllers\ReportController::class, 'dailyTransactionPrint'])->name('report.daily.print');
+    Route::get('/laporan/rekap-simpanan', [App\Http\Controllers\ReportController::class, 'savingsRecap'])->name('report.savings-recap');
+    Route::get('/laporan/rekap-deposito', [App\Http\Controllers\ReportController::class, 'depositRecap'])->name('report.deposit-recap');
 
     // Utility — Trash
     Route::get('/utility/trash', [App\Http\Controllers\TrashController::class, 'index'])->name('trash.index');

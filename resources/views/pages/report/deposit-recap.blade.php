@@ -1,0 +1,148 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+
+        {{-- Summary Cards --}}
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="info-box bg-primary">
+                    <span class="info-box-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Dana Deposito</span>
+                        <span class="info-box-number" style="font-size:1.1rem;">Rp {{ number_format($totalDeposito, 0, ',', '.') }}</span>
+                        <span class="progress-description">seluruh deposito</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-success">
+                    <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Deposito Aktif</span>
+                        <span class="info-box-number">{{ number_format($totalAktif, 0, ',', '.') }}</span>
+                        <span class="progress-description">Rp {{ number_format($nominalAktif, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Jatuh Tempo</span>
+                        <span class="info-box-number">{{ number_format($totalJatuhTempo, 0, ',', '.') }}</span>
+                        <span class="progress-description">menunggu keputusan</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-secondary">
+                    <span class="info-box-icon"><i class="fas fa-hand-holding-usd"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Dicairkan</span>
+                        <span class="info-box-number">{{ number_format($totalDicairkan, 0, ',', '.') }}</span>
+                        <span class="progress-description">sudah dicairkan</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title"><i class="fas fa-landmark mr-2"></i>Rekap Deposito</h3>
+                <small class="text-muted">Data per: {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }}</small>
+            </div>
+            <div class="card-body">
+                {{-- Filter --}}
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label>Filter Status Deposito:</label>
+                        <select class="form-control" id="filter_status">
+                            <option value="">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="matured">Jatuh Tempo</option>
+                            <option value="extended">Diperpanjang</option>
+                            <option value="liquidated">Dicairkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="deposit-recap-table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th width="40">No</th>
+                                <th>No. Deposito</th>
+                                <th>No. Nasabah</th>
+                                <th>Nama Nasabah</th>
+                                <th>Nominal</th>
+                                <th>Rate</th>
+                                <th>Bunga/Bulan</th>
+                                <th>Tgl. Mulai</th>
+                                <th>Jatuh Tempo</th>
+                                <th>Status</th>
+                                <th width="80">Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap4.min.css">
+    <style>
+        #deposit-recap-table td { vertical-align: middle; }
+        .info-box-number { font-size: 1.3rem; }
+    </style>
+@endpush
+
+@push('script')
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap4.min.js"></script>
+
+    <script>
+    $(document).ready(function () {
+        var table = $('#deposit-recap-table').DataTable({
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{ route('report.deposit-recap') }}",
+                data: function (d) {
+                    d.status = $('#filter_status').val();
+                }
+            },
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+            },
+            columns: [
+                { data: 'DT_RowIndex',    name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'no_deposito',    name: 'number' },
+                { data: 'no_nasabah',     name: 'customer.number', searchable: false, orderable: false },
+                { data: 'nama_nasabah',   name: 'customer.name', orderable: false },
+                { data: 'amount',         name: 'amount' },
+                { data: 'rate_percent',   name: 'rate_percent' },
+                { data: 'bunga_bulanan',  name: 'bunga_bulanan', orderable: false, searchable: false },
+                { data: 'start_date',     name: 'start_date' },
+                { data: 'maturity_date',  name: 'maturity_date' },
+                { data: 'status_label',   name: 'status', orderable: false },
+                { data: 'aksi',           name: 'aksi', orderable: false, searchable: false },
+            ],
+            order: [[7, 'desc']],
+        });
+
+        $('#filter_status').change(function () {
+            table.draw();
+        });
+    });
+    </script>
+@endpush
