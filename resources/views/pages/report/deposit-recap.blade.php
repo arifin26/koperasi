@@ -69,6 +69,11 @@
                 </div>
 
                 <div class="table-responsive">
+                    {{-- Legenda warna --}}
+                    <div class="mb-2 d-flex align-items-center" style="gap:18px;">
+                        <span><span class="legend-dot" style="background:#ffb3b3;"></span> Sudah jatuh tempo</span>
+                        <span><span class="legend-dot" style="background:#84d9a4;"></span> Mendekati jatuh tempo (≤ 30 hari)</span>
+                    </div>
                     <table class="table table-bordered table-striped table-hover" id="deposit-recap-table">
                         <thead class="thead-dark">
                             <tr>
@@ -99,6 +104,12 @@
     <style>
         #deposit-recap-table td { vertical-align: middle; }
         .info-box-number { font-size: 1.3rem; }
+        /* Warna baris berdasarkan jatuh tempo */
+        #deposit-recap-table tbody tr.row-overdue td  { background-color: #ffe5e5 !important; }
+        #deposit-recap-table tbody tr.row-soon    td  { background-color: #e6f9ee !important; }
+        #deposit-recap-table tbody tr.row-overdue:hover td { background-color: #ffc9c9 !important; }
+        #deposit-recap-table tbody tr.row-soon:hover    td { background-color: #c3f0d4 !important; }
+        .legend-dot { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:5px; vertical-align:middle; }
     </style>
 @endpush
 
@@ -125,19 +136,38 @@
                 url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
             },
             columns: [
-                { data: 'DT_RowIndex',    name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'no_deposito',    name: 'number' },
-                { data: 'no_nasabah',     name: 'customer.number', searchable: false, orderable: false },
-                { data: 'nama_nasabah',   name: 'customer.name', orderable: false },
-                { data: 'amount',         name: 'amount' },
-                { data: 'rate_percent',   name: 'rate_percent' },
-                { data: 'bunga_bulanan',  name: 'bunga_bulanan', orderable: false, searchable: false },
-                { data: 'start_date',     name: 'start_date' },
-                { data: 'maturity_date',  name: 'maturity_date' },
-                { data: 'status_label',   name: 'status', orderable: false },
-                { data: 'aksi',           name: 'aksi', orderable: false, searchable: false },
+                { data: 'DT_RowIndex',          name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'no_deposito',           name: 'number' },
+                { data: 'no_nasabah',            name: 'customer.number', searchable: false, orderable: false },
+                { data: 'nama_nasabah',          name: 'customer.name', orderable: false },
+                { data: 'amount',                name: 'amount' },
+                { data: 'rate_percent',          name: 'rate_percent' },
+                { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false },
+                { data: 'start_date',            name: 'start_date' },
+                { data: 'maturity_date',         name: 'maturity_date' },
+                { data: 'status_label',          name: 'status', orderable: false },
+                { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false },
+                // Kolom helper (tidak ditampilkan)
+                { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },
             ],
             order: [[7, 'desc']],
+            createdRow: function (row, data) {
+                var days  = parseInt(data.days_until_maturity);
+                var status = data.status_label; // misal mengandung kata 'liquidated'
+
+                // Hanya beri warna untuk deposito yang belum dicairkan / diperpanjang
+                if (status && (status.indexOf('Dicairkan') !== -1 || status.indexOf('Diperpanjang') !== -1)) {
+                    return;
+                }
+
+                if (days < 0) {
+                    // Sudah melewati jatuh tempo → merah
+                    $(row).addClass('row-overdue');
+                } else if (days <= 30) {
+                    // Maksimal H-30 → hijau
+                    $(row).addClass('row-soon');
+                }
+            }
         });
 
         $('#filter_status').change(function () {

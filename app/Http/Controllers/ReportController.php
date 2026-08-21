@@ -186,6 +186,10 @@ class ReportController extends Controller
                 ->editColumn('start_date', fn($row) => Carbon::parse($row->start_date)->isoFormat('DD MMM Y'))
                 ->editColumn('maturity_date', fn($row) => Carbon::parse($row->maturity_date)->isoFormat('DD MMM Y'))
                 ->addColumn('status_label', fn($row) => $row->status_label)
+                ->addColumn('days_until_maturity', function ($row) {
+                    // Positif = hari tersisa, negatif = sudah lewat jatuh tempo
+                    return (int) Carbon::today()->diffInDays(Carbon::parse($row->maturity_date), false);
+                })
                 ->addColumn('aksi', function ($row) {
                     return '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
                 })
