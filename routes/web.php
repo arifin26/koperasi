@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function() {
         Route::resource('/penarikan', WithdrawalController::class, ['names' => 'withdrawal']);
 
         Route::post('/simpanan/cetak', [DepositController::class, 'print'])->name('deposit.print');
+        Route::post('/simpanan/update-bunga', [DepositController::class, 'updateBunga'])->name('deposit.update-bunga');
         Route::post('/penarikan/cetak', [WithdrawalController::class, 'print'])->name('withdrawal.print');
     });
 
@@ -63,6 +64,7 @@ Route::middleware('auth')->group(function() {
     Route::resource('interest', App\Http\Controllers\InterestRateController::class);
 
     // Modul 09 — Deposito
+    Route::post('deposito/update-bunga', [App\Http\Controllers\FixedDepositController::class, 'updateBunga'])->name('fixed-deposit.update-bunga');
     Route::get('deposito/{fixed_deposit}/kwitansi', [App\Http\Controllers\FixedDepositController::class, 'receipt'])->name('fixed-deposit.receipt');
     // Kwitansi penghapusan — menggunakan plain {id} karena record sudah soft-deleted
     Route::get('deposito/{id}/kwitansi-hapus', [App\Http\Controllers\FixedDepositController::class, 'destroyReceipt'])->name('fixed-deposit.destroy-receipt');

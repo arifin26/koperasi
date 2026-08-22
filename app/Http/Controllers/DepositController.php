@@ -22,6 +22,7 @@ class DepositController extends Controller
     {
         $this->title = 'Transaksi - Simpanan';
         $this->code = 'SI';
+        $this->middleware('role:manager')->only(['updateBunga']);
     }
 
     /**
@@ -316,5 +317,26 @@ class DepositController extends Controller
 
         $filename = 'Bukti_Hapus_Simpanan_' . $code . '_' . time() . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function updateBunga(Request $request, \App\Services\SavingsInterestService $service)
+    {
+        $request->validate([
+            'process_date' => 'nullable|date',
+        ]);
+
+        try {
+            $result = $service->processSavingsInterest(
+                $request->process_date,
+                auth()->id()
+            );
+
+            return response()->json($result);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses update bunga simpanan: ' . $th->getMessage(),
+            ], 500);
+        }
     }
 }
