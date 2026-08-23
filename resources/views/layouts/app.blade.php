@@ -264,9 +264,71 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <script src="{{ asset('js/adminlte.min.js') }}"></script>
     @stack('script')
     <script>
-        $(document).ready(function() {
+        // Global Passbook Print Modal Selector
+        function openPassbookModal(passbookUrl, title) {
+            Swal.fire({
+                title: 'Cetak Buku Tabungan',
+                html: `
+                    <div class="text-left" style="font-size: 13px;">
+                        <p class="mb-2"><strong>${title || 'Transaksi Nasabah'}</strong></p>
+                        <label for="swal-passbook-row" class="font-weight-bold">Mulai Cetak di Baris Ke:</label>
+                        <input id="swal-passbook-row" type="number" class="form-control" value="1" min="1" max="25" style="text-align: center; font-size: 16px; font-weight: bold;">
+                        <small class="text-muted d-block mt-1">Pilih baris pada buku tabungan fisik (Baris 1 s/d 25)</small>
+                    </div>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#17a2b8',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-print"></i> Cetak ke Printer',
+                cancelButtonText: 'Batal',
+                preConfirm: () => {
+                    const row = document.getElementById('swal-passbook-row').value;
+                    if (!row || row < 1 || row > 30) {
+                        Swal.showValidationMessage('Nomor baris harus antara 1 s/d 25');
+                        return false;
+                    }
+                    return row;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const selectedRow = result.value;
+                    const targetUrl = passbookUrl + (passbookUrl.includes('?') ? '&' : '?') + 'row=' + selectedRow;
+                    window.open(targetUrl, '_blank', 'width=800,height=700');
+                }
+            });
+        }
 
-            @if (session('receipt_url'))
+        $(document).ready(function() {
+            // Handler tombol cetak buku tabungan di tabel/tombol
+            $(document).on('click', '.print-passbook-btn', function(e) {
+                e.preventDefault();
+                const url = $(this).data('url');
+                const title = $(this).data('title');
+                openPassbookModal(url, title);
+            });
+
+            @if (session('receipt_url') && session('passbook_url'))
+                Swal.fire({
+                    title: 'Transaksi Berhasil!',
+                    text: "{{ session('success') }}",
+                    icon: 'success',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonColor: '#28a745',
+                    denyButtonColor: '#17a2b8',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-print"></i> Cetak Kwitansi',
+                    denyButtonText: '<i class="fas fa-book"></i> Print Buku Tabungan',
+                    cancelButtonText: 'Selesai',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open("{{ session('receipt_url') }}", '_blank');
+                    } else if (result.isDenied) {
+                        openPassbookModal("{{ session('passbook_url') }}", 'Transaksi Terakhir');
+                    }
+                });
+            @elseif (session('receipt_url'))
                 Swal.fire({
                     title: 'Transaksi Berhasil!',
                     text: "{{ session('success') }}",

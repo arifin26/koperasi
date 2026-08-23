@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function() {
 
     Route::resource('/karyawan', UserController::class, ['names' => 'user']);
     Route::resource('/nasabah', CustomerController::class, ['names' => 'customer']);
+    Route::get('/nasabah/{nasabah}/buku-tabungan', [CustomerController::class, 'passbook'])->name('customer.passbook');
 
     Route::post('/karyawan/cetak', [UserController::class, 'print'])->name('user.print');
     Route::post('/nasabah/cetak', [CustomerController::class, 'print'])->name('customer.print');
@@ -45,6 +46,10 @@ Route::middleware('auth')->group(function() {
     Route::as('transaction.')->prefix('transaksi')->group(function() {
         Route::get('/simpanan/{simpanan}/kwitansi', [DepositController::class, 'receipt'])->name('deposit.receipt');
         Route::get('/penarikan/{penarikan}/kwitansi', [WithdrawalController::class, 'receipt'])->name('withdrawal.receipt');
+
+        // Cetak Buku Tabungan (Passbook)
+        Route::get('/simpanan/{simpanan}/buku-tabungan', [DepositController::class, 'passbook'])->name('deposit.passbook');
+        Route::get('/penarikan/{penarikan}/buku-tabungan', [WithdrawalController::class, 'passbook'])->name('withdrawal.passbook');
 
         // Kwitansi penghapusan — menggunakan plain {id} karena record sudah soft-deleted
         Route::get('/simpanan/{id}/kwitansi-hapus', [DepositController::class, 'destroyReceipt'])->name('deposit.destroy-receipt');

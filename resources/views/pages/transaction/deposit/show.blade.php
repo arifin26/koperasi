@@ -11,6 +11,9 @@
                             <a href="{{ route('transaction.deposit.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-1">
                                 <i class="fas fa-print mr-1"></i> Cetak Kwitansi
                             </a>
+                            <button type="button" class="btn btn-info btn-sm mr-1 print-passbook-btn" data-url="{{ route('transaction.deposit.passbook', $deposit) }}" data-title="Simpanan {{ $code }} - {{ $deposit->customer->name ?? '' }}">
+                                <i class="fas fa-book mr-1"></i> Print Buku Tabungan
+                            </button>
                             <a href="{{ route('transaction.deposit.index') }}" class="btn btn-default btn-sm">
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali
                             </a>

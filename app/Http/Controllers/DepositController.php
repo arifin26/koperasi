@@ -55,6 +55,7 @@ class DepositController extends Controller
                 ->addColumn('action', function ($row) {
                     if ($row->customer) {
                         return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a>
+                                <button type="button" class="btn btn-info btn-xs px-2 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-book"></i> Buku</button>
                                 <a href="' . route('transaction.deposit.show', $row) . '" class="btn btn-success btn-xs px-2 mx-1"> Detail </a>
                                 <a href="' . route('transaction.deposit.edit', $row) . '" class="btn btn-primary btn-xs px-2 mr-1"> Edit </a>
                                 <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
@@ -65,6 +66,7 @@ class DepositController extends Controller
                     }
 
                     return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1"><i class="fas fa-print"></i> Kwitansi</a>
+                        <button type="button" class="btn btn-info btn-xs px-2 mr-1 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . '"><i class="fas fa-book"></i> Buku</button>
                         <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="_token" value="' . csrf_token() . '" />
@@ -164,7 +166,8 @@ class DepositController extends Controller
             DB::commit();
             return redirect()->route('transaction.deposit.index')
                 ->with('success', 'Berhasil menambahkan simpanan nasabah!')
-                ->with('receipt_url', route('transaction.deposit.receipt', $deposit));
+                ->with('receipt_url', route('transaction.deposit.receipt', $deposit))
+                ->with('passbook_url', route('transaction.deposit.passbook', $deposit));
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());
@@ -316,5 +319,21 @@ class DepositController extends Controller
 
         $filename = 'Bukti_Hapus_Simpanan_' . $code . '_' . time() . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function passbook(Request $request, Deposit $simpanan)
+    {
+        $simpanan->load(['customer', 'creator']);
+        $startRow = (int) ($request->query('row', 1));
+        if ($startRow < 1 || $startRow > 30) {
+            $startRow = 1;
+        }
+
+        return view('pages.transaction.passbook.print', [
+            'title' => 'Cetak Buku Tabungan - ' . ($simpanan->customer->name ?? 'Nasabah'),
+            'transactions' => [$simpanan],
+            'startRow' => $startRow,
+            'customer' => $simpanan->customer,
+        ]);
     }
 }

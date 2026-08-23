@@ -236,7 +236,8 @@ class FixedDepositController extends Controller
         $penalty = $isEarly ? (int) floor($fixed_deposit->amount * self::PENALTY_RATE) : 0;
         $netAmount = $fixed_deposit->amount - $penalty;
 
-        DB::transaction(function () use ($fixed_deposit, $netAmount, $penalty, $isEarly) {
+        $txn = null;
+        DB::transaction(function () use ($fixed_deposit, $netAmount, $penalty, $isEarly, &$txn) {
             // Mark deposit as liquidated
             $fixed_deposit->update([
                 'status' => 'liquidated',
@@ -261,7 +262,15 @@ class FixedDepositController extends Controller
             Deposit::recalculateBalance($fixed_deposit->customer_id);
         });
 
-        return redirect()->route('fixed-deposit.index')->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan Sukarela nasabah.');
+        $redirect = redirect()->route('fixed-deposit.index')
+            ->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan Sukarela nasabah.');
+
+        if ($txn) {
+            $redirect->with('receipt_url', route('transaction.deposit.receipt', $txn))
+                     ->with('passbook_url', route('transaction.deposit.passbook', $txn));
+        }
+
+        return $redirect;
     }
 
     public function print(Request $request)

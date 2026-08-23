@@ -244,4 +244,30 @@ class CustomerController extends Controller
             'results' => $formatted
         ]);
     }
+
+    public function passbook(Request $request, Customer $nasabah)
+    {
+        $startRow = (int) ($request->query('row', 1));
+        if ($startRow < 1 || $startRow > 30) {
+            $startRow = 1;
+        }
+
+        $query = Deposit::where('customer_id', $nasabah->id)
+            ->with(['customer', 'creator'])
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc');
+
+        if ($request->filled('limit')) {
+            $query->limit((int) $request->limit);
+        }
+
+        $transactions = $query->get();
+
+        return view('pages.transaction.passbook.print', [
+            'title' => 'Cetak Buku Tabungan - ' . $nasabah->name,
+            'transactions' => $transactions,
+            'startRow' => $startRow,
+            'customer' => $nasabah,
+        ]);
+    }
 }

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title ?? 'Cetak Buku Tabungan' }}</title>
+    <style>
+        @page {
+            size: 150mm 200mm;
+            margin: 0;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 150mm;
+            height: 200mm;
+            background: #fff;
+            font-family: 'Courier New', Courier, monospace, 'Lucida Console', Monaco;
+            font-size: 9.5pt;
+            line-height: 1;
+            color: #000;
+        }
+        .passbook-page {
+            width: 150mm;
+            height: 200mm;
+            position: relative;
+            padding-top: {{ $topMargin ?? '25mm' }};
+            padding-left: {{ $leftMargin ?? '6mm' }};
+            padding-right: {{ $rightMargin ?? '6mm' }};
+        }
+        /* Tabel Passbook */
+        .passbook-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .passbook-table tr {
+            height: 6.8mm;
+            max-height: 6.8mm;
+        }
+        .passbook-table td {
+            padding: 0 2px;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+            font-size: 9pt;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        /* Kolom Passbook */
+        .col-date {
+            width: 19mm;
+            text-align: left;
+        }
+        .col-code {
+            width: 16mm;
+            text-align: center;
+        }
+        .col-debit {
+            width: 26mm;
+            text-align: right;
+        }
+        .col-credit {
+            width: 26mm;
+            text-align: right;
+        }
+        .col-balance {
+            width: 33mm;
+            text-align: right;
+        }
+        .col-teller {
+            width: 14mm;
+            text-align: center;
+        }
+        /* Baris kosong penyesuai posisi awal */
+        .empty-row {
+            height: 6.8mm;
+            visibility: hidden;
+        }
+        @media print {
+            body {
+                width: 150mm;
+                height: 200mm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        /* Toolbar bantu untuk operator */
+        .print-toolbar {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: sans-serif;
+            font-size: 12px;
+            z-index: 9999;
+        }
+        .print-toolbar button {
+            background: #28a745;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar no-print">
+        <span>Baris Awal: <strong>Baris {{ $startRow ?? 1 }}</strong> | Total Baris: <strong>{{ count($transactions) }}</strong></span>
+        <button onclick="window.print()"><i class="fas fa-print"></i> Cetak Ulang</button>
+        <button onclick="window.close()" style="background:#6c757d;">Tutup</button>
+    </div>
+
+    <div class="passbook-page">
+        <table class="passbook-table">
+            <tbody>
+                {{-- Baris kosong sebelum baris awal --}}
+                @for ($i = 1; $i < ($startRow ?? 1); $i++)
+                    <tr class="empty-row">
+                        <td class="col-date">&nbsp;</td>
+                        <td class="col-code">&nbsp;</td>
+                        <td class="col-debit">&nbsp;</td>
+                        <td class="col-credit">&nbsp;</td>
+                        <td class="col-balance">&nbsp;</td>
+                        <td class="col-teller">&nbsp;</td>
+                    </tr>
+                @endfor
+
+                {{-- Baris transaksi --}}
+                @foreach ($transactions as $txn)
+                    @php
+                        $isDebit = ($txn->type === 'penarikan');
+                        $debitVal = $isDebit ? number_format($txn->amount, 0, ',', '.') : '-';
+                        $creditVal = !$isDebit ? number_format($txn->amount, 0, ',', '.') : '-';
+                        $balanceVal = number_format($txn->current_balance, 0, ',', '.');
+                        
+                        $code = match($txn->type) {
+                            'sukarela' => 'STR',
+                            'wajib' => 'WAJIB',
+                            'pokok' => 'POKOK',
+                            'penarikan' => 'TRK',
+                            'bunga' => 'BNG',
+                            default => strtoupper(substr($txn->type, 0, 4)),
+                        };
+
+                        if (str_contains(strtolower($txn->notes ?? ''), 'pencairan deposito')) {
+                            $code = 'PCD';
+                        }
+                        
+                        $teller = $txn->creator->name ?? 'ADM';
+                        $tellerInitial = strtoupper(substr(trim($teller), 0, 3));
+                    @endphp
+                    <tr>
+                        <td class="col-date">{{ \Carbon\Carbon::parse($txn->created_at)->format('d/m/y') }}</td>
+                        <td class="col-code">{{ $code }}</td>
+                        <td class="col-debit">{{ $debitVal }}</td>
+                        <td class="col-credit">{{ $creditVal }}</td>
+                        <td class="col-balance">{{ $balanceVal }}</td>
+                        <td class="col-teller">{{ $tellerInitial }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Auto trigger print saat halaman dibuka
+            setTimeout(function() {
+                window.print();
+            }, 300);
+        };
+    </script>
+</body>
+</html>

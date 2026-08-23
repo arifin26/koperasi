@@ -86,8 +86,13 @@
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h3 class="card-title mb-0"><i class="fas fa-wallet mr-2"></i> Ringkasan Saldo Simpanan</h3>
+                        <div class="card-tools ml-auto">
+                            <button type="button" class="btn btn-light btn-sm print-passbook-btn" data-url="{{ route('customer.passbook', $user) }}" data-title="Buku Tabungan - {{ $user->name }} ({{ $user->number }})">
+                                <i class="fas fa-book mr-1 text-primary"></i> <strong>Print Buku Tabungan</strong>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
