@@ -21,7 +21,7 @@ class FixedDepositController extends Controller
 
     public function __construct()
     {
-        $this->middleware('role:manager')->only(['destroy']);
+        $this->middleware('role:manager')->only(['destroy', 'updateBunga']);
     }
 
     public function index(Request $request)
@@ -85,7 +85,7 @@ class FixedDepositController extends Controller
 
     public function create()
     {
-        $rates = \App\Models\InterestRate::whereIn('type', ['deposito', 'deposito_3_bulan'])
+        $rates = \App\Models\InterestRate::where('type', 'deposito')
             ->where('is_active', 1)
             ->orderBy('effective_date', 'desc')
             ->get();
@@ -153,7 +153,7 @@ class FixedDepositController extends Controller
             return back()->with('error', 'Hanya deposito aktif yang dapat diperpanjang.');
         }
 
-        $rates = \App\Models\InterestRate::whereIn('type', ['deposito', 'deposito_3_bulan'])
+        $rates = \App\Models\InterestRate::where('type', 'deposito')
             ->where('is_active', 1)
             ->orderBy('effective_date', 'desc')
             ->get();
@@ -247,10 +247,10 @@ class FixedDepositController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            // Transfer net amount to savings (sukarela)
+            // Transfer net amount to savings (simpanan)
             $txn = Deposit::create([
                 'customer_id' => $fixed_deposit->customer_id,
-                'type' => 'sukarela',
+                'type' => 'simpanan',
                 'amount' => $netAmount,
                 'previous_balance' => 0,
                 'current_balance' => 0,
@@ -347,5 +347,26 @@ class FixedDepositController extends Controller
 
         $filename = 'Bukti_Hapus_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function updateBunga(Request $request, \App\Services\DepositInterestService $service)
+    {
+        $request->validate([
+            'process_date' => 'nullable|date',
+        ]);
+
+        try {
+            $result = $service->processDepositInterest(
+                $request->process_date,
+                auth()->id()
+            );
+
+            return response()->json($result);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses update bunga deposito: ' . $th->getMessage(),
+            ], 500);
+        }
     }
 }

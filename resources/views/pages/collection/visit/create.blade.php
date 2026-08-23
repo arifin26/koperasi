@@ -8,42 +8,36 @@
                     <div class="card-body">
                         <form action="{{ route('collection.visit.store') }}" method="post">
                             @csrf
-                            <div class="row">
-                                <div class="col-12 col-md-6">
-                                    <div class="form-group">
-                                        <label>Tanggal Kunjungan</label>
-                                        <input type="date" class="form-control @error('created_at') is-invalid @enderror" name="created_at" value="{{ old('created_at',date('Y-m-d')) }}" placeholder="Tanggal Daftar">
-                                        <span class="error invalid-feedback">{{ $errors->first('created_at') }}</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Nasabah</label>
-                                        <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
-                                            <!-- AJAX loaded options -->
-                                        </select>
-                                        <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Sisa Pembayaran (Rp)</label>
-                                        <input type="number" min="0" class="form-control change-installment @error('remaining_amount') is-invalid @enderror" name="remaining_amount" value="{{ old('remaining_amount', 0) }}" placeholder="Sisa Pembayaran">
-                                        <span class="error invalid-feedback">{{ $errors->first('remaining_amount') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <div class="form-group">
-                                        <label>Kolektor</label>
-                                        <select class="form-control @error('user_id') is-invalid @enderror" name="user_id">
-                                            @foreach ($users as $user)
-                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <span class="error invalid-feedback">{{ $errors->first('user_id') }}</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Keterangan</label>
-                                        <textarea name="description" class="form-control @error('description') is-invalid @enderror" placeholder="Keterangan" name="description" cols="30" rows="5">{{ old('description') }}</textarea>
-                                        <span class="error invalid-feedback">{{ $errors->first('description') }}</span>
-                                    </div>
-                                </div>
+                            <div class="form-group">
+                                <label>Tanggal Kunjungan</label>
+                                <input type="date" class="form-control @error('created_at') is-invalid @enderror" name="created_at" value="{{ old('created_at', date('Y-m-d')) }}" placeholder="Tanggal Kunjungan">
+                                <span class="error invalid-feedback">{{ $errors->first('created_at') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Nasabah</label>
+                                <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
+                                    <!-- AJAX loaded options -->
+                                </select>
+                                <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Sisa Pembayaran (Rp)</label>
+                                <input type="number" min="0" class="form-control change-installment @error('remaining_amount') is-invalid @enderror" name="remaining_amount" value="{{ old('remaining_amount', 0) }}" placeholder="Sisa Pembayaran">
+                                <span class="error invalid-feedback">{{ $errors->first('remaining_amount') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Kolektor</label>
+                                <select class="form-control @error('user_id') is-invalid @enderror" name="user_id">
+                                    @foreach ($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="error invalid-feedback">{{ $errors->first('user_id') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Keterangan</label>
+                                <textarea name="description" class="form-control @error('description') is-invalid @enderror" placeholder="Keterangan" rows="4">{{ old('description') }}</textarea>
+                                <span class="error invalid-feedback">{{ $errors->first('description') }}</span>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>
                         </form>

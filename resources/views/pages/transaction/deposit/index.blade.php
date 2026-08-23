@@ -7,12 +7,17 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row mb-3">
-                            <div class="col-4">
+                            <div class="col-12 col-md-5 mb-2 mb-md-0">
                                 <a href="{{ route('transaction.deposit.create') }}" class="btn btn-success">Baru</a>
                                 <button class="btn btn-outline-success" data-toggle="modal"
                                     data-target="#print">Cetak</button>
+                                @if(auth()->user()->role == 'manager')
+                                <button class="btn btn-warning" data-toggle="modal" data-target="#updateBungaModal">
+                                    <i class="fas fa-coins"></i> Update Bunga
+                                </button>
+                                @endif
                             </div>
-                            <div class="col-8 row">
+                            <div class="col-12 col-md-7 row">
                                 <div class="col-12 col-md-3">
                                     <select class="form-control" name="customer">
                                         <option value="">Semua Nasabah</option>
@@ -94,6 +99,89 @@
                         <button type="submit" class="btn btn-success">Cetak</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Update Bunga -->
+    <div class="modal fade" id="updateBungaModal" tabindex="-1" role="dialog" aria-labelledby="updateBungaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="formUpdateBunga">
+                    @csrf
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title font-weight-bold" id="updateBungaModalLabel"><i class="fas fa-coins mr-1"></i> Update Bunga Simpanan</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle mr-1"></i> Apakah Anda yakin ingin melakukan update bunga simpanan?
+                        </div>
+                        <div class="form-group">
+                            <label for="process_date">Tanggal Proses Bunga:</label>
+                            <input type="date" class="form-control" id="process_date" name="process_date" value="{{ date('Y-m-d') }}" required>
+                            <small class="form-text text-muted">Sistem akan menghitung bunga harian (hari kerja) dan memposting transaksi bunga s.d. tanggal ini.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning font-weight-bold" id="btnSubmitUpdateBunga">
+                            <i class="fas fa-play mr-1"></i> Jalankan Proses
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Summary Hasil -->
+    <div class="modal fade" id="summaryBungaModal" tabindex="-1" role="dialog" aria-labelledby="summaryBungaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold" id="summaryBungaModalLabel"><i class="fas fa-check-circle mr-1"></i> Hasil Update Bunga Simpanan</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="font-weight-bold text-success" id="summaryMessage"></p>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <td class="font-weight-bold">Tanggal Proses:</td>
+                            <td id="resProcessDate">-</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Total Rekening/Nasabah Diproses:</td>
+                            <td id="resTotalCustomers">0</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Berhasil Diposting:</td>
+                            <td class="text-success font-weight-bold" id="resPostedCount">0</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Dilewati / Libur:</td>
+                            <td id="resSkipped">0</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Duplikat / Sudah Diproses:</td>
+                            <td id="resDuplicate">0</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Error:</td>
+                            <td id="resErrors">0</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td class="font-weight-bold">Total Nominal Bunga:</td>
+                            <td class="font-weight-bold text-success" id="resTotalInterest">Rp 0</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -200,6 +288,43 @@
                 }
 
                 dtTable.draw();
+            });
+
+            $('#formUpdateBunga').on('submit', function(e) {
+                e.preventDefault();
+                const btn = $('#btnSubmitUpdateBunga');
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
+
+                $.ajax({
+                    url: "{{ route('transaction.deposit.update-bunga') }}",
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#updateBungaModal').modal('hide');
+                        btn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i> Jalankan Proses');
+
+                        if (response.success) {
+                            $('#summaryMessage').text(response.message);
+                            $('#resProcessDate').text(response.process_date);
+                            $('#resTotalCustomers').text(response.total_customers);
+                            $('#resPostedCount').text(response.posted_count);
+                            $('#resSkipped').text(response.skipped_days);
+                            $('#resDuplicate').text(response.duplicate);
+                            $('#resErrors').text(response.errors);
+                            $('#resTotalInterest').text('Rp ' + new Intl.NumberFormat('id-ID').format(response.total_interest));
+
+                            $('#summaryBungaModal').modal('show');
+                            dtTable.draw();
+                        } else {
+                            alert('Gagal: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        btn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i> Jalankan Proses');
+                        const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan sistem.';
+                        alert('Error: ' + msg);
+                    }
+                });
             });
         });
     </script>

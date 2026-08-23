@@ -7,7 +7,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Detail Deposito {{ $deposit->number }}</h3>
                 <div class="card-tools ml-auto">
-                    <a href="{{ route('fixed-deposit.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-2">
+                    <a href="{{ route('fixed-deposit.receipt', ['fixed_deposit' => $deposit]) }}" target="_blank" class="btn btn-secondary btn-sm mr-2">
                         <i class="fas fa-print mr-1"></i> Cetak Kwitansi
                     </a>
                     {!! $deposit->status_label !!}
@@ -42,8 +42,8 @@
 
                 @if($deposit->status == 'active')
                 <div class="mt-3">
-                    <a href="{{ route('fixed-deposit.extend.form', $deposit) }}" class="btn btn-info"><i class="fas fa-sync"></i> Perpanjang</a>
-                    <a href="{{ route('fixed-deposit.liquidate.form', $deposit) }}" class="btn btn-warning"><i class="fas fa-money-bill-wave"></i> Cairkan</a>
+                    <a href="{{ route('fixed-deposit.extend.form', ['fixed_deposit' => $deposit]) }}" class="btn btn-info"><i class="fas fa-sync"></i> Perpanjang</a>
+                    <a href="{{ route('fixed-deposit.liquidate.form', ['fixed_deposit' => $deposit]) }}" class="btn btn-warning"><i class="fas fa-money-bill-wave"></i> Cairkan</a>
                 </div>
                 @endif
             </div>

@@ -8,49 +8,39 @@
                     <div class="card-body">
                         <form action="{{ route('transaction.withdrawal.store') }}" method="post">
                             @csrf
-                            <div class="row">
-                                <div class="col-12 col-md-6">
-                                    <div class="form-group">
-                                        <label>Kode Transaksi</label>
-                                        <input type="hidden" name="type" value="penarikan">
-                                        <input type="text" class="form-control"
-                                            value="(Generated)" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tanggal</label>
-                                        <input type="date" name="created_at" class="form-control @error('created_at') is-invalid @enderror" value="{{ old('created_at',date('Y-m-d')) }}" placeholder="Tanggal">
-                                        <span class="error invalid-feedback">{{ $errors->first('created_at') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <div class="form-group">
-                                        <label>Nasabah</label>
-                                        <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
-                                            <!-- AJAX loaded options -->
-                                        </select>
-                                        <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Saldo (Rp)</label>
-                                        <input type="text" class="form-control" name="balance" value="Rp0,00" placeholder="Saldo" disabled>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Nominal Penarikan (Rp)</label>
-                                        <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Penarikan">
-                                        <span class="error invalid-feedback" id="amount-error">{{ $errors->first('amount') }}</span>
-                                    </div>
-                                </div>
+                            <input type="hidden" name="type" value="penarikan">
+                            <div class="form-group">
+                                <label>Kode Transaksi</label>
+                                <input type="text" class="form-control" value="(Generated)" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal</label>
+                                <input type="date" name="created_at" class="form-control @error('created_at') is-invalid @enderror" value="{{ old('created_at', date('Y-m-d')) }}" placeholder="Tanggal">
+                                <span class="error invalid-feedback">{{ $errors->first('created_at') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Nasabah</label>
+                                <select class="form-control select2 @error('customer_id') is-invalid @enderror" name="customer_id" id="customer_id">
+                                    <!-- AJAX loaded options -->
+                                </select>
+                                <span class="error invalid-feedback">{{ $errors->first('customer_id') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Saldo (Rp)</label>
+                                <input type="text" class="form-control" name="balance" value="Rp0,00" placeholder="Saldo" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Nominal Penarikan (Rp)</label>
+                                <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Penarikan">
+                                <span class="error invalid-feedback" id="amount-error">{{ $errors->first('amount') }}</span>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>
                         </form>
                     </div>
                 </div>
             </div>
-            <!-- /.col-md-6 -->
         </div>
-        <!-- /.row -->
-    </div><!-- /.container-fluid -->
-    <!-- /.content -->
+    </div>
 @endsection
 
 @push('style')
@@ -69,12 +59,8 @@
                 url: '{{ route("customer.search") }}',
                 dataType: 'json',
                 delay: 250,
-                data: function (params) {
-                    return { q: params.term };
-                },
-                processResults: function (data) {
-                    return { results: data.results };
-                }
+                data: function (params) { return { q: params.term }; },
+                processResults: function (data) { return { results: data.results }; }
             }
         });
 
@@ -86,7 +72,6 @@
         $('#amount').on('input', function() {
             let max = parseFloat($(this).attr('max')) || 0;
             let val = parseFloat($(this).val()) || 0;
-            
             if (val > max) {
                 $(this).addClass('is-invalid');
                 $('#amount-error').text('Nominal penarikan tidak boleh melebihi saldo.').show();
@@ -107,9 +92,8 @@
             .then(data => {
                 _withdrawal.attr('max', data.data.current_balance);
                 _balance.val(data.data.current_balance_formatted);
-                _withdrawal.trigger('input'); // re-trigger validation
+                _withdrawal.trigger('input');
             });
     }
-
 </script>
 @endpush

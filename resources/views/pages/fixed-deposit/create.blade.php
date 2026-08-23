@@ -27,87 +27,69 @@
                         @error('amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tenor Deposito <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" min="1" max="120" name="tenor_months" id="tenor_months" class="form-control @error('tenor_months') is-invalid @enderror" value="{{ old('tenor_months', 3) }}" required placeholder="Contoh: 3, 6, 12">
-                                    <div class="input-group-append"><span class="input-group-text">Bulan</span></div>
-                                </div>
-                                <small class="form-text text-muted">Bebas menginputkan durasi tenor dalam bulan.</small>
-                                @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            </div>
+                    <div class="form-group">
+                        <label>Tenor Deposito <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" min="1" max="120" name="tenor_months" id="tenor_months" class="form-control @error('tenor_months') is-invalid @enderror" value="{{ old('tenor_months', 3) }}" required placeholder="Contoh: 3, 6, 12">
+                            <div class="input-group-append"><span class="input-group-text">Bulan</span></div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Rate Bunga (% p.a.) <span class="text-danger">*</span></label>
-                                @if($rates->isNotEmpty())
-                                    <select name="rate_percent" id="rate_percent"
-                                        class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
-                                        required>
-                                        @foreach($rates as $rate)
-                                        <option value="{{ $rate->rate_percent }}"
-                                            {{ old('rate_percent', $activeRate?->rate_percent) == $rate->rate_percent ? 'selected' : '' }}>
-                                            {{ $rate->rate_percent }}% p.a.
-                                            (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle text-primary"></i>
-                                        Rate dari Manajemen Bunga. Rate aktif otomatis dipilih.
-                                    </small>
-                                @else
-                                    <div class="alert alert-warning py-1 mb-1" style="font-size:.85rem">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        Rate Deposito belum diatur.
-                                        <a href="{{ route('interest.create') }}" target="_blank">Tambah sekarang</a>
-                                    </div>
-                                    <div class="input-group">
-                                        <input type="number" step="0.01" min="0" max="100"
-                                            name="rate_percent" id="rate_percent"
-                                            class="form-control @error('rate_percent') is-invalid @enderror"
-                                            value="{{ old('rate_percent') }}"
-                                            required placeholder="Masukkan rate bunga">
-                                        <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
-                                    </div>
-                                @endif
-                                @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <small class="form-text text-muted">Bebas menginputkan durasi tenor dalam bulan.</small>
+                        @error('tenor_months')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rate Bunga (% p.a.) <span class="text-danger">*</span></label>
+                        @if($rates->isNotEmpty())
+                            <select name="rate_percent" id="rate_percent"
+                                class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
+                                required>
+                                @foreach($rates as $rate)
+                                <option value="{{ $rate->rate_percent }}"
+                                    {{ old('rate_percent', $activeRate?->rate_percent) == $rate->rate_percent ? 'selected' : '' }}>
+                                    {{ $rate->rate_percent }}% p.a.
+                                    (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
+                                </option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle text-primary"></i>
+                                Rate dari Manajemen Bunga. Rate aktif otomatis dipilih.
+                            </small>
+                        @else
+                            <div class="alert alert-warning py-1 mb-1" style="font-size:.85rem">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Rate Deposito belum diatur.
+                                <a href="{{ route('interest.create') }}" target="_blank">Tambah sekarang</a>
                             </div>
-                        </div>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" max="100"
+                                    name="rate_percent" id="rate_percent"
+                                    class="form-control @error('rate_percent') is-invalid @enderror"
+                                    value="{{ old('rate_percent') }}"
+                                    required placeholder="Masukkan rate bunga">
+                                <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
+                            </div>
+                        @endif
+                        @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
                     <hr>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tanggal Mulai</label>
-                                <input type="text" class="form-control" value="{{ date('d F Y') }}" disabled>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tanggal Jatuh Tempo</label>
-                                <input type="text" id="maturity_display" class="form-control font-weight-bold text-primary" disabled value="-">
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label>Tanggal Mulai</label>
+                        <input type="text" class="form-control" value="{{ date('d F Y') }}" disabled>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Estimasi Bunga per Bulan</label>
-                                <input type="text" id="monthly_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Estimasi Total Bunga (s.d Jatuh Tempo)</label>
-                                <input type="text" id="total_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label>Tanggal Jatuh Tempo</label>
+                        <input type="text" id="maturity_display" class="form-control font-weight-bold text-primary" disabled value="-">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimasi Bunga per Bulan</label>
+                        <input type="text" id="monthly_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimasi Total Bunga (s.d Jatuh Tempo)</label>
+                        <input type="text" id="total_interest_display" class="form-control font-weight-bold text-success" disabled value="-">
                     </div>
 
                     <div class="form-group">

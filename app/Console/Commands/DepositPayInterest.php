@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class DepositPayInterest extends Command
 {
     protected $signature = 'deposit:pay-interest {--date= : Override tanggal (YYYY-MM-DD)} {--dry-run : Simulasi tanpa menyimpan}';
-    protected $description = 'Transfer bunga deposito ke tabungan sukarela nasabah (bulanan)';
+    protected $description = 'Transfer bunga deposito ke simpanan nasabah (bulanan)';
 
     public function handle()
     {
