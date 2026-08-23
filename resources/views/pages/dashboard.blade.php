@@ -48,8 +48,11 @@
             <div class="alert @if($lastEngineLog && $lastEngineLog->status == 'success') alert-success @else alert-warning @endif">
                 <h5><i class="icon fas fa-info"></i> Status Engine Bunga</h5>
                 @if($lastEngineLog)
-                    Terakhir berjalan: {{ \Carbon\Carbon::parse($lastEngineLog->run_date)->isoFormat('dddd, D MMMM Y HH:mm') }}<br>
-                    Status: {{ ucfirst($lastEngineLog->status) }} | Total diproses: {{ $lastEngineLog->total_customers_processed }} nasabah
+                    Terakhir berjalan: {{ \Carbon\Carbon::parse($lastEngineLog->created_at ?? $lastEngineLog->run_date)->isoFormat('dddd, D MMMM Y HH:mm') }}<br>
+                    Status: {{ ucfirst($lastEngineLog->status) }} | Total diproses: {{ number_format($lastEngineLog->total_customers ?? $lastEngineLog->total_customers_processed ?? 0, 0, ',', '.') }} nasabah
+                    @if(isset($lastEngineLog->total_interest) && $lastEngineLog->total_interest > 0)
+                        | Total Bunga: Rp{{ number_format($lastEngineLog->total_interest, 0, ',', '.') }}
+                    @endif
                 @else
                     Engine belum pernah berjalan.
                 @endif
@@ -92,7 +95,7 @@
                             @forelse($maturedDeposits as $dep)
                             <tr>
                                 <td>{{ $dep->number }}</td>
-                                <td>{{ $dep->customer->name }}</td>
+                                <td>{{ $dep->customer->name ?? '-' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($dep->maturity_date)->isoFormat('DD MMM Y') }}</td>
                                 <td>Rp{{ number_format($dep->amount, 0, ',', '.') }}</td>
                             </tr>
@@ -119,7 +122,7 @@
                         <li class="item">
                             <div class="product-info ml-0">
                                 <a href="javascript:void(0)" class="product-title">
-                                    {{ $trx->customer->name }}
+                                    {{ $trx->customer->name ?? 'Nasabah' }}
                                     @if($trx->type == 'penarikan')
                                         <span class="badge badge-danger float-right">-Rp{{ number_format($trx->amount, 0, ',', '.') }}</span>
                                     @else
@@ -127,7 +130,7 @@
                                     @endif
                                 </a>
                                 <span class="product-description">
-                                    {{ ucfirst($trx->type) }} ({{ \Carbon\Carbon::parse($trx->created_at)->diffForHumans() }})
+                                    {{ ucfirst($trx->type == 'sukarela' ? 'Simpanan Harian' : $trx->type) }} ({{ \Carbon\Carbon::parse($trx->created_at)->diffForHumans() }})
                                 </span>
                             </div>
                         </li>

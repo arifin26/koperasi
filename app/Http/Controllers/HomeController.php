@@ -25,7 +25,7 @@ class HomeController extends Controller
         $nasabahAktif = \App\Models\Customer::where('status', 'active')->count();
         
         $masukHariIni = \App\Models\Deposit::whereDate('created_at', $today)
-                            ->whereIn('type', ['simpanan', 'bunga'])
+                            ->where('type', '!=', 'penarikan')
                             ->sum('amount');
                             
         $keluarHariIni = \App\Models\Deposit::whereDate('created_at', $today)
@@ -39,7 +39,20 @@ class HomeController extends Controller
                                       ->groupBy('customer_id');
                             })->sum('current_balance');
                             
-        // 2. Chart 7 Hari Terakhir
+        // 2. Chart 7 Hari Terakhir (Dioptimasi dari 14 query menjadi 1 query agregasi)
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        $dailyStats = \App\Models\Deposit::selectRaw("
+                DATE(created_at) as txn_date,
+                SUM(CASE WHEN type != 'penarikan' THEN amount ELSE 0 END) as masuk,
+                SUM(CASE WHEN type = 'penarikan' THEN amount ELSE 0 END) as keluar
+            ")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupByRaw('DATE(created_at)')
+            ->get()
+            ->keyBy('txn_date');
+
         $chartData = [
             'labels' => [],
             'masuk' => [],
@@ -49,16 +62,8 @@ class HomeController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
             $chartData['labels'][] = now()->subDays($i)->isoFormat('DD MMM');
-            
-            $masuk = \App\Models\Deposit::whereDate('created_at', $date)
-                        ->whereIn('type', ['simpanan', 'bunga'])
-                        ->sum('amount');
-            $keluar = \App\Models\Deposit::whereDate('created_at', $date)
-                        ->where('type', 'penarikan')
-                        ->sum('amount');
-                        
-            $chartData['masuk'][] = $masuk;
-            $chartData['keluar'][] = $keluar;
+            $chartData['masuk'][] = (int) ($dailyStats[$date]->masuk ?? 0);
+            $chartData['keluar'][] = (int) ($dailyStats[$date]->keluar ?? 0);
         }
 
         // 3. 5 Transaksi Terakhir
