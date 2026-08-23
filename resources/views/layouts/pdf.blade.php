@@ -19,7 +19,7 @@
 <body style="font-family: sans-serif;">
     <header class="text-center mb-4">
         <h3 class="mb-0 font-weight-bold">{{ strtoupper(config('app.name')) }}</h3>
-        <p class="mb-0">Jl. Sesama No. 47 RT. 16, Telp. 62 851-4306-4088</p>
+        <p class="mb-0">Jl. Gadungan-Kepung, RT.04/RW.04, Sumber Bahagia, Kepung, Kec. Puncu, Kabupaten Kediri, Jawa Timur 64293</p>
         <hr style="border-top: 2px solid #000;">
     </header>
 

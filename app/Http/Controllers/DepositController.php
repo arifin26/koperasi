@@ -33,7 +33,7 @@ class DepositController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Deposit::with('customer')->whereNot('type', 'penarikan')->orderBy('created_at');
+            $data = Deposit::with(['customer', 'validator'])->whereNot('type', 'penarikan')->orderBy('created_at');
 
             if ($request->customer) {
                 $data = $data->where('customer_id', $request->customer);
@@ -54,9 +54,18 @@ class DepositController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
+                    $validateBtn = '';
+                    if ($row->is_validated) {
+                        $validateBtn = '<span class="badge badge-success px-2 py-1 mr-1" title="Divalidasi oleh ' . ($row->validator->name ?? 'User') . ' pada ' . ($row->validated_at ? $row->validated_at->isoFormat('DD/MM/Y HH:mm') : '') . '"><i class="fas fa-check-circle"></i> Valid</span>
+                                        <a href="' . route('transaction.deposit.validation-print', $row) . '" target="_blank" class="btn btn-outline-dark btn-xs px-2 mr-1" title="Cetak Slip Validasi"><i class="fas fa-barcode"></i> Cetak Validasi</a>';
+                    } else {
+                        $validateBtn = '<button type="button" class="btn btn-warning btn-xs px-2 mr-1 btn-validate" data-url="' . route('transaction.deposit.validate', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-check"></i> Validasi</button>';
+                    }
+
                     if ($row->customer) {
                         return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a>
                                 <button type="button" class="btn btn-info btn-xs px-2 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-book"></i> Buku</button>
+                                ' . $validateBtn . '
                                 <a href="' . route('transaction.deposit.show', $row) . '" class="btn btn-success btn-xs px-2 mx-1"> Detail </a>
                                 <a href="' . route('transaction.deposit.edit', $row) . '" class="btn btn-primary btn-xs px-2 mr-1"> Edit </a>
                                 <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
@@ -68,6 +77,7 @@ class DepositController extends Controller
 
                     return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1"><i class="fas fa-print"></i> Kwitansi</a>
                         <button type="button" class="btn btn-info btn-xs px-2 mr-1 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . '"><i class="fas fa-book"></i> Buku</button>
+                        ' . $validateBtn . '
                         <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="_token" value="' . csrf_token() . '" />
@@ -285,7 +295,7 @@ class DepositController extends Controller
 
     public function receipt(Deposit $simpanan)
     {
-        $simpanan->load(['customer', 'creator']);
+        $simpanan->load(['customer', 'creator', 'validator']);
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
@@ -299,6 +309,48 @@ class DepositController extends Controller
 
         $filename = 'Kwitansi_Simpanan_' . $code . '_' . time() . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function validateTransaction(Deposit $simpanan)
+    {
+        if ($simpanan->validated_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaksi ini sudah divalidasi sebelumnya oleh ' . ($simpanan->validator->name ?? 'User') . '.',
+            ], 422);
+        }
+
+        $simpanan->update([
+            'validated_at' => now(),
+            'validated_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transaksi simpanan ' . $this->buildTransactionCode($simpanan->id) . ' berhasil divalidasi.',
+            'validation_print_url' => route('transaction.deposit.validation-print', $simpanan),
+        ]);
+    }
+
+    public function printValidation(Deposit $simpanan)
+    {
+        $simpanan->load(['customer', 'validator']);
+        $typeLabel = match($simpanan->type) {
+            'bunga' => 'PENYETORAN BUNGA',
+            default => 'PENYETORAN TUNAI',
+        };
+
+        $validatorName = $simpanan->validator->name ?? auth()->user()->name ?? 'TELLER';
+        $validatedAt = $simpanan->validated_at ? $simpanan->validated_at->format('d/m/Y H:i:s') : now()->format('d/m/Y H:i:s');
+
+        return view('pages.transaction.validation.print', [
+            'title' => 'Cetak Validasi Simpanan - ' . $this->buildTransactionCode($simpanan->id),
+            'typeLabel' => $typeLabel,
+            'validatorName' => $validatorName,
+            'accountNumber' => $simpanan->customer->number ?? '-',
+            'validatedAt' => $validatedAt,
+            'amount' => $simpanan->amount,
+        ]);
     }
 
     public function destroyReceipt($id)

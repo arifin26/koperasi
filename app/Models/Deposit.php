@@ -11,6 +11,10 @@ class Deposit extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'validated_at' => 'datetime',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -19,6 +23,16 @@ class Deposit extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validated_by')->withTrashed();
+    }
+
+    public function getIsValidatedAttribute()
+    {
+        return !is_null($this->validated_at);
     }
 
     /**

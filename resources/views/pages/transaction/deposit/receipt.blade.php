@@ -10,6 +10,23 @@
 @section('sign-right-name', $deposit->creator->name ?? auth()->user()->name ?? 'Teller')
 @section('sign-right-role', 'Teller / Kasir')
 
+@if($deposit->validated_at)
+@section('validation-strip')
+<div class="validation-strip">
+    <table class="validation-table">
+        <tr>
+            <td style="text-align: left; font-weight: bold; width: 60%;">PENYETORAN TUNAI</td>
+            <td style="text-align: right; width: 40%; font-weight: bold;">Usr. {{ strtoupper($deposit->validator->name ?? auth()->user()->name) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: left;">Rek.{{ $deposit->customer->number ?? '-' }} &nbsp; {{ $deposit->validated_at->format('d/m/Y H:i:s') }}</td>
+            <td style="text-align: right; font-weight: bold;">Rp. {{ number_format($deposit->amount, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+</div>
+@endsection
+@endif
+
 @section('content')
 @php
     $typeLabel = match($deposit->type) {

@@ -27,7 +27,7 @@ class FixedDepositController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = FixedDeposit::with('customer')->orderBy('created_at', 'desc');
+            $data = FixedDeposit::with(['customer', 'validator'])->orderBy('created_at', 'desc');
 
             if ($request->status) {
                 $data->where('status', $request->status);
@@ -66,7 +66,16 @@ class FixedDepositController extends Controller
                     return $row->status_label;
                 })
                 ->addColumn('action', function($row) {
+                    $validateBtn = '';
+                    if ($row->is_validated) {
+                        $validateBtn = '<span class="badge badge-success px-2 py-1 mr-1" title="Divalidasi oleh ' . ($row->validator->name ?? 'User') . ' pada ' . ($row->validated_at ? $row->validated_at->isoFormat('DD/MM/Y HH:mm') : '') . '"><i class="fas fa-check-circle"></i> Valid</span>
+                                        <a href="' . route('fixed-deposit.validation-print', $row) . '" target="_blank" class="btn btn-outline-dark btn-xs px-2 mr-1" title="Cetak Slip Validasi"><i class="fas fa-barcode"></i> Cetak Validasi</a>';
+                    } else {
+                        $validateBtn = '<button type="button" class="btn btn-warning btn-xs px-2 mr-1 btn-validate" data-url="' . route('fixed-deposit.validate', $row) . '" data-title="Deposito ' . $row->number . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-check"></i> Validasi</button>';
+                    }
+
                     $btn = '<a href="'.route('fixed-deposit.receipt', $row).'" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a> ';
+                    $btn .= $validateBtn . ' ';
                     $btn .= '<a href="'.route('fixed-deposit.show', $row).'" class="btn btn-success btn-xs px-2 mx-1">Detail</a> ';
                     if ($row->status == 'active') {
                         $btn .= '<a href="'.route('fixed-deposit.extend.form', $row).'" class="btn btn-info btn-xs px-2 mr-1">Perpanjang</a> ';
@@ -299,7 +308,7 @@ class FixedDepositController extends Controller
 
     public function receipt(FixedDeposit $fixed_deposit)
     {
-        $fixed_deposit->load(['customer', 'creator']);
+        $fixed_deposit->load(['customer', 'creator', 'validator']);
         $terbilang = TerbilangHelper::make($fixed_deposit->amount);
 
         $pdf = Pdf::loadView('pages.fixed-deposit.receipt', [
@@ -311,6 +320,43 @@ class FixedDepositController extends Controller
 
         $filename = 'Kwitansi_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    public function validateTransaction(FixedDeposit $fixed_deposit)
+    {
+        if ($fixed_deposit->validated_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deposito ini sudah divalidasi sebelumnya oleh ' . ($fixed_deposit->validator->name ?? 'User') . '.',
+            ], 422);
+        }
+
+        $fixed_deposit->update([
+            'validated_at' => now(),
+            'validated_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Deposito ' . $fixed_deposit->number . ' berhasil divalidasi.',
+            'validation_print_url' => route('fixed-deposit.validation-print', $fixed_deposit),
+        ]);
+    }
+
+    public function printValidation(FixedDeposit $fixed_deposit)
+    {
+        $fixed_deposit->load(['customer', 'validator']);
+        $validatorName = $fixed_deposit->validator->name ?? auth()->user()->name ?? 'TELLER';
+        $validatedAt = $fixed_deposit->validated_at ? $fixed_deposit->validated_at->format('d/m/Y H:i:s') : now()->format('d/m/Y H:i:s');
+
+        return view('pages.transaction.validation.print', [
+            'title' => 'Cetak Validasi Deposito - ' . $fixed_deposit->number,
+            'typeLabel' => 'PEMBUKAAN DEPOSITO',
+            'validatorName' => $validatorName,
+            'accountNumber' => $fixed_deposit->customer->number ?? '-',
+            'validatedAt' => $validatedAt,
+            'amount' => $fixed_deposit->amount,
+        ]);
     }
 
     public function destroy(FixedDeposit $fixed_deposit)

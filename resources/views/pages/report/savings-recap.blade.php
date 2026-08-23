@@ -44,7 +44,7 @@
                 <small class="text-muted">Data per: {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }}</small>
             </div>
             <div class="card-body">
-                {{-- Filter --}}
+                {{-- Filter & Action --}}
                 <div class="row mb-3">
                     <div class="col-md-3">
                         <label>Filter Status Nasabah:</label>
@@ -53,6 +53,13 @@
                             <option value="active">Aktif</option>
                             <option value="blacklist">Blacklist</option>
                         </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <form action="{{ route('report.savings-recap.print') }}" method="POST" target="_blank" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="status" id="print_status" value="">
+                            <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
+                        </form>
                     </div>
                 </div>
 
@@ -132,6 +139,7 @@
         });
 
         $('#filter_status').change(function () {
+            $('#print_status').val($(this).val());
             table.draw();
         });
     });

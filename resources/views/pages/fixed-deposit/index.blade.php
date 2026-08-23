@@ -254,6 +254,54 @@ $(document).ready(function() {
             }
         });
     });
+
+    $(document).on('click', '.btn-validate', function(e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+        const title = $(this).data('title') || 'transaksi ini';
+
+        Swal.fire({
+            title: 'Validasi Transaksi',
+            text: `Apakah Anda yakin ingin memvalidasi ${title}? Transaksi yang telah divalidasi akan mencantumkan baris validasi pada cetak kwitansi.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check"></i> Ya, Validasi',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(res) {
+                        Swal.fire({
+                            title: 'Berhasil Divalidasi!',
+                            text: res.message || 'Transaksi berhasil divalidasi.',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonColor: '#28a745',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="fas fa-print"></i> Cetak Validasi Sekarang',
+                            cancelButtonText: 'Tutup'
+                        }).then((printResult) => {
+                            if (printResult.isConfirmed && res.validation_print_url) {
+                                window.open(res.validation_print_url, '_blank');
+                            }
+                        });
+                        table.draw(false);
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan saat memvalidasi.';
+                        Swal.fire('Gagal!', msg, 'error');
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
 @endpush

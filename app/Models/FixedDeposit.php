@@ -18,6 +18,7 @@ class FixedDeposit extends Model
         'maturity_date' => 'date',
         'liquidated_at' => 'datetime',
         'matured_at' => 'datetime',
+        'validated_at' => 'datetime',
     ];
 
     public function customer()
@@ -38,6 +39,16 @@ class FixedDeposit extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validated_by')->withTrashed();
+    }
+
+    public function getIsValidatedAttribute()
+    {
+        return !is_null($this->validated_at);
     }
 
     /**

@@ -77,7 +77,7 @@
             border: none;
         }
         .meta-label {
-            width: 10%;
+            width: 12%;
             font-weight: bold;
             color: #444;
         }
@@ -86,7 +86,7 @@
             text-align: center;
         }
         .meta-value {
-            width: 39%;
+            width: 37%;
         }
         .data-table {
             width: 100%;
@@ -109,6 +109,18 @@
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
+        .badge {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-success { background-color: #e6f9ee; color: #1a5632; border: 0.5px solid #1a5632; }
+        .badge-warning { background-color: #fff3cd; color: #856404; border: 0.5px solid #856404; }
+        .badge-info { background-color: #d1ecf1; color: #0c5460; border: 0.5px solid #0c5460; }
+        .badge-secondary { background-color: #e2e3e5; color: #383d41; border: 0.5px solid #383d41; }
         .summary-row th, .summary-row td {
             font-weight: bold;
             background-color: #f4f8f5;
@@ -163,8 +175,8 @@
                 <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
             </td>
             <td style="width: 45%;" class="report-title-box">
-                <div class="report-title">LAPORAN TRANSAKSI HARIAN</div>
-                <div class="report-period">Tanggal: {{ $date }}</div>
+                <div class="report-title">LAPORAN REKAP DEPOSITO</div>
+                <div class="report-period">Per: {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</div>
             </td>
         </tr>
     </table>
@@ -180,12 +192,24 @@
             <td class="meta-value">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }} WIB</td>
         </tr>
         <tr>
-            <td class="meta-label">Total Transaksi</td>
+            <td class="meta-label">Filter Status</td>
             <td class="meta-colon">:</td>
-            <td class="meta-value">{{ count($data) }} Transaksi</td>
-            <td class="meta-label">Status Laporan</td>
+            <td class="meta-value">
+                @if($statusFilter == 'active')
+                    Deposito Aktif
+                @elseif($statusFilter == 'matured')
+                    Jatuh Tempo
+                @elseif($statusFilter == 'extended')
+                    Diperpanjang
+                @elseif($statusFilter == 'liquidated')
+                    Dicairkan
+                @else
+                    Semua Status
+                @endif
+            </td>
+            <td class="meta-label">Total Deposito</td>
             <td class="meta-colon">:</td>
-            <td class="meta-value">Final</td>
+            <td class="meta-value">{{ count($data) }} Bilyet</td>
         </tr>
     </table>
 
@@ -194,41 +218,53 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 7%;">Waktu</th>
-                <th style="width: 14%;">No. Rekening</th>
-                <th style="width: 20%;">Nama Nasabah</th>
-                <th style="width: 10%;">Jenis</th>
-                <th>Keterangan</th>
-                <th style="width: 12%;">Masuk (Rp)</th>
-                <th style="width: 12%;">Keluar (Rp)</th>
-                <th style="width: 13%;">Saldo (Rp)</th>
+                <th style="width: 12%;">No. Deposito</th>
+                <th style="width: 12%;">No. Rekening</th>
+                <th style="width: 18%;">Nama Nasabah</th>
+                <th style="width: 8%;">Bunga</th>
+                <th style="width: 8%;">Tenor</th>
+                <th style="width: 9%;">Tgl Mulai</th>
+                <th style="width: 9%;">Jatuh Tempo</th>
+                <th style="width: 8%;">Status</th>
+                <th style="width: 12%;">Nominal (Rp)</th>
             </tr>
         </thead>
         <tbody>
             @forelse($data as $i => $row)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center">{{ (\Carbon\Carbon::parse($row->created_at)->format('H:i:s') === '00:00:00' && $row->updated_at) ? \Carbon\Carbon::parse($row->updated_at)->format('H:i') : \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</td>
-                <td>{{ $row->customer->number ?? '-' }}</td>
+                <td class="text-center"><strong>{{ $row->number }}</strong></td>
+                <td class="text-center">{{ $row->customer->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
-                <td class="text-center">{{ ucfirst($row->type) }}</td>
-                <td>{{ $row->notes ?? '-' }}</td>
-                <td class="text-right">{{ $row->type !== 'penarikan' ? number_format($row->amount, 0, ',', '.') : '-' }}</td>
-                <td class="text-right">{{ $row->type === 'penarikan' ? number_format($row->amount, 0, ',', '.') : '-' }}</td>
-                <td class="text-right"><strong>{{ number_format($row->current_balance, 0, ',', '.') }}</strong></td>
+                <td class="text-center">{{ $row->rate_percent }}% p.a.</td>
+                <td class="text-center">{{ $row->tenor_months }} Bulan</td>
+                <td class="text-center">{{ $row->start_date ? $row->start_date->isoFormat('DD/MM/Y') : '-' }}</td>
+                <td class="text-center">{{ $row->maturity_date ? $row->maturity_date->isoFormat('DD/MM/Y') : '-' }}</td>
+                <td class="text-center">
+                    @if($row->status == 'active')
+                        <span class="badge badge-success">Aktif</span>
+                    @elseif($row->status == 'matured')
+                        <span class="badge badge-warning">Jatuh Tempo</span>
+                    @elseif($row->status == 'extended')
+                        <span class="badge badge-info">Diperpanjang</span>
+                    @elseif($row->status == 'liquidated')
+                        <span class="badge badge-secondary">Dicairkan</span>
+                    @else
+                        <span class="badge badge-secondary">-</span>
+                    @endif
+                </td>
+                <td class="text-right"><strong>{{ number_format($row->amount, 0, ',', '.') }}</strong></td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center" style="padding: 15px; color: #888;">Tidak ada transaksi pada tanggal ini.</td>
+                <td colspan="10" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="6" class="text-right">TOTAL TRANSAKSI</th>
-                <th class="text-right">{{ number_format($totalMasuk, 0, ',', '.') }}</th>
-                <th class="text-right">{{ number_format($totalKeluar, 0, ',', '.') }}</th>
-                <th class="text-right">Selisih: {{ number_format($totalMasuk - $totalKeluar, 0, ',', '.') }}</th>
+                <th colspan="9" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th class="text-right">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
             </tr>
         </tfoot>
     </table>

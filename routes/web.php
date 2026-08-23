@@ -60,7 +60,11 @@ Route::middleware('auth')->group(function() {
 
         Route::post('/simpanan/cetak', [DepositController::class, 'print'])->name('deposit.print');
         Route::post('/simpanan/update-bunga', [DepositController::class, 'updateBunga'])->name('deposit.update-bunga');
+        Route::post('/simpanan/{simpanan}/validasi', [DepositController::class, 'validateTransaction'])->name('deposit.validate');
+        Route::get('/simpanan/{simpanan}/cetak-validasi', [DepositController::class, 'printValidation'])->name('deposit.validation-print');
         Route::post('/penarikan/cetak', [WithdrawalController::class, 'print'])->name('withdrawal.print');
+        Route::post('/penarikan/{penarikan}/validasi', [WithdrawalController::class, 'validateTransaction'])->name('withdrawal.validate');
+        Route::get('/penarikan/{penarikan}/cetak-validasi', [WithdrawalController::class, 'printValidation'])->name('withdrawal.validation-print');
     });
 
     // Modul 05 & 06 (Hari Libur & Bunga)
@@ -79,12 +83,16 @@ Route::middleware('auth')->group(function() {
     Route::get('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidateForm'])->name('fixed-deposit.liquidate.form');
     Route::post('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidate'])->name('fixed-deposit.liquidate');
     Route::post('deposito/cetak', [App\Http\Controllers\FixedDepositController::class, 'print'])->name('fixed-deposit.print');
+    Route::post('deposito/{fixed_deposit}/validasi', [App\Http\Controllers\FixedDepositController::class, 'validateTransaction'])->name('fixed-deposit.validate');
+    Route::get('deposito/{fixed_deposit}/cetak-validasi', [App\Http\Controllers\FixedDepositController::class, 'printValidation'])->name('fixed-deposit.validation-print');
 
     // Laporan
     Route::get('/laporan/harian', [App\Http\Controllers\ReportController::class, 'dailyTransaction'])->name('report.daily');
     Route::post('/laporan/harian/cetak', [App\Http\Controllers\ReportController::class, 'dailyTransactionPrint'])->name('report.daily.print');
     Route::get('/laporan/rekap-simpanan', [App\Http\Controllers\ReportController::class, 'savingsRecap'])->name('report.savings-recap');
+    Route::post('/laporan/rekap-simpanan/cetak', [App\Http\Controllers\ReportController::class, 'savingsRecapPrint'])->name('report.savings-recap.print');
     Route::get('/laporan/rekap-deposito', [App\Http\Controllers\ReportController::class, 'depositRecap'])->name('report.deposit-recap');
+    Route::post('/laporan/rekap-deposito/cetak', [App\Http\Controllers\ReportController::class, 'depositRecapPrint'])->name('report.deposit-recap.print');
 
     // Utility — Trash
     Route::get('/utility/trash', [App\Http\Controllers\TrashController::class, 'index'])->name('trash.index');

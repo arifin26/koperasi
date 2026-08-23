@@ -107,9 +107,12 @@ class ReportController extends Controller
     public function savingsRecap(Request $request)
     {
         if ($request->ajax()) {
+            $statusFilter = $request->status ?? '';
+
             // Ambil saldo terbaru dari kolom current_balance di tabel deposits
             // (kolom ini di-update setiap kali ada transaksi via recalculateBalance)
             $data = Customer::select('customers.*')
+                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with(['deposits' => function ($q) {
                     $q->latest('id')->limit(1);
                 }])
@@ -162,6 +165,42 @@ class ReportController extends Controller
         ]);
     }
 
+    public function savingsRecapPrint(Request $request)
+    {
+        $statusFilter = $request->status ?? '';
+
+        $data = Customer::select('customers.*')
+            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+            ->with(['deposits' => function ($q) {
+                $q->latest('id')->limit(1);
+            }])
+            ->withCount('deposits')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $totalSaldo = 0;
+        foreach ($data as $customer) {
+            $lastDeposit = $customer->deposits->first();
+            $totalSaldo += $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+        }
+
+        $manager = User::where('role', 'manager')->first();
+
+        $pdf = PDF::loadView('pages.report.savings-recap-print', [
+            'title' => 'Laporan Rekap Simpanan Nasabah',
+            'user' => auth()->user(),
+            'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
+            'manager' => $manager,
+            'data' => $data,
+            'totalSaldo' => $totalSaldo,
+            'statusFilter' => $statusFilter,
+        ]);
+        $pdf->setPaper('A4', 'landscape');
+
+        $filename = date('Y-m-d') . '_laporan_rekap_simpanan_' . time() . '.pdf';
+        return $pdf->download($filename);
+    }
+
     /**
      * Rekap Deposito per Nasabah
      */
@@ -212,5 +251,39 @@ class ReportController extends Controller
             'totalDicairkan' => $totalDicairkan,
             'nominalAktif' => $nominalAktif,
         ]);
+    }
+
+    public function depositRecapPrint(Request $request)
+    {
+        $statusFilter = $request->status ?? '';
+
+        $data = FixedDeposit::with('customer')
+            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+            ->orderBy('start_date', 'desc')
+            ->get();
+
+        $totalNominal = $data->sum('amount');
+        $totalBunga = 0;
+        foreach ($data as $row) {
+            $monthlyInterest = floor($row->amount * ($row->rate_percent / 100) / 12);
+            $totalBunga += ($monthlyInterest * $row->tenor_months);
+        }
+
+        $manager = User::where('role', 'manager')->first();
+
+        $pdf = PDF::loadView('pages.report.deposit-recap-print', [
+            'title' => 'Laporan Rekap Deposito',
+            'user' => auth()->user(),
+            'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
+            'manager' => $manager,
+            'data' => $data,
+            'totalNominal' => $totalNominal,
+            'totalBunga' => $totalBunga,
+            'statusFilter' => $statusFilter,
+        ]);
+        $pdf->setPaper('A4', 'landscape');
+
+        $filename = date('Y-m-d') . '_laporan_rekap_deposito_' . time() . '.pdf';
+        return $pdf->download($filename);
     }
 }

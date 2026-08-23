@@ -10,6 +10,23 @@
 @section('sign-right-name', $fixed_deposit->creator->name ?? auth()->user()->name ?? 'Petugas')
 @section('sign-right-role', 'Customer Service / Teller')
 
+@if($fixed_deposit->validated_at)
+@section('validation-strip')
+<div class="validation-strip">
+    <table class="validation-table">
+        <tr>
+            <td style="text-align: left; font-weight: bold; width: 60%;">PEMBUKAAN DEPOSITO</td>
+            <td style="text-align: right; width: 40%; font-weight: bold;">Usr. {{ strtoupper($fixed_deposit->validator->name ?? auth()->user()->name) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align: left;">Rek.{{ $fixed_deposit->customer->number ?? '-' }} &nbsp; {{ $fixed_deposit->validated_at->format('d/m/Y H:i:s') }}</td>
+            <td style="text-align: right; font-weight: bold;">Rp. {{ number_format($fixed_deposit->amount, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+</div>
+@endsection
+@endif
+
 @section('content')
 <table class="content-table">
     <tr>

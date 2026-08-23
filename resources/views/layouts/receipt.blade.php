@@ -161,12 +161,32 @@
             padding-top: 1px;
             line-height: 1.1;
         }
+        .validation-strip {
+            margin-bottom: 3px;
+            padding-bottom: 2px;
+            border-bottom: 0.5px dashed #777;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .validation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .validation-table td {
+            font-size: 6.5pt;
+            line-height: 1.15;
+            color: #111;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 0 1px;
+        }
     </style>
 </head>
 <body>
     <div class="receipt-container">
         <div class="watermark">{{ config('app.name') }}</div>
         <div class="receipt-inner">
+            <!-- Validation Strip -->
+            @yield('validation-strip')
+
             <!-- Header -->
             <table class="header-table">
                 <tr>

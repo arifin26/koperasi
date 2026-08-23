@@ -77,7 +77,7 @@
             border: none;
         }
         .meta-label {
-            width: 10%;
+            width: 12%;
             font-weight: bold;
             color: #444;
         }
@@ -86,7 +86,7 @@
             text-align: center;
         }
         .meta-value {
-            width: 39%;
+            width: 37%;
         }
         .data-table {
             width: 100%;
@@ -96,7 +96,7 @@
         }
         .data-table th, .data-table td {
             border: 1px solid #1a5632;
-            padding: 4px 5px;
+            padding: 4px 6px;
             vertical-align: middle;
         }
         .data-table th {
@@ -109,6 +109,16 @@
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-success { background-color: #e6f9ee; color: #1a5632; border: 0.5px solid #1a5632; }
+        .badge-danger { background-color: #ffe5e5; color: #c82333; border: 0.5px solid #c82333; }
         .summary-row th, .summary-row td {
             font-weight: bold;
             background-color: #f4f8f5;
@@ -163,8 +173,8 @@
                 <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
             </td>
             <td style="width: 45%;" class="report-title-box">
-                <div class="report-title">LAPORAN TRANSAKSI HARIAN</div>
-                <div class="report-period">Tanggal: {{ $date }}</div>
+                <div class="report-title">REKAP SIMPANAN NASABAH</div>
+                <div class="report-period">Per: {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</div>
             </td>
         </tr>
     </table>
@@ -180,12 +190,20 @@
             <td class="meta-value">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }} WIB</td>
         </tr>
         <tr>
-            <td class="meta-label">Total Transaksi</td>
+            <td class="meta-label">Filter Status</td>
             <td class="meta-colon">:</td>
-            <td class="meta-value">{{ count($data) }} Transaksi</td>
-            <td class="meta-label">Status Laporan</td>
+            <td class="meta-value">
+                @if($statusFilter == 'active')
+                    Nasabah Aktif
+                @elseif($statusFilter == 'blacklist')
+                    Nasabah Blacklist
+                @else
+                    Semua Status
+                @endif
+            </td>
+            <td class="meta-label">Total Nasabah</td>
             <td class="meta-colon">:</td>
-            <td class="meta-value">Final</td>
+            <td class="meta-value">{{ count($data) }} Orang</td>
         </tr>
     </table>
 
@@ -193,42 +211,44 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 7%;">Waktu</th>
-                <th style="width: 14%;">No. Rekening</th>
-                <th style="width: 20%;">Nama Nasabah</th>
-                <th style="width: 10%;">Jenis</th>
-                <th>Keterangan</th>
-                <th style="width: 12%;">Masuk (Rp)</th>
-                <th style="width: 12%;">Keluar (Rp)</th>
-                <th style="width: 13%;">Saldo (Rp)</th>
+                <th style="width: 5%;">No</th>
+                <th style="width: 15%;">No. Rekening</th>
+                <th style="width: 25%;">Nama Nasabah</th>
+                <th style="width: 12%;">Status</th>
+                <th style="width: 15%;">Jumlah Transaksi</th>
+                <th style="width: 28%;">Saldo Simpanan (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($data as $i => $row)
+            @forelse($data as $i => $customer)
+            @php
+                $lastDeposit = $customer->deposits->first();
+                $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+            @endphp
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center">{{ (\Carbon\Carbon::parse($row->created_at)->format('H:i:s') === '00:00:00' && $row->updated_at) ? \Carbon\Carbon::parse($row->updated_at)->format('H:i') : \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</td>
-                <td>{{ $row->customer->number ?? '-' }}</td>
-                <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
-                <td class="text-center">{{ ucfirst($row->type) }}</td>
-                <td>{{ $row->notes ?? '-' }}</td>
-                <td class="text-right">{{ $row->type !== 'penarikan' ? number_format($row->amount, 0, ',', '.') : '-' }}</td>
-                <td class="text-right">{{ $row->type === 'penarikan' ? number_format($row->amount, 0, ',', '.') : '-' }}</td>
-                <td class="text-right"><strong>{{ number_format($row->current_balance, 0, ',', '.') }}</strong></td>
+                <td class="text-center">{{ $customer->number ?? '-' }}</td>
+                <td><strong>{{ $customer->name ?? '-' }}</strong></td>
+                <td class="text-center">
+                    @if($customer->status == 'blacklist')
+                        <span class="badge badge-danger">Blacklist</span>
+                    @else
+                        <span class="badge badge-success">Aktif</span>
+                    @endif
+                </td>
+                <td class="text-center">{{ $customer->deposits_count ?? 0 }} kali</td>
+                <td class="text-right"><strong>Rp {{ number_format($saldo, 0, ',', '.') }}</strong></td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center" style="padding: 15px; color: #888;">Tidak ada transaksi pada tanggal ini.</td>
+                <td colspan="6" class="text-center" style="padding: 15px; color: #888;">Tidak ada data nasabah yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="6" class="text-right">TOTAL TRANSAKSI</th>
-                <th class="text-right">{{ number_format($totalMasuk, 0, ',', '.') }}</th>
-                <th class="text-right">{{ number_format($totalKeluar, 0, ',', '.') }}</th>
-                <th class="text-right">Selisih: {{ number_format($totalMasuk - $totalKeluar, 0, ',', '.') }}</th>
+                <th colspan="5" class="text-right">TOTAL DANA SIMPANAN NASABAH</th>
+                <th class="text-right">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</th>
             </tr>
         </tfoot>
     </table>
