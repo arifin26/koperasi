@@ -300,7 +300,7 @@ class FixedDepositController extends Controller
             'manager' => $manager,
             'data' => $data,
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_laporan_deposito_' . time() . '.pdf';
         return $pdf->download($filename);

@@ -95,7 +95,7 @@ class ReportController extends Controller
             'totalMasuk' => $totalMasuk,
             'totalKeluar' => $totalKeluar,
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         $filename = $date . '_laporan_transaksi_harian_' . time() . '.pdf';
         return $pdf->download($filename);
@@ -173,7 +173,7 @@ class ReportController extends Controller
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->with(['deposits' => function ($q) {
                 $q->latest('id')->limit(1);
-            }])
+            }, 'interestRate'])
             ->withCount('deposits')
             ->orderBy('name', 'asc')
             ->get();
@@ -195,7 +195,7 @@ class ReportController extends Controller
             'totalSaldo' => $totalSaldo,
             'statusFilter' => $statusFilter,
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         $filename = date('Y-m-d') . '_laporan_rekap_simpanan_' . time() . '.pdf';
         return $pdf->download($filename);
@@ -281,7 +281,7 @@ class ReportController extends Controller
             'totalBunga' => $totalBunga,
             'statusFilter' => $statusFilter,
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         $filename = date('Y-m-d') . '_laporan_rekap_deposito_' . time() . '.pdf';
         return $pdf->download($filename);

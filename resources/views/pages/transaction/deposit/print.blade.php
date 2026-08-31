@@ -1,5 +1,23 @@
 @extends('layouts.pdf')
 
+@section('header')
+@if(isset($customer))
+<table style="width: 100%; margin-bottom: 15px; border: none;">
+    <tr>
+        <td style="width: 15%; font-weight: bold; border: none; padding: 2px;">No. Rekening</td>
+        <td style="width: 35%; border: none; padding: 2px;">: {{ $customer->number ?? '-' }}</td>
+        <td style="width: 15%; font-weight: bold; border: none; padding: 2px;">Alamat</td>
+        <td style="width: 35%; border: none; padding: 2px;">: {{ $customer->address ?? '-' }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight: bold; border: none; padding: 2px;">Nama Nasabah</td>
+        <td style="border: none; padding: 2px;">: {{ $customer->name ?? '-' }}</td>
+        <td style="border: none; padding: 2px;"></td>
+        <td style="border: none; padding: 2px;"></td>
+    </tr>
+</table>
+@endif
+@endsection
 
 @section('content')
 <table class="table table-bordered table-striped">

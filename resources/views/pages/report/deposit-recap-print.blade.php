@@ -6,8 +6,8 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 8mm 10mm 8mm 10mm;
+            size: A4 portrait;
+            margin: 12mm 12mm 12mm 20mm;
         }
         * {
             box-sizing: border-box;
@@ -171,8 +171,17 @@
     <table class="header-table">
         <tr>
             <td style="width: 55%; vertical-align: middle;">
-                <div class="header-logo">{{ config('app.name') }}</div>
-                <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="width: 48px; vertical-align: middle; padding-right: 8px;">
+                            <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 44px; height: 44px; object-fit: contain;">
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div class="header-logo">{{ config('app.name') }}</div>
+                            <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                        </td>
+                    </tr>
+                </table>
             </td>
             <td style="width: 45%;" class="report-title-box">
                 <div class="report-title">LAPORAN REKAP DEPOSITO</div>
@@ -218,52 +227,38 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 12%;">No. Deposito</th>
-                <th style="width: 12%;">No. Rekening</th>
+                <th style="width: 11%;">No. Rekening</th>
                 <th style="width: 18%;">Nama Nasabah</th>
-                <th style="width: 8%;">Bunga</th>
+                <th style="width: 22%;">Alamat</th>
                 <th style="width: 8%;">Tenor</th>
                 <th style="width: 9%;">Tgl Mulai</th>
                 <th style="width: 9%;">Jatuh Tempo</th>
-                <th style="width: 8%;">Status</th>
-                <th style="width: 12%;">Nominal (Rp)</th>
+                <th style="width: 9%;">Nominal (Rp)</th>
+                <th style="width: 10%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
             @forelse($data as $i => $row)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center"><strong>{{ $row->number }}</strong></td>
                 <td class="text-center">{{ $row->customer->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
-                <td class="text-center">{{ $row->rate_percent }}% p.a.</td>
+                <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $row->tenor_months }} Bulan</td>
                 <td class="text-center">{{ $row->start_date ? $row->start_date->isoFormat('DD/MM/Y') : '-' }}</td>
                 <td class="text-center">{{ $row->maturity_date ? $row->maturity_date->isoFormat('DD/MM/Y') : '-' }}</td>
-                <td class="text-center">
-                    @if($row->status == 'active')
-                        <span class="badge badge-success">Aktif</span>
-                    @elseif($row->status == 'matured')
-                        <span class="badge badge-warning">Jatuh Tempo</span>
-                    @elseif($row->status == 'extended')
-                        <span class="badge badge-info">Diperpanjang</span>
-                    @elseif($row->status == 'liquidated')
-                        <span class="badge badge-secondary">Dicairkan</span>
-                    @else
-                        <span class="badge badge-secondary">-</span>
-                    @endif
-                </td>
                 <td class="text-right"><strong>{{ number_format($row->amount, 0, ',', '.') }}</strong></td>
+                <td class="text-right">Rp {{ number_format($row->monthly_interest, 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
+                <td colspan="9" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="9" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th colspan="8" class="text-right">TOTAL DANA DEPOSITO</th>
                 <th class="text-right">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
             </tr>
         </tfoot>

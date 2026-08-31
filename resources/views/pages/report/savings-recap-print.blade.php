@@ -6,8 +6,8 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 8mm 10mm 8mm 10mm;
+            size: A4 portrait;
+            margin: 12mm 12mm 12mm 20mm;
         }
         * {
             box-sizing: border-box;
@@ -169,8 +169,17 @@
     <table class="header-table">
         <tr>
             <td style="width: 55%; vertical-align: middle;">
-                <div class="header-logo">{{ config('app.name') }}</div>
-                <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="width: 48px; vertical-align: middle; padding-right: 8px;">
+                            <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 44px; height: 44px;">
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div class="header-logo">{{ config('app.name') }}</div>
+                            <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                        </td>
+                    </tr>
+                </table>
             </td>
             <td style="width: 45%;" class="report-title-box">
                 <div class="report-title">REKAP SIMPANAN NASABAH</div>
@@ -211,12 +220,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 15%;">No. Rekening</th>
-                <th style="width: 25%;">Nama Nasabah</th>
-                <th style="width: 12%;">Status</th>
-                <th style="width: 15%;">Jumlah Transaksi</th>
-                <th style="width: 28%;">Saldo Simpanan (Rp)</th>
+                <th style="width: 4%;">No</th>
+                <th style="width: 10%;">No. Rekening</th>
+                <th style="width: 16%;">Nama Nasabah</th>
+                <th style="width: 28%;">Alamat</th>
+                <th style="width: 9%;">Jml Transaksi</th>
+                <th style="width: 22%;">Saldo Simpanan (Rp)</th>
+                <th style="width: 11%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
@@ -224,30 +234,27 @@
             @php
                 $lastDeposit = $customer->deposits->first();
                 $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+                $rate = $customer->interestRate->rate_percent ?? 0;
+                $bungaBulan = floor($saldo * ($rate / 100) / 12);
             @endphp
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
                 <td class="text-center">{{ $customer->number ?? '-' }}</td>
                 <td><strong>{{ $customer->name ?? '-' }}</strong></td>
-                <td class="text-center">
-                    @if($customer->status == 'blacklist')
-                        <span class="badge badge-danger">Blacklist</span>
-                    @else
-                        <span class="badge badge-success">Aktif</span>
-                    @endif
-                </td>
+                <td>{{ $customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $customer->deposits_count ?? 0 }} kali</td>
                 <td class="text-right"><strong>Rp {{ number_format($saldo, 0, ',', '.') }}</strong></td>
+                <td class="text-right">Rp {{ number_format($bungaBulan, 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center" style="padding: 15px; color: #888;">Tidak ada data nasabah yang sesuai.</td>
+                <td colspan="7" class="text-center" style="padding: 15px; color: #888;">Tidak ada data nasabah yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="5" class="text-right">TOTAL DANA SIMPANAN NASABAH</th>
+                <th colspan="6" class="text-right">TOTAL DANA SIMPANAN NASABAH</th>
                 <th class="text-right">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</th>
             </tr>
         </tfoot>

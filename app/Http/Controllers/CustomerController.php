@@ -188,7 +188,7 @@ class CustomerController extends Controller
             'manager' => $manager,
             'data' => $data
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         return $pdf->download($filename);
     }

@@ -288,7 +288,7 @@ class DepositController extends Controller
             'data' => $data,
             'total' => 0
         ]);
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
 
         return $pdf->download($filename);
     }

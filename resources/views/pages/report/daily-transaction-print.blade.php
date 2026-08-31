@@ -6,8 +6,8 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 8mm 10mm 8mm 10mm;
+            size: A4 portrait;
+            margin: 12mm 12mm 12mm 20mm;
         }
         * {
             box-sizing: border-box;
@@ -159,8 +159,17 @@
     <table class="header-table">
         <tr>
             <td style="width: 55%; vertical-align: middle;">
-                <div class="header-logo">{{ config('app.name') }}</div>
-                <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="width: 48px; vertical-align: middle; padding-right: 8px;">
+                            <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 44px; height: 44px;">
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div class="header-logo">{{ config('app.name') }}</div>
+                            <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                        </td>
+                    </tr>
+                </table>
             </td>
             <td style="width: 45%;" class="report-title-box">
                 <div class="report-title">LAPORAN TRANSAKSI HARIAN</div>
@@ -193,15 +202,16 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 7%;">Waktu</th>
-                <th style="width: 14%;">No. Rekening</th>
-                <th style="width: 20%;">Nama Nasabah</th>
-                <th style="width: 10%;">Jenis</th>
+                <th style="width: 3%;">No</th>
+                <th style="width: 5%;">Waktu</th>
+                <th style="width: 10%;">No. Rekening</th>
+                <th style="width: 14%;">Nama Nasabah</th>
+                <th style="width: 18%;">Alamat</th>
+                <th style="width: 7%;">Jenis</th>
                 <th>Keterangan</th>
-                <th style="width: 12%;">Masuk (Rp)</th>
-                <th style="width: 12%;">Keluar (Rp)</th>
-                <th style="width: 13%;">Saldo (Rp)</th>
+                <th style="width: 11%;">Masuk (Rp)</th>
+                <th style="width: 11%;">Keluar (Rp)</th>
+                <th style="width: 12%;">Saldo (Rp)</th>
             </tr>
         </thead>
         <tbody>
@@ -211,6 +221,7 @@
                 <td class="text-center">{{ (\Carbon\Carbon::parse($row->created_at)->format('H:i:s') === '00:00:00' && $row->updated_at) ? \Carbon\Carbon::parse($row->updated_at)->format('H:i') : \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</td>
                 <td>{{ $row->customer->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
+                <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ ucfirst($row->type) }}</td>
                 <td>{{ $row->notes ?? '-' }}</td>
                 <td class="text-right">{{ $row->type !== 'penarikan' ? number_format($row->amount, 0, ',', '.') : '-' }}</td>
@@ -219,13 +230,13 @@
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center" style="padding: 15px; color: #888;">Tidak ada transaksi pada tanggal ini.</td>
+                <td colspan="10" class="text-center" style="padding: 15px; color: #888;">Tidak ada transaksi pada tanggal ini.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="6" class="text-right">TOTAL TRANSAKSI</th>
+                <th colspan="7" class="text-right">TOTAL TRANSAKSI</th>
                 <th class="text-right">{{ number_format($totalMasuk, 0, ',', '.') }}</th>
                 <th class="text-right">{{ number_format($totalKeluar, 0, ',', '.') }}</th>
                 <th class="text-right">Selisih: {{ number_format($totalMasuk - $totalKeluar, 0, ',', '.') }}</th>
