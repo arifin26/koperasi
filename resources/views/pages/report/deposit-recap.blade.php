@@ -66,10 +66,40 @@
                             <option value="liquidated">Dicairkan</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-3">
+                        <label>Filter Bulan:</label>
+                        <select class="form-control" id="filter_bulan">
+                            <option value="">Semua Bulan</option>
+                            @foreach([
+                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                            ] as $mKey => $mName)
+                                <option value="{{ $mKey }}">{{ $mName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Filter Tahun:</label>
+                        <select class="form-control" id="filter_tahun">
+                            <option value="">Semua Tahun</option>
+                            @for($y = date('Y') + 1; $y >= 2020; $y--)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-5 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary mr-1" id="btn_filter">
+                            <i class="fas fa-filter"></i> Terapkan Filter
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary mr-2" id="btn_reset">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
                         <form action="{{ route('report.deposit-recap.print') }}" method="POST" target="_blank" class="d-inline">
                             @csrf
                             <input type="hidden" name="status" id="print_status" value="">
+                            <input type="hidden" name="bulan" id="print_bulan" value="">
+                            <input type="hidden" name="tahun" id="print_tahun" value="">
                             <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
                         </form>
                     </div>
@@ -128,6 +158,12 @@
 
     <script>
     $(document).ready(function () {
+        var activeFilter = {
+            status: '',
+            bulan: '',
+            tahun: ''
+        };
+
         var table = $('#deposit-recap-table').DataTable({
             processing: true,
             serverSide: true,
@@ -136,7 +172,9 @@
             ajax: {
                 url: "{{ route('report.deposit-recap') }}",
                 data: function (d) {
-                    d.status = $('#filter_status').val();
+                    d.status = activeFilter.status;
+                    d.bulan = activeFilter.bulan;
+                    d.tahun = activeFilter.tahun;
                 }
             },
             language: {
@@ -157,7 +195,7 @@
                 // Kolom helper (tidak ditampilkan)
                 { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },
             ],
-            order: [[7, 'desc']],
+            order: [[7, 'asc']],
             createdRow: function (row, data) {
                 var days  = parseInt(data.days_until_maturity);
                 var status = data.status_label; // misal mengandung kata 'liquidated'
@@ -177,8 +215,31 @@
             }
         });
 
-        $('#filter_status').change(function () {
-            $('#print_status').val($(this).val());
+        $('#btn_filter').click(function () {
+            activeFilter.status = $('#filter_status').val();
+            activeFilter.bulan = $('#filter_bulan').val();
+            activeFilter.tahun = $('#filter_tahun').val();
+
+            $('#print_status').val(activeFilter.status);
+            $('#print_bulan').val(activeFilter.bulan);
+            $('#print_tahun').val(activeFilter.tahun);
+
+            table.draw();
+        });
+
+        $('#btn_reset').click(function () {
+            $('#filter_status').val('');
+            $('#filter_bulan').val('');
+            $('#filter_tahun').val('');
+
+            activeFilter.status = '';
+            activeFilter.bulan = '';
+            activeFilter.tahun = '';
+
+            $('#print_status').val('');
+            $('#print_bulan').val('');
+            $('#print_tahun').val('');
+
             table.draw();
         });
     });

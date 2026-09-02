@@ -11,7 +11,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 12mm 12mm 20mm;
+            margin: 18mm 15mm 15mm 25mm;
         }
         * {
             box-sizing: border-box;
@@ -29,19 +29,21 @@
 
 <body style="font-family: sans-serif;">
     <header class="mb-3">
-        <table style="width: 100%; border: none; border-collapse: collapse;">
+        <table style="width: 100%; border-collapse: collapse; border-bottom: 3px double #000; padding-bottom: 4px; margin-bottom: 10px;">
             <tr>
-                <td style="width: 60px; vertical-align: middle; border: none; padding: 0;">
-                    <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 50px; height: 50px;">
+                <td style="width: 65px; vertical-align: middle; text-align: left; padding: 0;">
+                    <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 58px; height: 58px;">
                 </td>
-                <td style="vertical-align: middle; text-align: center; border: none; padding: 0;">
-                    <h3 class="mb-0 font-weight-bold" style="font-size: 14pt; margin-bottom: 2px;">{{ strtoupper(config('app.name')) }}</h3>
-                    <p class="mb-0" style="font-size: 8.5pt; color: #333;">Jl. Gadungan-Kepung, RT.04/RW.04, Sumber Bahagia, Kepung, Kec. Puncu, Kabupaten Kediri, Jawa Timur 64293</p>
+                <td style="vertical-align: middle; text-align: center; padding: 0 10px;">
+                    <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
+                    <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
+                    <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
+                    <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                    <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Telp. (0354) 393063</div>
                 </td>
-                <td style="width: 60px; border: none; padding: 0;"></td>
+                <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
             </tr>
         </table>
-        <hr style="border-top: 2px solid #000; margin-top: 8px; margin-bottom: 12px;">
     </header>
 
     <section class="mb-3">
