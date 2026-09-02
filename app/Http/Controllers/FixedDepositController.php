@@ -87,8 +87,42 @@ class FixedDepositController extends Controller
                 ->make(true);
         }
 
+        $currentPeriod = now()->format('Y-m');
+        $today = now()->format('Y-m-d');
+        $todayDay = (int) now()->format('d');
+
+        // 1. Total Bunga Deposito Terdistribusi (Bulan Ini)
+        $bungaDepositoTerdistribusi = DepositInterestPayment::where('period', $currentPeriod)
+            ->sum('interest_amount');
+        $bungaDepositoTerdistribusiCount = DepositInterestPayment::where('period', $currentPeriod)
+            ->count();
+
+        // 2. Bunga Deposito Jatuh Tempo Hari Ini / Menunggu Update
+        // Yaitu deposito aktif yang start_date milestonya <= hari ini, belum dibayar pada periode berjalan
+        $paidDepositIdsThisMonth = DepositInterestPayment::where('period', $currentPeriod)
+            ->pluck('fixed_deposit_id');
+
+        $pendingDeposits = FixedDeposit::whereIn('status', ['active', 'matured'])
+            ->whereNotIn('id', $paidDepositIdsThisMonth)
+            ->get()
+            ->filter(function($item) use ($todayDay, $currentPeriod) {
+                $startDay = (int) $item->start_date->format('d');
+                $isMatured = now()->gte($item->maturity_date);
+                // Jatuh tempo bunga jika milestone day <= hari ini atau sudah jatuh tempo keseluruhan
+                return $startDay <= $todayDay || $isMatured;
+            });
+
+        $bungaDepositoMenunggu = $pendingDeposits->sum(function($item) {
+            return (int) floor($item->amount * ($item->rate_percent / 100) / 12);
+        });
+        $bungaDepositoMenungguCount = $pendingDeposits->count();
+
         return view('pages.fixed-deposit.index', [
-            'title' => 'Manajemen Deposito'
+            'title' => 'Manajemen Deposito',
+            'bungaDepositoTerdistribusi' => $bungaDepositoTerdistribusi,
+            'bungaDepositoTerdistribusiCount' => $bungaDepositoTerdistribusiCount,
+            'bungaDepositoMenunggu' => $bungaDepositoMenunggu,
+            'bungaDepositoMenungguCount' => $bungaDepositoMenungguCount,
         ]);
     }
 
@@ -120,6 +154,14 @@ class FixedDepositController extends Controller
         $customer = Customer::findOrFail($request->customer_id);
         if ($customer->status !== 'active') {
             return back()->withErrors(['customer_id' => 'Nasabah tidak aktif.'])->withInput();
+        }
+
+        // Validasi: Nasabah wajib memiliki rekening/transaksi simpanan aktif terlebih dahulu
+        $hasDeposit = Deposit::where('customer_id', $customer->id)->exists();
+        if (!$hasDeposit) {
+            return back()->withErrors([
+                'customer_id' => 'Nasabah belum memiliki rekening/transaksi simpanan. Silakan buat transaksi simpanan terlebih dahulu sebelum membuka deposito.'
+            ])->with('require_deposit', true)->with('customer_id', $customer->id)->withInput();
         }
 
         $startDate = Carbon::today();
@@ -272,7 +314,7 @@ class FixedDepositController extends Controller
         });
 
         $redirect = redirect()->route('fixed-deposit.index')
-            ->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan Sukarela nasabah.');
+            ->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan nasabah.');
 
         if ($txn) {
             $redirect->with('receipt_url', route('transaction.deposit.receipt', $txn))

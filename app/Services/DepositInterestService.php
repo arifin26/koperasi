@@ -64,13 +64,13 @@ class DepositInterestService
                     continue;
                 }
 
-                // Cek apakah hari ini sudah melepasi atau sama dengan tanggal milestone bulanan deposito
+                // Cek apakah hari ini sudah mencapai atau melewati tanggal milestone bulanan deposito
                 // Contoh: start_date 15 Jan, maka tanggal 15 setiap bulan bunga berhak diproses
                 $startDay = (int) $deposit->start_date->format('d');
                 $targetDay = (int) $targetDate->format('d');
 
                 // Jika belum mencapai milestone hari di bulan ini dan belum jatuh tempo, skip
-                if ($targetDay < $startDay && !$isMatured && $targetDate->format('Y-m') === $deposit->start_date->format('Y-m')) {
+                if ($targetDay < $startDay && !$isMatured) {
                     $skippedCount++;
                     continue;
                 }

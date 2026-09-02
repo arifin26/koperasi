@@ -28,7 +28,7 @@
                         @if($isEarly)
                         <tr class="table-danger"><th>Penalti (1%)</th><td class="text-danger font-weight-bold">- Rp {{ number_format($penalty, 0, ',', '.') }}</td></tr>
                         @endif
-                        <tr class="table-success"><th>Dana yang Ditransfer ke Tabungan Sukarela</th><td class="text-success font-weight-bold">Rp {{ number_format($netAmount, 0, ',', '.') }}</td></tr>
+                        <tr class="table-success"><th>Dana yang Ditransfer ke Simpanan Nasabah</th><td class="text-success font-weight-bold">Rp {{ number_format($netAmount, 0, ',', '.') }}</td></tr>
                     </table>
                 </div>
                 <div class="card-footer">

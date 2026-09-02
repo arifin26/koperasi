@@ -1,6 +1,48 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Info Cards Ringkasan Status Bunga Deposito -->
+<div class="row mb-3">
+    <div class="col-12 col-md-6 col-lg-6">
+        <div class="info-box bg-gradient-success shadow-sm mb-2">
+            <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text font-weight-bold">Bunga Deposito Terdistribusi ({{ now()->isoFormat('MMMM Y') }})</span>
+                <span class="info-box-number" style="font-size: 1.35rem;">
+                    Rp {{ number_format($bungaDepositoTerdistribusi ?? 0, 0, ',', '.') }}
+                </span>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar bg-white" style="width: 100%"></div>
+                </div>
+                <span class="progress-description text-white-50 small">
+                    <i class="fas fa-money-bill-wave mr-1"></i> {{ $bungaDepositoTerdistribusiCount ?? 0 }} rekening telah menerima bunga bulan ini
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-6">
+        <div class="info-box {{ ($bungaDepositoMenungguCount ?? 0) > 0 ? 'bg-gradient-warning' : 'bg-gradient-info' }} shadow-sm mb-2">
+            <span class="info-box-icon text-white"><i class="fas {{ ($bungaDepositoMenungguCount ?? 0) > 0 ? 'fa-bell' : 'fa-check' }}"></i></span>
+            <div class="info-box-content text-white">
+                <span class="info-box-text font-weight-bold text-white">Bunga Deposito Jatuh Tempo Hari Ini / Menunggu Update</span>
+                <span class="info-box-number text-white" style="font-size: 1.35rem;">
+                    Rp {{ number_format($bungaDepositoMenunggu ?? 0, 0, ',', '.') }}
+                </span>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar bg-white" style="width: 100%"></div>
+                </div>
+                <span class="progress-description text-white small">
+                    @if(($bungaDepositoMenungguCount ?? 0) > 0)
+                        <i class="fas fa-exclamation-circle mr-1"></i> {{ $bungaDepositoMenungguCount }} deposito siap update bunga hari ini
+                    @else
+                        <i class="fas fa-check-circle mr-1"></i> Tidak ada bunga deposito jatuh tempo hari ini yang tertunda
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">

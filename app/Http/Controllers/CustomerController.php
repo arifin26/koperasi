@@ -196,22 +196,36 @@ class CustomerController extends Controller
     public function currentBalanceByDeposit($id)
     {
         try {
+            $customer = Customer::findOrFail($id);
             $balances = Deposit::recalculateBalance($id);
             $saldo = $balances['simpanan'] ?? 0;
-            
+
+            $depositCount = Deposit::where('customer_id', $id)->count();
+            $hasDeposit = $depositCount > 0;
+
             $data = Deposit::where('customer_id', $id)->latest()->first();
             if ($data) {
                 $data->current_balance = $saldo;
                 $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
+                $data->has_deposit = $hasDeposit;
+                $data->deposit_count = $depositCount;
+                $data->customer_name = $customer->name;
+                $data->customer_number = $customer->number;
             } else {
                 $data = new \stdClass();
                 $data->current_balance = $saldo;
                 $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
+                $data->has_deposit = $hasDeposit;
+                $data->deposit_count = $depositCount;
+                $data->customer_name = $customer->name;
+                $data->customer_number = $customer->number;
             }
-            
+
             return response()->json([
                 'status' => 'success',
                 'data' => $data,
+                'has_deposit' => $hasDeposit,
+                'deposit_count' => $depositCount,
             ]);
         } catch (\Throwable $th) {
             return response()->json([

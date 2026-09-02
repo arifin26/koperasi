@@ -67,7 +67,8 @@ class DepositPayInterest extends Command
                         'amount' => $interestAmount,
                         'previous_balance' => 0,
                         'current_balance' => 0,
-                        'notes' => 'Bunga Deposito ' . $deposit->number . ' periode ' . $period,
+                        'notes' => 'Bunga Deposito ' . $deposit->number . ' Periode ' . $period,
+                        'created_at' => $date->copy()->setTime(now()->hour, now()->minute, now()->second),
                     ]);
 
                     Deposit::recalculateBalance($deposit->customer_id);
