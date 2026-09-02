@@ -128,10 +128,43 @@ class DepositController extends Controller
                 ->rawColumns(['action', 'type', 'customer'])
                 ->make(true);
         }
+        $currentMonth = now()->format('Y-m');
+
+        // 1. Total Bunga Simpanan Terposting (Bulan Ini)
+        $bungaSimpananTerposting = Deposit::where('type', 'bunga')
+            ->where(function($q) {
+                $q->where('notes', 'like', 'Bunga Simpanan%')
+                  ->orWhere('notes', 'like', 'Bunga bulan%');
+            })
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+
+        $bungaSimpananTerpostingCount = Deposit::where('type', 'bunga')
+            ->where(function($q) {
+                $q->where('notes', 'like', 'Bunga Simpanan%')
+                  ->orWhere('notes', 'like', 'Bunga bulan%');
+            })
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
+        // 2. Akumulasi Bunga Simpanan Belum Diposting (Menunggu tanggal 1 berikutnya)
+        $bungaSimpananBelumDiposting = \App\Models\DailyInterestAccumulation::where('is_posted', 0)
+            ->sum('interest_amount');
+
+        $bungaSimpananBelumDipostingCount = \App\Models\DailyInterestAccumulation::where('is_posted', 0)
+            ->distinct('customer_id')
+            ->count('customer_id');
+
         return view('pages.transaction.deposit.index', [
             'title' => $this->title,
             'customers' => Customer::all(),
-            'types' => ['simpanan' => 'Simpanan', 'bunga' => 'Bunga']
+            'types' => ['simpanan' => 'Simpanan', 'bunga' => 'Bunga'],
+            'bungaSimpananTerposting' => $bungaSimpananTerposting,
+            'bungaSimpananTerpostingCount' => $bungaSimpananTerpostingCount,
+            'bungaSimpananBelumDiposting' => $bungaSimpananBelumDiposting,
+            'bungaSimpananBelumDipostingCount' => $bungaSimpananBelumDipostingCount,
         ]);
     }
 

@@ -87,8 +87,42 @@ class FixedDepositController extends Controller
                 ->make(true);
         }
 
+        $currentPeriod = now()->format('Y-m');
+        $today = now()->format('Y-m-d');
+        $todayDay = (int) now()->format('d');
+
+        // 1. Total Bunga Deposito Terdistribusi (Bulan Ini)
+        $bungaDepositoTerdistribusi = DepositInterestPayment::where('period', $currentPeriod)
+            ->sum('interest_amount');
+        $bungaDepositoTerdistribusiCount = DepositInterestPayment::where('period', $currentPeriod)
+            ->count();
+
+        // 2. Bunga Deposito Jatuh Tempo Hari Ini / Menunggu Update
+        // Yaitu deposito aktif yang start_date milestonya <= hari ini, belum dibayar pada periode berjalan
+        $paidDepositIdsThisMonth = DepositInterestPayment::where('period', $currentPeriod)
+            ->pluck('fixed_deposit_id');
+
+        $pendingDeposits = FixedDeposit::whereIn('status', ['active', 'matured'])
+            ->whereNotIn('id', $paidDepositIdsThisMonth)
+            ->get()
+            ->filter(function($item) use ($todayDay, $currentPeriod) {
+                $startDay = (int) $item->start_date->format('d');
+                $isMatured = now()->gte($item->maturity_date);
+                // Jatuh tempo bunga jika milestone day <= hari ini atau sudah jatuh tempo keseluruhan
+                return $startDay <= $todayDay || $isMatured;
+            });
+
+        $bungaDepositoMenunggu = $pendingDeposits->sum(function($item) {
+            return (int) floor($item->amount * ($item->rate_percent / 100) / 12);
+        });
+        $bungaDepositoMenungguCount = $pendingDeposits->count();
+
         return view('pages.fixed-deposit.index', [
-            'title' => 'Manajemen Deposito'
+            'title' => 'Manajemen Deposito',
+            'bungaDepositoTerdistribusi' => $bungaDepositoTerdistribusi,
+            'bungaDepositoTerdistribusiCount' => $bungaDepositoTerdistribusiCount,
+            'bungaDepositoMenunggu' => $bungaDepositoMenunggu,
+            'bungaDepositoMenungguCount' => $bungaDepositoMenungguCount,
         ]);
     }
 

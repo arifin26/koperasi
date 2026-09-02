@@ -2,6 +2,44 @@
 
 @section('content')
     <div class="container-fluid">
+        <!-- Info Cards Ringkasan Status Bunga Simpanan -->
+        <div class="row mb-3">
+            <div class="col-12 col-md-6 col-lg-6">
+                <div class="info-box bg-gradient-success shadow-sm mb-2">
+                    <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text font-weight-bold">Bunga Simpanan Terposting ({{ now()->isoFormat('MMMM Y') }})</span>
+                        <span class="info-box-number" style="font-size: 1.35rem;">
+                            Rp {{ number_format($bungaSimpananTerposting ?? 0, 0, ',', '.') }}
+                        </span>
+                        <div class="progress" style="height: 3px;">
+                            <div class="progress-bar bg-white" style="width: 100%"></div>
+                        </div>
+                        <span class="progress-description text-white-50 small">
+                            <i class="fas fa-receipt mr-1"></i> {{ $bungaSimpananTerpostingCount ?? 0 }} transaksi bunga telah masuk ke rekening
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-6">
+                <div class="info-box bg-gradient-warning shadow-sm mb-2">
+                    <span class="info-box-icon text-white"><i class="fas fa-hourglass-half"></i></span>
+                    <div class="info-box-content text-white">
+                        <span class="info-box-text font-weight-bold text-white">Bunga Simpanan Menunggu Posting</span>
+                        <span class="info-box-number text-white" style="font-size: 1.35rem;">
+                            Rp {{ number_format($bungaSimpananBelumDiposting ?? 0, 0, ',', '.') }}
+                        </span>
+                        <div class="progress" style="height: 3px;">
+                            <div class="progress-bar bg-white" style="width: 100%"></div>
+                        </div>
+                        <span class="progress-description text-white small">
+                            <i class="fas fa-calendar-alt mr-1"></i> {{ $bungaSimpananBelumDipostingCount ?? 0 }} nasabah &bull; Jadwal posting: Tgl 1 Bulan Berikutnya
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col">
                 <div class="card">

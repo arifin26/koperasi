@@ -118,7 +118,8 @@ class SavingsInterestService
                     $rate = $customer->interestRate ?? $simpananRate;
 
                     if ($saldo > 0 && $rate && $rate->rate_percent > 0) {
-                        // Formula: Saldo * rate_percent / 100 / workday_count
+                        // Formula Bunga Harian berdasarkan Bunga Tahunan / 12 / Hari Kerja:
+                        // (Saldo * (rate_percent / 100) / 12) / (workdayCount / 12) -> equivalen Saldo * (rate / 100) / workdayCount
                         $bunga = (int) floor(($saldo * ($rate->rate_percent / 100)) / $workdayCount);
                         if ($bunga > 0) {
                             $inserts[] = [
