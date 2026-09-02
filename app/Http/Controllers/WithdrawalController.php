@@ -31,7 +31,7 @@ class WithdrawalController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Deposit::with(['customer', 'validator'])->where('type', 'penarikan')->orderBy('created_at');
+            $data = Deposit::with(['customer', 'validator'])->where('type', 'penarikan')->orderBy('created_at', 'desc')->orderBy('id', 'desc');
 
             if ($request->customer) {
                 $data = $data->where('customer_id', $request->customer);
