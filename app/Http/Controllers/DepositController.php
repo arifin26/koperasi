@@ -91,11 +91,24 @@ class DepositController extends Controller
                     return Carbon::parse($row->created_at)->isoFormat('DD-MM-Y');
                 })
                 ->editColumn('type', function($row) {
-                    return $row->type == 'bunga' ? 'Bunga' : 'Simpanan';
+                    if ($row->type == 'bunga') {
+                        if (str_contains(strtolower($row->notes ?? ''), 'deposito')) {
+                            return '<span class="badge badge-info px-2 py-1">Bunga Deposito</span>';
+                        }
+                        return '<span class="badge badge-warning px-2 py-1">Bunga Simpanan</span>';
+                    }
+                    if (str_contains(strtolower($row->notes ?? ''), 'pencairan deposito')) {
+                        return '<span class="badge badge-success px-2 py-1">Pencairan Deposito</span>';
+                    }
+                    return '<span class="badge badge-primary px-2 py-1">Simpanan</span>';
                 })
                 ->editColumn('customer', function($row) {
                     if ($row->customer) {
-                        return $row->customer->name . '<small class="small d-block">No. Rek: ' . $row->customer->number . '</small>';
+                        $info = $row->customer->name . '<small class="small d-block text-muted">No. Rek: ' . $row->customer->number . '</small>';
+                        if ($row->notes) {
+                            $info .= '<small class="small d-block text-secondary font-italic"><i class="fas fa-sticky-note mr-1"></i>' . e($row->notes) . '</small>';
+                        }
+                        return $info;
                     }
 
                     return 'Nasabah Tidak Ditemukan';
@@ -112,7 +125,7 @@ class DepositController extends Controller
                 ->editColumn('current_balance', function($row) {
                     return 'Rp' . number_format($row->current_balance, 2, ',', '.');
                 })
-                ->rawColumns(['action', 'customer'])
+                ->rawColumns(['action', 'type', 'customer'])
                 ->make(true);
         }
         return view('pages.transaction.deposit.index', [

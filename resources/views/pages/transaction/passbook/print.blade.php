@@ -146,20 +146,26 @@
                         $debitVal = $isDebit ? number_format($txn->amount, 0, ',', '.') : '-';
                         $creditVal = !$isDebit ? number_format($txn->amount, 0, ',', '.') : '-';
                         $balanceVal = number_format($txn->current_balance, 0, ',', '.');
-                        
-                        $code = match($txn->type) {
-                            'sukarela' => 'STR',
-                            'wajib' => 'WAJIB',
-                            'pokok' => 'POKOK',
-                            'penarikan' => 'TRK',
-                            'bunga' => 'BNG',
-                            default => strtoupper(substr($txn->type, 0, 4)),
-                        };
 
-                        if (str_contains(strtolower($txn->notes ?? ''), 'pencairan deposito')) {
-                            $code = 'PCD';
+                        $notesLower = strtolower($txn->notes ?? '');
+
+                        // Kode sandi transaksi buku tabungan:
+                        // 1: Setor (simpanan reguler/pokok/wajib/sukarela)
+                        // 2: Penarikan
+                        // 3: Bunga Deposito
+                        // 4: Bunga Simpanan
+                        if ($isDebit) {
+                            $code = '2'; // Penarikan
+                        } elseif ($txn->type === 'bunga') {
+                            if (str_contains($notesLower, 'deposito')) {
+                                $code = '3'; // Bunga Deposito
+                            } else {
+                                $code = '4'; // Bunga Simpanan
+                            }
+                        } else {
+                            $code = '1'; // Setor
                         }
-                        
+
                         $teller = $txn->creator->name ?? 'ADM';
                         $tellerInitial = strtoupper(substr(trim($teller), 0, 3));
                     @endphp

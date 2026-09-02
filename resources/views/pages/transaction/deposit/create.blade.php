@@ -85,7 +85,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(function() {
-        $('#customer_id').select2({
+        var selectedCustomer = @json(request('customer_id') ? \App\Models\Customer::find(request('customer_id')) : null);
+
+        var selectEl = $('#customer_id').select2({
             theme: 'bootstrap4',
             placeholder: 'Cari Nama atau Nomor Rekening...',
             ajax: {
@@ -96,6 +98,11 @@
                 processResults: function (data) { return { results: data.results }; }
             }
         });
+
+        if (selectedCustomer) {
+            var option = new Option(selectedCustomer.number + ' - ' + selectedCustomer.name, selectedCustomer.id, true, true);
+            selectEl.append(option).trigger('change');
+        }
     });
 </script>
 @endpush

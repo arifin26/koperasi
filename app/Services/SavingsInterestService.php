@@ -163,26 +163,33 @@ class SavingsInterestService
                 $currentDate->addDay();
             }
 
-            // 3. Posting Bunga (Aggregasi unposted accumulations ke transaksi simpanan)
-            $unpostedAccumulations = DailyInterestAccumulation::where('is_posted', 0)
+            // 3. Posting Bunga per Bulan (Aggregasi unposted accumulations ke transaksi simpanan per periode bulan)
+            // Mengelompokkan per customer dan per bulan (YYYY-MM) agar 1 bulan tepat menjadi 1 baris transaksi bunga
+            $unpostedMonthlyAccumulations = DailyInterestAccumulation::where('is_posted', 0)
                 ->where('calculation_date', '<=', $dateStr)
-                ->selectRaw('customer_id, SUM(interest_amount) as total_interest')
-                ->groupBy('customer_id')
+                ->selectRaw("customer_id, DATE_FORMAT(calculation_date, '%Y-%m') as period, SUM(interest_amount) as total_interest, MAX(calculation_date) as last_calc_date")
+                ->groupBy('customer_id', DB::raw("DATE_FORMAT(calculation_date, '%Y-%m')"))
                 ->get();
 
-            if ($unpostedAccumulations->isNotEmpty()) {
-                $periodStr = $targetDate->format('Y-m');
-
-                foreach ($unpostedAccumulations as $acc) {
+            if ($unpostedMonthlyAccumulations->isNotEmpty()) {
+                foreach ($unpostedMonthlyAccumulations as $acc) {
                     if ($acc->total_interest > 0) {
+                        $periodCarbon = Carbon::createFromFormat('Y-m', $acc->period);
+                        // Tanggal transaksi bunga dicatat pada akhir bulan periode tersebut (atau targetDate jika periode saat ini)
+                        $txnDate = $periodCarbon->copy()->endOfMonth()->lte($targetDate)
+                            ? $periodCarbon->copy()->endOfMonth()->setTime(23, 59, 59)
+                            : $targetDate->copy()->setTime(23, 59, 59);
+
+                        $periodLabel = $periodCarbon->isoFormat('MMMM Y');
+
                         Deposit::create([
                             'customer_id' => $acc->customer_id,
                             'type' => 'bunga',
                             'amount' => $acc->total_interest,
                             'previous_balance' => 0,
                             'current_balance' => 0,
-                            'notes' => 'Bunga Simpanan s/d ' . $targetDate->isoFormat('D MMMM Y'),
-                            'created_at' => $targetDate->copy()->setTime(23, 59, 59),
+                            'notes' => 'Bunga Simpanan Periode ' . $periodLabel,
+                            'created_at' => $txnDate,
                             'updated_at' => now(),
                             'created_by' => $userId,
                         ]);
@@ -194,7 +201,7 @@ class SavingsInterestService
                     }
                 }
 
-                // Tandai akumulasi sebagai diposting
+                // Tandai seluruh akumulasi s.d tanggal ini sebagai sudah diposting
                 DailyInterestAccumulation::where('is_posted', 0)
                     ->where('calculation_date', '<=', $dateStr)
                     ->update([
@@ -204,12 +211,12 @@ class SavingsInterestService
 
                 // Record log posting
                 InterestPostingLog::create([
-                    'period' => $periodStr . '-' . date('d-His'),
+                    'period' => $targetDate->format('Y-m') . '-' . date('d-His'),
                     'status' => 'manual',
                     'total_customers' => $postedCount,
                     'total_interest' => $totalPostedAmount,
                     'posted_by' => $userId,
-                    'notes' => 'Update bunga manual pada ' . now()->toDateTimeString(),
+                    'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
                 ]);
             }
 

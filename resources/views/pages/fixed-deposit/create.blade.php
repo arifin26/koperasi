@@ -3,6 +3,21 @@
 @section('content')
 <div class="row">
     <div class="col-md-8">
+        @if(session('require_deposit'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h5><i class="icon fas fa-exclamation-triangle"></i> Nasabah Belum Memiliki Simpanan!</h5>
+            Nasabah harus memiliki transaksi/rekening simpanan aktif terlebih dahulu agar bunga dan pencairan deposito dapat disalurkan.
+            <div class="mt-2">
+                <a href="{{ route('transaction.deposit.create', ['customer_id' => session('customer_id') ?? old('customer_id')]) }}" class="btn btn-sm btn-dark font-weight-bold">
+                    <i class="fas fa-plus-circle mr-1"></i> Buat Transaksi Simpanan Sekarang
+                </a>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        @endif
+
         <div class="card card-primary">
             <div class="card-header">
                 <h3 class="card-title">Pembukaan Deposito Baru</h3>
@@ -16,6 +31,24 @@
                             <option value=""></option>
                         </select>
                         @error('customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                        <!-- Warning banner jika nasabah belum punya simpanan -->
+                        <div id="no-savings-warning" class="alert alert-warning mt-2 py-2" style="display: none;">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>Perhatian:</strong> Nasabah ini belum memiliki rekening/transaksi simpanan.
+                            <div class="mt-1">
+                                <a href="#" id="btn-create-savings-link" class="btn btn-xs btn-primary font-weight-bold" target="_blank">
+                                    <i class="fas fa-plus-circle mr-1"></i> Buat Simpanan untuk Nasabah Ini Terlebih Dahulu
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Info saldo simpanan nasabah jika ada -->
+                        <div id="savings-info-box" class="alert alert-info mt-2 py-2" style="display: none;">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Rekening Simpanan Aktif &bull; Saldo saat ini: <strong id="savings-balance-display">Rp 0</strong>
+                            <small class="d-block text-muted">Bunga bulanan dan pencairan deposito akan langsung disalurkan ke simpanan ini.</small>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -99,7 +132,7 @@
                 </div>
                 <div class="card-footer">
                     <a href="{{ route('fixed-deposit.index') }}" class="btn btn-secondary">Batal</a>
-                    <button type="submit" class="btn btn-primary float-right"><i class="fas fa-save"></i> Buka Deposito</button>
+                    <button type="submit" id="btnSubmitDeposito" class="btn btn-primary float-right"><i class="fas fa-save"></i> Buka Deposito</button>
                 </div>
             </form>
         </div>
@@ -116,6 +149,8 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
+    var createDepositBaseUrl = '{{ route("transaction.deposit.create") }}';
+
     // Select2 AJAX for customer
     $('#customer_id').select2({
         theme: 'bootstrap4',
@@ -138,12 +173,51 @@ $(document).ready(function() {
         }
     });
 
+    // Handle customer change to verify savings account
+    $('#customer_id').on('change', function() {
+        var customerId = $(this).val();
+        if (!customerId) {
+            $('#no-savings-warning').hide();
+            $('#savings-info-box').hide();
+            $('#btnSubmitDeposito').prop('disabled', false);
+            return;
+        }
+
+        $.ajax({
+            url: '/api/nasabah/' + customerId + '/saldo',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    if (!response.has_deposit || response.deposit_count <= 0) {
+                        // Nasabah belum punya rekening simpanan
+                        $('#btn-create-savings-link').attr('href', createDepositBaseUrl + '?customer_id=' + customerId);
+                        $('#no-savings-warning').slideDown();
+                        $('#savings-info-box').hide();
+                        $('#btnSubmitDeposito').prop('disabled', true);
+                    } else {
+                        // Nasabah memiliki simpanan aktif
+                        $('#savings-balance-display').text(response.data.current_balance_formatted || 'Rp 0');
+                        $('#savings-info-box').slideDown();
+                        $('#no-savings-warning').hide();
+                        $('#btnSubmitDeposito').prop('disabled', false);
+                    }
+                }
+            },
+            error: function() {
+                $('#no-savings-warning').hide();
+                $('#savings-info-box').hide();
+                $('#btnSubmitDeposito').prop('disabled', false);
+            }
+        });
+    });
+
     // Auto-calculate maturity & interest
     function recalculate() {
         var amount = parseInt($('input[name="amount"]').val()) || 0;
         var tenor = parseInt($('#tenor_months').val()) || 0;
         var rate = parseFloat($('#rate_percent').val()) || 0;
-        
+
         if (tenor <= 0) {
             $('#maturity_display').val('-');
             $('#monthly_interest_display').val('-');

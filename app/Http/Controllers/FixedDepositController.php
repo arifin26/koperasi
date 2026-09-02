@@ -122,6 +122,14 @@ class FixedDepositController extends Controller
             return back()->withErrors(['customer_id' => 'Nasabah tidak aktif.'])->withInput();
         }
 
+        // Validasi: Nasabah wajib memiliki rekening/transaksi simpanan aktif terlebih dahulu
+        $hasDeposit = Deposit::where('customer_id', $customer->id)->exists();
+        if (!$hasDeposit) {
+            return back()->withErrors([
+                'customer_id' => 'Nasabah belum memiliki rekening/transaksi simpanan. Silakan buat transaksi simpanan terlebih dahulu sebelum membuka deposito.'
+            ])->with('require_deposit', true)->with('customer_id', $customer->id)->withInput();
+        }
+
         $startDate = Carbon::today();
         $maturityDate = $startDate->copy()->addMonths((int)$request->tenor_months);
 
@@ -272,7 +280,7 @@ class FixedDepositController extends Controller
         });
 
         $redirect = redirect()->route('fixed-deposit.index')
-            ->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan Sukarela nasabah.');
+            ->with('success', 'Deposito berhasil dicairkan! Dana telah ditransfer ke Simpanan nasabah.');
 
         if ($txn) {
             $redirect->with('receipt_url', route('transaction.deposit.receipt', $txn))
