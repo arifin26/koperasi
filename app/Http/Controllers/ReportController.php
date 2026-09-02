@@ -108,30 +108,83 @@ class ReportController extends Controller
     {
         if ($request->ajax()) {
             $statusFilter = $request->status ?? '';
+            $bulan = $request->bulan ?? '';
+            $tahun = $request->tahun ?? '';
 
-            // Ambil saldo terbaru dari kolom current_balance di tabel deposits
-            // (kolom ini di-update setiap kali ada transaksi via recalculateBalance)
-            $data = Customer::select('customers.*')
+            // Tentukan batas akhir periode tanggal jika ada filter
+            $cutoffDate = null;
+            if ($bulan && $tahun) {
+                $cutoffDate = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth();
+            } elseif ($tahun) {
+                $cutoffDate = Carbon::createFromDate($tahun, 12, 31)->endOfDay();
+            } elseif ($bulan) {
+                $cutoffDate = Carbon::createFromDate(date('Y'), $bulan, 1)->endOfMonth();
+            }
+
+            $query = Customer::select('customers.*')
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-                ->with(['deposits' => function ($q) {
-                    $q->latest('id')->limit(1);
-                }])
-                ->withCount('deposits')
-                ->orderBy('name', 'asc');
+                ->with('interestRate');
 
-            return DataTables::of($data)
+            // Filter nasabah yang memiliki transaksi pada periode bulan/tahun yang dipilih
+            if ($bulan || $tahun) {
+                $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
+                    if ($bulan && $tahun) {
+                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+                    } elseif ($tahun) {
+                        $q->whereYear('created_at', $tahun);
+                    } elseif ($bulan) {
+                        $q->whereMonth('created_at', $bulan);
+                    }
+                });
+            }
+
+            $query->orderBy('name', 'asc');
+
+            return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('no_nasabah', fn($row) => $row->number ?? '-')
+                ->addColumn('nik', fn($row) => $row->nik ?? '-')
                 ->addColumn('nama_nasabah', fn($row) => $row->name)
-                ->addColumn('total_transaksi', fn($row) => $row->deposits_count)
-                ->addColumn('saldo_simpanan', function ($row) {
-                    // Hitung saldo dari current_balance transaksi terakhir
-                    $lastDeposit = $row->deposits->first();
+                ->addColumn('alamat', fn($row) => $row->address ?? '-')
+                ->addColumn('phone', fn($row) => $row->phone ?? '-')
+                ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
+                ->addColumn('total_transaksi', function ($row) use ($bulan, $tahun) {
+                    $q = Deposit::where('customer_id', $row->id);
+                    if ($bulan && $tahun) {
+                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+                    } elseif ($tahun) {
+                        $q->whereYear('created_at', $tahun);
+                    } elseif ($bulan) {
+                        $q->whereMonth('created_at', $bulan);
+                    }
+                    return $q->count() . ' kali';
+                })
+                ->addColumn('saldo_simpanan', function ($row) use ($cutoffDate) {
+                    $q = Deposit::where('customer_id', $row->id);
+                    if ($cutoffDate) {
+                        $q->where('created_at', '<=', $cutoffDate);
+                    }
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
                     $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                     return 'Rp ' . number_format($saldo, 0, ',', '.');
                 })
-                ->addColumn('saldo_raw', function ($row) {
-                    $lastDeposit = $row->deposits->first();
+                ->addColumn('bunga_bulanan', function ($row) use ($cutoffDate) {
+                    $q = Deposit::where('customer_id', $row->id);
+                    if ($cutoffDate) {
+                        $q->where('created_at', '<=', $cutoffDate);
+                    }
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
+                    $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+                    $rate = $row->interestRate->rate_percent ?? 0;
+                    $bunga = floor($saldo * ($rate / 100) / 12);
+                    return 'Rp ' . number_format($bunga, 0, ',', '.');
+                })
+                ->addColumn('saldo_raw', function ($row) use ($cutoffDate) {
+                    $q = Deposit::where('customer_id', $row->id);
+                    if ($cutoffDate) {
+                        $q->where('created_at', '<=', $cutoffDate);
+                    }
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
                     return $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                 })
                 ->addColumn('status_nasabah', function ($row) {
@@ -168,20 +221,67 @@ class ReportController extends Controller
     public function savingsRecapPrint(Request $request)
     {
         $statusFilter = $request->status ?? '';
+        $bulan = $request->bulan ?? '';
+        $tahun = $request->tahun ?? '';
 
-        $data = Customer::select('customers.*')
+        $cutoffDate = null;
+        if ($bulan && $tahun) {
+            $cutoffDate = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth();
+        } elseif ($tahun) {
+            $cutoffDate = Carbon::createFromDate($tahun, 12, 31)->endOfDay();
+        } elseif ($bulan) {
+            $cutoffDate = Carbon::createFromDate(date('Y'), $bulan, 1)->endOfMonth();
+        }
+
+        $query = Customer::select('customers.*')
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-            ->with(['deposits' => function ($q) {
-                $q->latest('id')->limit(1);
-            }, 'interestRate'])
-            ->withCount('deposits')
-            ->orderBy('name', 'asc')
-            ->get();
+            ->with('interestRate');
+
+        if ($bulan || $tahun) {
+            $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
+                if ($bulan && $tahun) {
+                    $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+                } elseif ($tahun) {
+                    $q->whereYear('created_at', $tahun);
+                } elseif ($bulan) {
+                    $q->whereMonth('created_at', $bulan);
+                }
+            });
+        }
+
+        $data = $query->orderBy('name', 'asc')->get();
 
         $totalSaldo = 0;
         foreach ($data as $customer) {
-            $lastDeposit = $customer->deposits->first();
+            $depQ = Deposit::where('customer_id', $customer->id);
+            if ($cutoffDate) {
+                $depQ->where('created_at', '<=', $cutoffDate);
+            }
+            $lastDeposit = $depQ->orderBy('id', 'desc')->first();
+            $customer->last_deposit = $lastDeposit;
+
+            $txnCountQ = Deposit::where('customer_id', $customer->id);
+            if ($bulan && $tahun) {
+                $txnCountQ->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+            } elseif ($tahun) {
+                $txnCountQ->whereYear('created_at', $tahun);
+            } elseif ($bulan) {
+                $txnCountQ->whereMonth('created_at', $bulan);
+            }
+            $customer->deposits_count = $txnCountQ->count();
+
             $totalSaldo += $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+        }
+
+        $periodeLabel = '';
+        if ($bulan && $tahun) {
+            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
+        } elseif ($tahun) {
+            $periodeLabel = 'Tahun ' . $tahun;
+        } elseif ($bulan) {
+            $periodeLabel = 'Bulan ' . Carbon::createFromDate(date('Y'), $bulan, 1)->isoFormat('MMMM');
+        } else {
+            $periodeLabel = 'Semua Periode';
         }
 
         $manager = User::where('role', 'manager')->first();
@@ -194,6 +294,7 @@ class ReportController extends Controller
             'data' => $data,
             'totalSaldo' => $totalSaldo,
             'statusFilter' => $statusFilter,
+            'periodeLabel' => $periodeLabel,
         ]);
         $pdf->setPaper('A4', 'portrait');
 
@@ -208,11 +309,15 @@ class ReportController extends Controller
     {
         if ($request->ajax()) {
             $statusFilter = $request->status ?? '';
+            $bulan = $request->bulan ?? '';
+            $tahun = $request->tahun ?? '';
 
             $data = FixedDeposit::with('customer')
                 ->select('fixed_deposits.*')
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-                ->orderBy('start_date', 'desc');
+                ->when($bulan, fn($q) => $q->whereMonth('start_date', $bulan))
+                ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
+                ->orderBy('start_date', 'asc');
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -256,10 +361,14 @@ class ReportController extends Controller
     public function depositRecapPrint(Request $request)
     {
         $statusFilter = $request->status ?? '';
+        $bulan = $request->bulan ?? '';
+        $tahun = $request->tahun ?? '';
 
         $data = FixedDeposit::with('customer')
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-            ->orderBy('start_date', 'desc')
+            ->when($bulan, fn($q) => $q->whereMonth('start_date', $bulan))
+            ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
+            ->orderBy('start_date', 'asc')
             ->get();
 
         $totalNominal = $data->sum('amount');
@@ -267,6 +376,15 @@ class ReportController extends Controller
         foreach ($data as $row) {
             $monthlyInterest = floor($row->amount * ($row->rate_percent / 100) / 12);
             $totalBunga += ($monthlyInterest * $row->tenor_months);
+        }
+
+        $periodeLabel = '';
+        if ($bulan && $tahun) {
+            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
+        } elseif ($tahun) {
+            $periodeLabel = 'Tahun ' . $tahun;
+        } else {
+            $periodeLabel = 'Semua Periode';
         }
 
         $manager = User::where('role', 'manager')->first();
@@ -280,6 +398,7 @@ class ReportController extends Controller
             'totalNominal' => $totalNominal,
             'totalBunga' => $totalBunga,
             'statusFilter' => $statusFilter,
+            'periodeLabel' => $periodeLabel,
         ]);
         $pdf->setPaper('A4', 'portrait');
 

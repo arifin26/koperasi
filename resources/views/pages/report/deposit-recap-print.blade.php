@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 12mm 12mm 20mm;
+            margin: 18mm 15mm 15mm 25mm;
         }
         * {
             box-sizing: border-box;
@@ -167,28 +167,27 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <table class="header-table">
+    <!-- Header Kop Resmi -->
+    <table style="width: 100%; border-collapse: collapse; border-bottom: 3px double #000; padding-bottom: 4px; margin-bottom: 10px;">
         <tr>
-            <td style="width: 55%; vertical-align: middle;">
-                <table style="border-collapse: collapse; width: 100%;">
-                    <tr>
-                        <td style="width: 48px; vertical-align: middle; padding-right: 8px;">
-                            <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 44px; height: 44px; object-fit: contain;">
-                        </td>
-                        <td style="vertical-align: middle;">
-                            <div class="header-logo">{{ config('app.name') }}</div>
-                            <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
-                        </td>
-                    </tr>
-                </table>
+            <td style="width: 65px; vertical-align: middle; text-align: left; padding: 0;">
+                <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 58px; height: 58px;">
             </td>
-            <td style="width: 45%;" class="report-title-box">
-                <div class="report-title">LAPORAN REKAP DEPOSITO</div>
-                <div class="report-period">Per: {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</div>
+            <td style="vertical-align: middle; text-align: center; padding: 0 10px;">
+                <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
+                <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
+                <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Telp. (0354) 393063</div>
             </td>
+            <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
         </tr>
     </table>
+
+    <div style="text-align: center; margin-bottom: 8px;">
+        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #1a5632;">LAPORAN REKAP DEPOSITO</div>
+        <div style="font-size: 8pt; font-weight: bold; color: #444; margin-top: 2px;">Periode: {{ $periodeLabel ?? 'Semua Periode' }}</div>
+    </div>
 
     <!-- Meta Info -->
     <table class="meta-table">
@@ -227,13 +226,14 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 11%;">No. Rekening</th>
-                <th style="width: 18%;">Nama Nasabah</th>
-                <th style="width: 22%;">Alamat</th>
-                <th style="width: 8%;">Tenor</th>
-                <th style="width: 9%;">Tgl Mulai</th>
-                <th style="width: 9%;">Jatuh Tempo</th>
-                <th style="width: 9%;">Nominal (Rp)</th>
+                <th style="width: 10%;">No. Rekening</th>
+                <th style="width: 16%;">Nama Nasabah</th>
+                <th style="width: 18%;">Alamat</th>
+                <th style="width: 7%;">Tenor</th>
+                <th style="width: 8%;">Tgl Mulai</th>
+                <th style="width: 8%;">Jatuh Tempo</th>
+                <th style="width: 11%;">Nominal (Rp)</th>
+                <th style="width: 8%;">Bunga (%)</th>
                 <th style="width: 10%;">Bunga/Bulan</th>
             </tr>
         </thead>
@@ -248,18 +248,23 @@
                 <td class="text-center">{{ $row->start_date ? $row->start_date->isoFormat('DD/MM/Y') : '-' }}</td>
                 <td class="text-center">{{ $row->maturity_date ? $row->maturity_date->isoFormat('DD/MM/Y') : '-' }}</td>
                 <td class="text-right"><strong>{{ number_format($row->amount, 0, ',', '.') }}</strong></td>
+                <td class="text-center">{{ $row->rate_percent }}%</td>
                 <td class="text-right">Rp {{ number_format($row->monthly_interest, 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
+                <td colspan="10" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="8" class="text-right">TOTAL DANA DEPOSITO</th>
-                <th class="text-right">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
+                <th colspan="7" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th class="text-right" colspan="3">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
+            </tr>
+            <tr class="summary-row">
+                <th colspan="7" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
+                <th colspan="3" class="text-right">Rp {{ number_format($data->sum('monthly_interest'), 0, ',', '.') }}</th>
             </tr>
         </tfoot>
     </table>
