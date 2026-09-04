@@ -33,7 +33,7 @@ class DepositController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Deposit::with(['customer', 'validator'])->whereNot('type', 'penarikan')->orderBy('created_at');
+            $data = Deposit::with(['customer', 'validator'])->whereNot('type', 'penarikan')->orderBy('created_at', 'desc')->orderBy('id', 'desc');
 
             if ($request->customer) {
                 $data = $data->where('customer_id', $request->customer);
@@ -130,30 +130,24 @@ class DepositController extends Controller
         }
         $currentMonth = now()->format('Y-m');
 
-        // 1. Total Bunga Simpanan Terposting (Bulan Ini)
-        $bungaSimpananTerposting = Deposit::where('type', 'bunga')
+        // 1. Bunga Simpanan Terposting (Bulan Ini)
+        $bungaSimpananTerpostingQuery = Deposit::where('type', 'bunga')
             ->where(function($q) {
                 $q->where('notes', 'like', 'Bunga Simpanan%')
                   ->orWhere('notes', 'like', 'Bunga bulan%');
             })
             ->whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)
-            ->sum('amount');
+            ->whereMonth('created_at', now()->month);
 
-        $bungaSimpananTerpostingCount = Deposit::where('type', 'bunga')
-            ->where(function($q) {
-                $q->where('notes', 'like', 'Bunga Simpanan%')
-                  ->orWhere('notes', 'like', 'Bunga bulan%');
-            })
-            ->whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)
-            ->count();
+        $bungaSimpananTerposting = $bungaSimpananTerpostingQuery->sum('amount');
+        $bungaSimpananTerpostingTxnCount = $bungaSimpananTerpostingQuery->count();
+        $bungaSimpananTerpostingNasabahCount = $bungaSimpananTerpostingQuery->distinct('customer_id')->count('customer_id');
 
         // 2. Akumulasi Bunga Simpanan Belum Diposting (Menunggu tanggal 1 berikutnya)
         $bungaSimpananBelumDiposting = \App\Models\DailyInterestAccumulation::where('is_posted', 0)
             ->sum('interest_amount');
 
-        $bungaSimpananBelumDipostingCount = \App\Models\DailyInterestAccumulation::where('is_posted', 0)
+        $bungaSimpananBelumDipostingNasabahCount = \App\Models\DailyInterestAccumulation::where('is_posted', 0)
             ->distinct('customer_id')
             ->count('customer_id');
 
@@ -162,9 +156,10 @@ class DepositController extends Controller
             'customers' => Customer::all(),
             'types' => ['simpanan' => 'Simpanan', 'bunga' => 'Bunga'],
             'bungaSimpananTerposting' => $bungaSimpananTerposting,
-            'bungaSimpananTerpostingCount' => $bungaSimpananTerpostingCount,
+            'bungaSimpananTerpostingTxnCount' => $bungaSimpananTerpostingTxnCount,
+            'bungaSimpananTerpostingNasabahCount' => $bungaSimpananTerpostingNasabahCount,
             'bungaSimpananBelumDiposting' => $bungaSimpananBelumDiposting,
-            'bungaSimpananBelumDipostingCount' => $bungaSimpananBelumDipostingCount,
+            'bungaSimpananBelumDipostingNasabahCount' => $bungaSimpananBelumDipostingNasabahCount,
         ]);
     }
 

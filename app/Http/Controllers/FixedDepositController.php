@@ -96,6 +96,10 @@ class FixedDepositController extends Controller
             ->sum('interest_amount');
         $bungaDepositoTerdistribusiCount = DepositInterestPayment::where('period', $currentPeriod)
             ->count();
+        $bungaDepositoTerdistribusiNasabahCount = DepositInterestPayment::where('period', $currentPeriod)
+            ->join('fixed_deposits', 'deposit_interest_payments.fixed_deposit_id', '=', 'fixed_deposits.id')
+            ->distinct('fixed_deposits.customer_id')
+            ->count('fixed_deposits.customer_id');
 
         // 2. Bunga Deposito Jatuh Tempo Hari Ini / Menunggu Update
         // Yaitu deposito aktif yang start_date milestonya <= hari ini, belum dibayar pada periode berjalan
@@ -116,13 +120,16 @@ class FixedDepositController extends Controller
             return (int) floor($item->amount * ($item->rate_percent / 100) / 12);
         });
         $bungaDepositoMenungguCount = $pendingDeposits->count();
+        $bungaDepositoMenungguNasabahCount = $pendingDeposits->pluck('customer_id')->unique()->count();
 
         return view('pages.fixed-deposit.index', [
             'title' => 'Manajemen Deposito',
             'bungaDepositoTerdistribusi' => $bungaDepositoTerdistribusi,
             'bungaDepositoTerdistribusiCount' => $bungaDepositoTerdistribusiCount,
+            'bungaDepositoTerdistribusiNasabahCount' => $bungaDepositoTerdistribusiNasabahCount,
             'bungaDepositoMenunggu' => $bungaDepositoMenunggu,
             'bungaDepositoMenungguCount' => $bungaDepositoMenungguCount,
+            'bungaDepositoMenungguNasabahCount' => $bungaDepositoMenungguNasabahCount,
         ]);
     }
 
