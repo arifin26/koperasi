@@ -120,19 +120,6 @@ class ReportController extends Controller
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with('interestRate');
 
-            // Filter nasabah yang memiliki transaksi pada periode bulan/tahun yang dipilih
-            if ($bulan || $tahun) {
-                $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
-                    if ($bulan && $tahun) {
-                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-                    } elseif ($tahun) {
-                        $q->whereYear('created_at', $tahun);
-                    } elseif ($bulan) {
-                        $q->whereMonth('created_at', $bulan);
-                    }
-                });
-            }
-
             $query->orderBy('name', 'asc');
 
             // Hitung total dana simpanan nasabah hasil filter aktif
@@ -155,14 +142,10 @@ class ReportController extends Controller
                 ->addColumn('alamat', fn($row) => $row->address ?? '-')
                 ->addColumn('phone', fn($row) => $row->phone ?? '-')
                 ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
-                ->addColumn('total_transaksi', function ($row) use ($bulan, $tahun) {
+                ->addColumn('total_transaksi', function ($row) use ($tanggal) {
                     $q = Deposit::where('customer_id', $row->id);
-                    if ($bulan && $tahun) {
-                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-                    } elseif ($tahun) {
-                        $q->whereYear('created_at', $tahun);
-                    } elseif ($bulan) {
-                        $q->whereMonth('created_at', $bulan);
+                    if ($tanggal) {
+                        $q->whereDate('created_at', $tanggal);
                     }
                     return $q->count() . ' kali';
                 })
