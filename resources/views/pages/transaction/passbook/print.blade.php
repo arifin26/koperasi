@@ -6,18 +6,17 @@
     <title>{{ $title ?? 'Cetak Buku Tabungan' }}</title>
     <style>
         @page {
-            size: 150mm 200mm;
-            margin: 0;
+            size: auto;
+            margin: 0mm !important;
         }
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 150mm;
-            height: 200mm;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
             background: #fff;
             font-family: 'Courier New', Courier, monospace, 'Lucida Console', Monaco;
             font-size: 9.5pt;
@@ -26,9 +25,8 @@
         }
         .passbook-page {
             width: 150mm;
-            height: 200mm;
             position: relative;
-            padding-top: {{ $topMargin ?? '25mm' }};
+            padding-top: {{ $topMargin ?? '0mm' }};
             padding-left: {{ $leftMargin ?? '6mm' }};
             padding-right: {{ $rightMargin ?? '6mm' }};
         }
@@ -83,9 +81,15 @@
             visibility: hidden;
         }
         @media print {
-            body {
-                width: 150mm;
-                height: 200mm;
+            @page {
+                size: auto;
+                margin: 0mm !important;
+            }
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100%;
+                background: transparent;
             }
             .no-print {
                 display: none !important;

@@ -67,28 +67,10 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label>Filter Bulan:</label>
-                        <select class="form-control" id="filter_bulan">
-                            <option value="">Semua Bulan</option>
-                            @foreach([
-                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-                            ] as $mKey => $mName)
-                                <option value="{{ $mKey }}">{{ $mName }}</option>
-                            @endforeach
-                        </select>
+                        <label>Tanggal Per:</label>
+                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}">
                     </div>
-                    <div class="col-md-2">
-                        <label>Filter Tahun:</label>
-                        <select class="form-control" id="filter_tahun">
-                            <option value="">Semua Tahun</option>
-                            @for($y = date('Y') + 1; $y >= 2020; $y--)
-                                <option value="{{ $y }}">{{ $y }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-5 d-flex align-items-end">
+                    <div class="col-md-6 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
@@ -98,8 +80,7 @@
                         <form action="{{ route('report.deposit-recap.print') }}" method="POST" target="_blank" class="d-inline">
                             @csrf
                             <input type="hidden" name="status" id="print_status" value="">
-                            <input type="hidden" name="bulan" id="print_bulan" value="">
-                            <input type="hidden" name="tahun" id="print_tahun" value="">
+                            <input type="hidden" name="tanggal" id="print_tanggal" value="">
                             <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
                         </form>
                     </div>
@@ -160,8 +141,7 @@
     $(document).ready(function () {
         var activeFilter = {
             status: '',
-            bulan: '',
-            tahun: ''
+            tanggal: ''
         };
 
         var table = $('#deposit-recap-table').DataTable({
@@ -173,8 +153,7 @@
                 url: "{{ route('report.deposit-recap') }}",
                 data: function (d) {
                     d.status = activeFilter.status;
-                    d.bulan = activeFilter.bulan;
-                    d.tahun = activeFilter.tahun;
+                    d.tanggal = activeFilter.tanggal;
                 }
             },
             language: {
@@ -217,28 +196,23 @@
 
         $('#btn_filter').click(function () {
             activeFilter.status = $('#filter_status').val();
-            activeFilter.bulan = $('#filter_bulan').val();
-            activeFilter.tahun = $('#filter_tahun').val();
+            activeFilter.tanggal = $('#filter_tanggal').val();
 
             $('#print_status').val(activeFilter.status);
-            $('#print_bulan').val(activeFilter.bulan);
-            $('#print_tahun').val(activeFilter.tahun);
+            $('#print_tanggal').val(activeFilter.tanggal);
 
             table.draw();
         });
 
         $('#btn_reset').click(function () {
             $('#filter_status').val('');
-            $('#filter_bulan').val('');
-            $('#filter_tahun').val('');
+            $('#filter_tanggal').val('');
 
             activeFilter.status = '';
-            activeFilter.bulan = '';
-            activeFilter.tahun = '';
+            activeFilter.tanggal = '';
 
             $('#print_status').val('');
-            $('#print_bulan').val('');
-            $('#print_tahun').val('');
+            $('#print_tanggal').val('');
 
             table.draw();
         });

@@ -6,7 +6,7 @@
 
         {{-- Summary Cards --}}
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-success">
                     <span class="info-box-icon"><i class="fas fa-piggy-bank"></i></span>
                     <div class="info-box-content">
@@ -16,7 +16,17 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-coins text-white"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-white">Dana Simpanan</span>
+                        <span class="info-box-number text-white" id="card_dana_simpanan">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span>
+                        <span class="progress-description text-white">hasil filter aktif</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-primary">
                     <span class="info-box-icon"><i class="fas fa-users"></i></span>
                     <div class="info-box-content">
@@ -26,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-info">
                     <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
                     <div class="info-box-content">
@@ -94,8 +104,8 @@
                         </thead>
                         <tfoot>
                             <tr class="bg-light font-weight-bold">
-                                <td colspan="9" class="text-right">Total Dana Simpanan (Seluruh Nasabah):</td>
-                                <td class="text-success" colspan="3">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
+                                <td colspan="9" class="text-right">Total Dana Simpanan (Hasil Filter):</td>
+                                <td class="text-success" colspan="3" id="footer_total_saldo">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -164,6 +174,40 @@
                 if (parseInt(data.saldo_raw) === 0) {
                     $(row).addClass('table-warning');
                 }
+            }
+        });
+
+        // Update card dan footer saat data diterima dari server
+        table.on('xhr', function () {
+            var json = table.ajax.json();
+            if (json && json.filtered_total_saldo_formatted !== undefined) {
+                $('#card_dana_simpanan').text('Rp ' + json.filtered_total_saldo_formatted);
+                $('#footer_total_saldo').text('Rp ' + json.filtered_total_saldo_formatted);
+            }
+        });
+
+        // Kontrol interaktivitas Tanggal Mulai dan Tanggal Selesai
+        $('#filter_start_date').on('change', function () {
+            var startDate = $(this).val();
+            if (startDate) {
+                $('#filter_end_date').prop('disabled', false);
+                $('#filter_end_date').attr('min', startDate);
+
+                // Jika tanggal selesai belum diisi atau mendahului tanggal mulai, sesuaikan
+                var endDate = $('#filter_end_date').val();
+                if (endDate && endDate < startDate) {
+                    $('#filter_end_date').val(startDate);
+                }
+            } else {
+                $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
+            }
+        });
+
+        $('#filter_end_date').on('change', function () {
+            var startDate = $('#filter_start_date').val();
+            var endDate = $(this).val();
+            if (startDate && endDate && endDate < startDate) {
+                $(this).val(startDate);
             }
         });
 

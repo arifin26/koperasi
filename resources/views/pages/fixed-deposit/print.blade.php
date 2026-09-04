@@ -24,7 +24,7 @@
         .meta-label { width: 12%; font-weight: bold; color: #444; }
         .meta-colon { width: 1%; text-align: center; }
         .meta-value { width: 37%; }
-        table.data-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 7pt; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 8pt; }
         table.data-table th, table.data-table td { border: 1px solid #333; padding: 3px 4px; vertical-align: middle; }
         table.data-table th { background-color: #eee; font-weight: bold; text-align: center; }
         .text-right { text-align: right; }

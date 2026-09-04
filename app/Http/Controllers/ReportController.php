@@ -110,7 +110,7 @@ class ReportController extends Controller
             $statusFilter = $request->status ?? '';
             $tanggal = $request->tanggal ?? '';
 
-            // Tentukan batas akhir periode tanggal jika ada filter
+            // Tentukan batas akhir periode tanggal jika ada filter tanggal
             $cutoffDate = null;
             if ($tanggal && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
                 $cutoffDate = Carbon::parse($tanggal)->endOfDay();
@@ -120,7 +120,32 @@ class ReportController extends Controller
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with('interestRate');
 
+            // Filter nasabah yang memiliki transaksi pada periode bulan/tahun yang dipilih
+            if ($bulan || $tahun) {
+                $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
+                    if ($bulan && $tahun) {
+                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+                    } elseif ($tahun) {
+                        $q->whereYear('created_at', $tahun);
+                    } elseif ($bulan) {
+                        $q->whereMonth('created_at', $bulan);
+                    }
+                });
+            }
+
             $query->orderBy('name', 'asc');
+
+            // Hitung total dana simpanan nasabah hasil filter aktif
+            $filteredCustomers = (clone $query)->get();
+            $filteredTotalSaldo = 0;
+            foreach ($filteredCustomers as $cust) {
+                $depQ = Deposit::where('customer_id', $cust->id);
+                if ($cutoffDate) {
+                    $depQ->where('created_at', '<=', $cutoffDate);
+                }
+                $lastDep = $depQ->orderBy('id', 'desc')->first();
+                $filteredTotalSaldo += $lastDep ? ($lastDep->current_balance ?? 0) : 0;
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -130,10 +155,14 @@ class ReportController extends Controller
                 ->addColumn('alamat', fn($row) => $row->address ?? '-')
                 ->addColumn('phone', fn($row) => $row->phone ?? '-')
                 ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
-                ->addColumn('total_transaksi', function ($row) use ($tanggal) {
+                ->addColumn('total_transaksi', function ($row) use ($bulan, $tahun) {
                     $q = Deposit::where('customer_id', $row->id);
-                    if ($tanggal) {
-                        $q->whereDate('created_at', $tanggal);
+                    if ($bulan && $tahun) {
+                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
+                    } elseif ($tahun) {
+                        $q->whereYear('created_at', $tahun);
+                    } elseif ($bulan) {
+                        $q->whereMonth('created_at', $bulan);
                     }
                     return $q->count() . ' kali';
                 })
@@ -174,6 +203,8 @@ class ReportController extends Controller
                 ->addColumn('aksi', function ($row) {
                     return '<a href="' . route('customer.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
                 })
+                ->with('filtered_total_saldo', $filteredTotalSaldo)
+                ->with('filtered_total_saldo_formatted', number_format($filteredTotalSaldo, 0, ',', '.'))
                 ->rawColumns(['status_nasabah', 'aksi'])
                 ->make(true);
         }
@@ -231,8 +262,12 @@ class ReportController extends Controller
         }
 
         $periodeLabel = '';
-        if ($tanggal) {
-            $periodeLabel = 'Per Tanggal ' . Carbon::parse($tanggal)->isoFormat('D MMMM Y');
+        if ($bulan && $tahun) {
+            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
+        } elseif ($tahun) {
+            $periodeLabel = 'Tahun ' . $tahun;
+        } elseif ($bulan) {
+            $periodeLabel = 'Bulan ' . Carbon::createFromDate(date('Y'), $bulan, 1)->isoFormat('MMMM');
         } else {
             $periodeLabel = 'Semua Periode';
         }
