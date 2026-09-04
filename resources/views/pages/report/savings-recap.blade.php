@@ -6,7 +6,7 @@
 
         {{-- Summary Cards --}}
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-success">
                     <span class="info-box-icon"><i class="fas fa-piggy-bank"></i></span>
                     <div class="info-box-content">
@@ -16,7 +16,17 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-coins text-white"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-white">Dana Simpanan</span>
+                        <span class="info-box-number text-white" id="card_dana_simpanan">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span>
+                        <span class="progress-description text-white">hasil filter aktif</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-primary">
                     <span class="info-box-icon"><i class="fas fa-users"></i></span>
                     <div class="info-box-content">
@@ -26,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box bg-info">
                     <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
                     <div class="info-box-content">
@@ -54,29 +64,15 @@
                             <option value="blacklist">Blacklist</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label>Bulan:</label>
-                        <select class="form-control" id="filter_bulan">
-                            <option value="">Semua Bulan</option>
-                            @foreach([
-                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-                            ] as $mKey => $mName)
-                                <option value="{{ $mKey }}">{{ $mName }}</option>
-                            @endforeach
-                        </select>
+                    <div class="col-md-2">
+                        <label>Tanggal Mulai:</label>
+                        <input type="date" class="form-control" id="filter_start_date">
                     </div>
                     <div class="col-md-2">
-                        <label>Tahun:</label>
-                        <select class="form-control" id="filter_tahun">
-                            <option value="">Semua Tahun</option>
-                            @for($y = date('Y') + 1; $y >= 2020; $y--)
-                                <option value="{{ $y }}">{{ $y }}</option>
-                            @endfor
-                        </select>
+                        <label>Tanggal Selesai:</label>
+                        <input type="date" class="form-control" id="filter_end_date" disabled>
                     </div>
-                    <div class="col-md-5 d-flex align-items-end">
+                    <div class="col-md-6 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
@@ -86,8 +82,8 @@
                         <form action="{{ route('report.savings-recap.print') }}" method="POST" target="_blank" class="d-inline">
                             @csrf
                             <input type="hidden" name="status" id="print_status" value="">
-                            <input type="hidden" name="bulan" id="print_bulan" value="">
-                            <input type="hidden" name="tahun" id="print_tahun" value="">
+                            <input type="hidden" name="start_date" id="print_start_date" value="">
+                            <input type="hidden" name="end_date" id="print_end_date" value="">
                             <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
                         </form>
                     </div>
@@ -113,8 +109,8 @@
                         </thead>
                         <tfoot>
                             <tr class="bg-light font-weight-bold">
-                                <td colspan="9" class="text-right">Total Dana Simpanan (Seluruh Nasabah):</td>
-                                <td class="text-success" colspan="3">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
+                                <td colspan="9" class="text-right">Total Dana Simpanan (Hasil Filter):</td>
+                                <td class="text-success" colspan="3" id="footer_total_saldo">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -145,8 +141,8 @@
         // State filter aktif yang diterapkan
         var activeFilter = {
             status: '',
-            bulan: '',
-            tahun: ''
+            start_date: '',
+            end_date: ''
         };
 
         var table = $('#savings-recap-table').DataTable({
@@ -158,8 +154,8 @@
                 url: "{{ route('report.savings-recap') }}",
                 data: function (d) {
                     d.status = activeFilter.status;
-                    d.bulan = activeFilter.bulan;
-                    d.tahun = activeFilter.tahun;
+                    d.start_date = activeFilter.start_date;
+                    d.end_date = activeFilter.end_date;
                 }
             },
             language: {
@@ -188,16 +184,50 @@
             }
         });
 
+        // Update card dan footer saat data diterima dari server
+        table.on('xhr', function () {
+            var json = table.ajax.json();
+            if (json && json.filtered_total_saldo_formatted !== undefined) {
+                $('#card_dana_simpanan').text('Rp ' + json.filtered_total_saldo_formatted);
+                $('#footer_total_saldo').text('Rp ' + json.filtered_total_saldo_formatted);
+            }
+        });
+
+        // Kontrol interaktivitas Tanggal Mulai dan Tanggal Selesai
+        $('#filter_start_date').on('change', function () {
+            var startDate = $(this).val();
+            if (startDate) {
+                $('#filter_end_date').prop('disabled', false);
+                $('#filter_end_date').attr('min', startDate);
+
+                // Jika tanggal selesai belum diisi atau mendahului tanggal mulai, sesuaikan
+                var endDate = $('#filter_end_date').val();
+                if (endDate && endDate < startDate) {
+                    $('#filter_end_date').val(startDate);
+                }
+            } else {
+                $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
+            }
+        });
+
+        $('#filter_end_date').on('change', function () {
+            var startDate = $('#filter_start_date').val();
+            var endDate = $(this).val();
+            if (startDate && endDate && endDate < startDate) {
+                $(this).val(startDate);
+            }
+        });
+
         // Eksekusi filter HANYA saat tombol "Terapkan Filter" diklik
         $('#btn_filter').click(function () {
             activeFilter.status = $('#filter_status').val();
-            activeFilter.bulan = $('#filter_bulan').val();
-            activeFilter.tahun = $('#filter_tahun').val();
+            activeFilter.start_date = $('#filter_start_date').val();
+            activeFilter.end_date = $('#filter_end_date').val();
 
             // Sinkronkan ke form Cetak PDF
             $('#print_status').val(activeFilter.status);
-            $('#print_bulan').val(activeFilter.bulan);
-            $('#print_tahun').val(activeFilter.tahun);
+            $('#print_start_date').val(activeFilter.start_date);
+            $('#print_end_date').val(activeFilter.end_date);
 
             table.draw();
         });
@@ -205,16 +235,16 @@
         // Reset filter
         $('#btn_reset').click(function () {
             $('#filter_status').val('');
-            $('#filter_bulan').val('');
-            $('#filter_tahun').val('');
+            $('#filter_start_date').val('');
+            $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
 
             activeFilter.status = '';
-            activeFilter.bulan = '';
-            activeFilter.tahun = '';
+            activeFilter.start_date = '';
+            activeFilter.end_date = '';
 
             $('#print_status').val('');
-            $('#print_bulan').val('');
-            $('#print_tahun').val('');
+            $('#print_start_date').val('');
+            $('#print_end_date').val('');
 
             table.draw();
         });

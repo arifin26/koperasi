@@ -231,7 +231,7 @@
         <tbody>
             @forelse($data as $i => $customer)
             @php
-                $lastDeposit = $customer->deposits->first();
+                $lastDeposit = $customer->last_deposit;
                 $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                 $rate = $customer->interestRate->rate_percent ?? 0;
                 $bungaBulan = floor($saldo * ($rate / 100) / 12);
@@ -254,15 +254,17 @@
         <tfoot>
             <tr class="summary-row">
                 <th colspan="5" class="text-right">TOTAL DANA SIMPANAN NASABAH</th>
-                <th class="text-right" colspan="2">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</th>
+                <th class="text-right">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</th>
+                <th></th>
             </tr>
             <tr class="summary-row">
                 <th colspan="5" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
-                <th colspan="2" class="text-right">
+                <th></th>
+                <th class="text-right">
                     @php
                         $totalBungaBulan = 0;
                         foreach ($data as $customer) {
-                            $lastDep = $customer->deposits->first();
+                            $lastDep = $customer->last_deposit;
                             $saldoCust = $lastDep ? ($lastDep->current_balance ?? 0) : 0;
                             $rateCust = $customer->interestRate->rate_percent ?? 0;
                             $totalBungaBulan += floor($saldoCust * ($rateCust / 100) / 12);

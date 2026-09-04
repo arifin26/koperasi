@@ -108,37 +108,48 @@ class ReportController extends Controller
     {
         if ($request->ajax()) {
             $statusFilter = $request->status ?? '';
-            $bulan = $request->bulan ?? '';
-            $tahun = $request->tahun ?? '';
+            $startDate = $request->start_date ?? '';
+            $endDate = $request->end_date ?? '';
 
-            // Tentukan batas akhir periode tanggal jika ada filter
+            // Tentukan batas akhir periode tanggal jika ada filter tanggal
             $cutoffDate = null;
-            if ($bulan && $tahun) {
-                $cutoffDate = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth();
-            } elseif ($tahun) {
-                $cutoffDate = Carbon::createFromDate($tahun, 12, 31)->endOfDay();
-            } elseif ($bulan) {
-                $cutoffDate = Carbon::createFromDate(date('Y'), $bulan, 1)->endOfMonth();
+            if ($endDate) {
+                $cutoffDate = Carbon::parse($endDate)->endOfDay();
             }
 
             $query = Customer::select('customers.*')
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with('interestRate');
 
-            // Filter nasabah yang memiliki transaksi pada periode bulan/tahun yang dipilih
-            if ($bulan || $tahun) {
-                $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
-                    if ($bulan && $tahun) {
-                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-                    } elseif ($tahun) {
-                        $q->whereYear('created_at', $tahun);
-                    } elseif ($bulan) {
-                        $q->whereMonth('created_at', $bulan);
+            // Filter nasabah yang memiliki transaksi pada rentang tanggal yang dipilih
+            if ($startDate || $endDate) {
+                $query->whereHas('deposits', function ($q) use ($startDate, $endDate) {
+                    if ($startDate && $endDate) {
+                        $q->whereBetween('created_at', [
+                            Carbon::parse($startDate)->startOfDay(),
+                            Carbon::parse($endDate)->endOfDay()
+                        ]);
+                    } elseif ($startDate) {
+                        $q->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+                    } elseif ($endDate) {
+                        $q->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
                     }
                 });
             }
 
             $query->orderBy('name', 'asc');
+
+            // Hitung total dana simpanan nasabah hasil filter aktif
+            $filteredCustomers = (clone $query)->get();
+            $filteredTotalSaldo = 0;
+            foreach ($filteredCustomers as $cust) {
+                $depQ = Deposit::where('customer_id', $cust->id);
+                if ($cutoffDate) {
+                    $depQ->where('created_at', '<=', $cutoffDate);
+                }
+                $lastDep = $depQ->orderBy('id', 'desc')->first();
+                $filteredTotalSaldo += $lastDep ? ($lastDep->current_balance ?? 0) : 0;
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -148,14 +159,17 @@ class ReportController extends Controller
                 ->addColumn('alamat', fn($row) => $row->address ?? '-')
                 ->addColumn('phone', fn($row) => $row->phone ?? '-')
                 ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
-                ->addColumn('total_transaksi', function ($row) use ($bulan, $tahun) {
+                ->addColumn('total_transaksi', function ($row) use ($startDate, $endDate) {
                     $q = Deposit::where('customer_id', $row->id);
-                    if ($bulan && $tahun) {
-                        $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-                    } elseif ($tahun) {
-                        $q->whereYear('created_at', $tahun);
-                    } elseif ($bulan) {
-                        $q->whereMonth('created_at', $bulan);
+                    if ($startDate && $endDate) {
+                        $q->whereBetween('created_at', [
+                            Carbon::parse($startDate)->startOfDay(),
+                            Carbon::parse($endDate)->endOfDay()
+                        ]);
+                    } elseif ($startDate) {
+                        $q->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+                    } elseif ($endDate) {
+                        $q->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
                     }
                     return $q->count() . ' kali';
                 })
@@ -196,6 +210,8 @@ class ReportController extends Controller
                 ->addColumn('aksi', function ($row) {
                     return '<a href="' . route('customer.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
                 })
+                ->with('filtered_total_saldo', $filteredTotalSaldo)
+                ->with('filtered_total_saldo_formatted', number_format($filteredTotalSaldo, 0, ',', '.'))
                 ->rawColumns(['status_nasabah', 'aksi'])
                 ->make(true);
         }
@@ -221,30 +237,29 @@ class ReportController extends Controller
     public function savingsRecapPrint(Request $request)
     {
         $statusFilter = $request->status ?? '';
-        $bulan = $request->bulan ?? '';
-        $tahun = $request->tahun ?? '';
+        $startDate = $request->start_date ?? '';
+        $endDate = $request->end_date ?? '';
 
         $cutoffDate = null;
-        if ($bulan && $tahun) {
-            $cutoffDate = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth();
-        } elseif ($tahun) {
-            $cutoffDate = Carbon::createFromDate($tahun, 12, 31)->endOfDay();
-        } elseif ($bulan) {
-            $cutoffDate = Carbon::createFromDate(date('Y'), $bulan, 1)->endOfMonth();
+        if ($endDate) {
+            $cutoffDate = Carbon::parse($endDate)->endOfDay();
         }
 
         $query = Customer::select('customers.*')
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->with('interestRate');
 
-        if ($bulan || $tahun) {
-            $query->whereHas('deposits', function ($q) use ($bulan, $tahun) {
-                if ($bulan && $tahun) {
-                    $q->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-                } elseif ($tahun) {
-                    $q->whereYear('created_at', $tahun);
-                } elseif ($bulan) {
-                    $q->whereMonth('created_at', $bulan);
+        if ($startDate || $endDate) {
+            $query->whereHas('deposits', function ($q) use ($startDate, $endDate) {
+                if ($startDate && $endDate) {
+                    $q->whereBetween('created_at', [
+                        Carbon::parse($startDate)->startOfDay(),
+                        Carbon::parse($endDate)->endOfDay()
+                    ]);
+                } elseif ($startDate) {
+                    $q->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+                } elseif ($endDate) {
+                    $q->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
                 }
             });
         }
@@ -261,12 +276,15 @@ class ReportController extends Controller
             $customer->last_deposit = $lastDeposit;
 
             $txnCountQ = Deposit::where('customer_id', $customer->id);
-            if ($bulan && $tahun) {
-                $txnCountQ->whereMonth('created_at', $bulan)->whereYear('created_at', $tahun);
-            } elseif ($tahun) {
-                $txnCountQ->whereYear('created_at', $tahun);
-            } elseif ($bulan) {
-                $txnCountQ->whereMonth('created_at', $bulan);
+            if ($startDate && $endDate) {
+                $txnCountQ->whereBetween('created_at', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay()
+                ]);
+            } elseif ($startDate) {
+                $txnCountQ->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+            } elseif ($endDate) {
+                $txnCountQ->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
             }
             $customer->deposits_count = $txnCountQ->count();
 
@@ -274,12 +292,12 @@ class ReportController extends Controller
         }
 
         $periodeLabel = '';
-        if ($bulan && $tahun) {
-            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
-        } elseif ($tahun) {
-            $periodeLabel = 'Tahun ' . $tahun;
-        } elseif ($bulan) {
-            $periodeLabel = 'Bulan ' . Carbon::createFromDate(date('Y'), $bulan, 1)->isoFormat('MMMM');
+        if ($startDate && $endDate) {
+            $periodeLabel = Carbon::parse($startDate)->isoFormat('D MMMM Y') . ' s/d ' . Carbon::parse($endDate)->isoFormat('D MMMM Y');
+        } elseif ($startDate) {
+            $periodeLabel = 'Sejak ' . Carbon::parse($startDate)->isoFormat('D MMMM Y');
+        } elseif ($endDate) {
+            $periodeLabel = 'Sampai dengan ' . Carbon::parse($endDate)->isoFormat('D MMMM Y');
         } else {
             $periodeLabel = 'Semua Periode';
         }

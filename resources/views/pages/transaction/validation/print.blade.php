@@ -23,15 +23,19 @@
             color: #000;
         }
         .validation-slip {
-            width: 180mm;
+            width: 140mm;
             padding-top: {{ $topMargin ?? '6mm' }};
-            padding-left: {{ $leftMargin ?? '12mm' }};
-            padding-right: {{ $rightMargin ?? '12mm' }};
+            padding-left: {{ $leftMargin ?? '10mm' }};
+            padding-right: {{ $rightMargin ?? '10mm' }};
         }
         .validation-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            line-height: 1;
+        }
+        .validation-table tr {
+            line-height: 1;
         }
         .validation-table td {
             padding: 0;
@@ -39,6 +43,7 @@
             font-weight: 700;
             letter-spacing: 0.3px;
             font-size: 10pt;
+            line-height: 1.05;
             white-space: nowrap;
         }
         .text-left { text-align: left; }
@@ -87,7 +92,7 @@
         <table class="validation-table">
             <tr>
                 <td class="text-left" style="width: 58%;">{{ strtoupper($typeLabel) }}</td>
-                <td class="text-right" style="width: 42%;">Usr. {{ strtoupper($validatorName) }}</td>
+                <td class="text-right" style="width: 42%;">{{ strtoupper($validatorName) }}</td>
             </tr>
             <tr>
                 <td class="text-left" style="width: 58%;">Rek.{{ $accountNumber }} &nbsp; {{ $validatedAt }}</td>
