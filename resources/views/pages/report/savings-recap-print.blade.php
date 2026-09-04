@@ -231,7 +231,7 @@
         <tbody>
             @forelse($data as $i => $customer)
             @php
-                $lastDeposit = $customer->deposits->first();
+                $lastDeposit = $customer->last_deposit ?? null;
                 $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                 $rate = $customer->interestRate->rate_percent ?? 0;
                 $bungaBulan = floor($saldo * ($rate / 100) / 12);
@@ -262,7 +262,7 @@
                     @php
                         $totalBungaBulan = 0;
                         foreach ($data as $customer) {
-                            $lastDep = $customer->deposits->first();
+                            $lastDep = $customer->last_deposit ?? null;
                             $saldoCust = $lastDep ? ($lastDep->current_balance ?? 0) : 0;
                             $rateCust = $customer->interestRate->rate_percent ?? 0;
                             $totalBungaBulan += floor($saldoCust * ($rateCust / 100) / 12);
