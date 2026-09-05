@@ -153,27 +153,6 @@
             </div>
         </div>
 
-        {{-- Rekap Total Card --}}
-        <div class="card mt-3" id="rekap-total-card">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-calculator mr-2"></i>Rekap Total</h3>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-bordered mb-0">
-                    <tbody>
-                        <tr>
-                            <td class="font-weight-bold" style="width:50%">Total Nominal Deposito</td>
-                            <td class="text-right font-weight-bold text-primary" id="rekap_total_nominal">Rp -</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Total Bunga/Bulan</td>
-                            <td class="text-right font-weight-bold text-success" id="rekap_total_bunga">Rp -</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 </div>
 @endsection
@@ -190,6 +169,29 @@
         #deposit-recap-table tbody tr.row-overdue:hover td { background-color: #ffc9c9 !important; }
         #deposit-recap-table tbody tr.row-soon:hover    td { background-color: #c3f0d4 !important; }
         .legend-dot { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:5px; vertical-align:middle; }
+
+        /* Footer styling */
+        #deposit-recap-table tfoot th {
+            background-color: #f8f9fa;
+            border-top: 2px solid #343a40;
+            padding: 12px 8px;
+            font-size: 0.9rem;
+        }
+
+        .deposit-recap-summary-row {
+            background-color: #f8f9fa !important;
+        }
+
+        .deposit-recap-summary-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .deposit-recap-summary-value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
     </style>
 @endpush
 
@@ -228,9 +230,9 @@
                 { data: 'no_deposito',           name: 'number' },
                 { data: 'no_nasabah',            name: 'customer.number', searchable: false, orderable: false },
                 { data: 'nama_nasabah',          name: 'customer.name', orderable: false },
-                { data: 'amount',                name: 'amount' },
+                { data: 'amount',                name: 'amount', responsivePriority: 1 },
+                { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false, responsivePriority: 2 },
                 { data: 'rate_percent',          name: 'rate_percent' },
-                { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false },
                 { data: 'start_date',            name: 'start_date' },
                 { data: 'maturity_date',         name: 'maturity_date' },
                 { data: 'status_label',          name: 'status', orderable: false },
@@ -258,13 +260,22 @@
             }
         });
 
-        // Update Rekap Total when data is received
+        // Function to update footer totals
+        function updateDepositRecapFooter(json) {
+            if (json && json.filtered_total_nominal_formatted !== undefined) {
+                $('#footer_total_nominal').text('Rp ' + json.filtered_total_nominal_formatted);
+                $('#footer_total_bunga').text('Rp ' + json.filtered_total_bunga_formatted);
+            } else {
+                // Fallback to zero if metadata not available
+                $('#footer_total_nominal').text('Rp 0');
+                $('#footer_total_bunga').text('Rp 0');
+            }
+        }
+
+        // Update footer when data is received
         table.on('xhr', function () {
             var json = table.ajax.json();
-            if (json && json.filtered_total_nominal_formatted !== undefined) {
-                $('#rekap_total_nominal').text('Rp ' + json.filtered_total_nominal_formatted);
-                $('#rekap_total_bunga').text('Rp ' + json.filtered_total_bunga_formatted);
-            }
+            updateDepositRecapFooter(json);
         });
 
         $('#btn_filter').click(function () {
