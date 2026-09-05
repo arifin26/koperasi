@@ -4,6 +4,9 @@
 <div class="row">
     <div class="col-12">
 
+        {{-- Screen-only UI --}}
+        <div class="savings-recap-screen-only">
+
         {{-- Summary Cards --}}
         <div class="row mb-3">
             <div class="col-12 col-sm-6 col-md-3">
@@ -75,12 +78,9 @@
                         <button type="button" class="btn btn-outline-secondary mr-2" id="btn_reset">
                             <i class="fas fa-undo"></i> Reset
                         </button>
-                        <form action="{{ route('report.savings-recap.print') }}" method="POST" target="_blank" class="d-inline">
-                            @csrf
-                            <input type="hidden" name="status" id="print_status" value="">
-                            <input type="hidden" name="tanggal" id="print_tanggal" value="">
-                            <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
-                        </form>
+                        <button type="button" class="btn btn-secondary" id="btn_print_savings_recap">
+                            <i class="fas fa-print"></i> Cetak
+                        </button>
                     </div>
                 </div>
 
@@ -139,6 +139,11 @@
             </div>
         </div>
 
+        </div>{{-- End savings-recap-screen-only --}}
+
+        {{-- Hidden Print Area --}}
+        <div id="savings-recap-print-area" aria-live="polite" aria-busy="false"></div>
+
     </div>
 </div>
 @endsection
@@ -149,6 +154,183 @@
     <style>
         #savings-recap-table td { vertical-align: middle; }
         .info-box-number { font-size: 1.3rem; }
+
+        /* Print Area - Hidden by default */
+        #savings-recap-print-area {
+            display: none;
+        }
+
+        /* Print-specific styles */
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+
+        @media print {
+            /* Hide everything except print area */
+            .main-header,
+            .main-sidebar,
+            .content-header,
+            .main-footer,
+            .savings-recap-screen-only {
+                display: none !important;
+            }
+
+            .content-wrapper,
+            .content {
+                margin: 0 !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Show only print area */
+            #savings-recap-print-area {
+                display: block !important;
+                width: 100%;
+            }
+
+            #savings-recap-print-area,
+            #savings-recap-print-area * {
+                visibility: visible;
+            }
+
+            /* Print document styles */
+            .savings-recap-print-document {
+                color: #222;
+                font-size: 8pt;
+                line-height: 1.25;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            }
+
+            /* Meta table */
+            .savings-recap-print-meta {
+                width: 100%;
+                margin-bottom: 8px;
+                font-size: 7.5pt;
+                border-collapse: collapse;
+            }
+
+            .savings-recap-print-meta td {
+                padding: 1px 3px;
+                vertical-align: top;
+                border: none;
+            }
+
+            .meta-label {
+                width: 12%;
+                font-weight: bold;
+                color: #444;
+            }
+
+            .meta-colon {
+                width: 1%;
+                text-align: center;
+            }
+
+            .meta-value {
+                width: 37%;
+            }
+
+            /* Data table */
+            .savings-recap-print-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                margin-top: 4px;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-table th,
+            .savings-recap-print-table td {
+                border: 1px solid #1a5632;
+                padding: 4px 6px;
+                vertical-align: middle;
+                overflow-wrap: anywhere;
+            }
+
+            .savings-recap-print-table th {
+                background-color: #f4f8f5;
+                color: #1a5632;
+                font-weight: bold;
+                text-align: center;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-table thead {
+                display: table-header-group;
+            }
+
+            .savings-recap-print-table tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Summary section */
+            .savings-recap-print-summary {
+                margin-top: 8px;
+            }
+
+            .summary-row td {
+                font-weight: bold;
+                background-color: #f4f8f5;
+                color: #1a5632;
+                border: 1px solid #1a5632;
+                padding: 6px;
+            }
+
+            /* Signature section */
+            .savings-recap-print-signature {
+                width: 100%;
+                margin-top: 20px;
+                border-collapse: collapse;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-signature td {
+                border: none !important;
+            }
+
+            .sign-space {
+                height: 45px;
+            }
+
+            .sign-name {
+                font-weight: bold;
+                text-decoration: underline;
+                font-size: 8pt;
+            }
+
+            .sign-title {
+                font-size: 7pt;
+                color: #555;
+                margin-top: 2px;
+            }
+
+            /* Footer */
+            .savings-recap-print-footer {
+                margin-top: 15px;
+                font-size: 6.5pt;
+                color: #777;
+                border-top: 0.5px dotted #ccc;
+                padding-top: 2px;
+            }
+
+            /* Prevent breaking */
+            .print-avoid-break {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Utility classes */
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+
+            /* Force color printing */
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 @endpush
 
@@ -297,6 +479,85 @@
                 detailTable.destroy();
                 detailTable = null;
             }
+        });
+
+        // Native Print Button Handler
+        $('#btn_print_savings_recap').click(function() {
+            var btn = $(this);
+            var originalHtml = btn.html();
+
+            // Disable button and show loading
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan laporan...');
+            $('#savings-recap-print-area').attr('aria-busy', 'true');
+
+            // Send AJAX request with current active filters
+            $.ajax({
+                url: "{{ route('report.savings-recap.print') }}",
+                method: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    status: activeFilter.status,
+                    tanggal: activeFilter.tanggal
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data.html) {
+                        // Insert HTML into print area
+                        $('#savings-recap-print-area').html(response.data.html);
+
+                        // Wait for logo image to load before printing
+                        var logo = $('#savings-recap-print-area').find('img')[0];
+
+                        if (logo) {
+                            if (logo.complete) {
+                                // Image already loaded
+                                window.print();
+                            } else {
+                                // Wait for image to load
+                                logo.onload = function() {
+                                    window.print();
+                                };
+                                logo.onerror = function() {
+                                    // Print anyway even if logo fails
+                                    window.print();
+                                };
+                            }
+                        } else {
+                            // No logo found, print directly
+                            window.print();
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Gagal memuat laporan cetak. Silakan coba lagi.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = 'Gagal memuat laporan cetak.';
+
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        // Validation errors
+                        var errors = xhr.responseJSON.errors;
+                        var errorList = Object.values(errors).flat().join('<br>');
+                        errorMsg = errorList;
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMsg
+                    });
+                },
+                complete: function() {
+                    // Re-enable button
+                    btn.prop('disabled', false).html(originalHtml);
+                    $('#savings-recap-print-area').attr('aria-busy', 'false');
+                }
+            });
         });
     });
     </script>

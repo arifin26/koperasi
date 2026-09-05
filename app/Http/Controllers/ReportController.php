@@ -249,15 +249,33 @@ class ReportController extends Controller
         ]);
     }
 
-    public function savingsRecapPrint(Request $request)
+    public function savingsRecapPrint(\App\Http\Requests\SavingsRecapPrintRequest $request)
     {
-        $statusFilter = $request->status ?? '';
-        $tanggal = $request->tanggal ?? '';
+        $validated = $request->validated();
+        $statusFilter = $validated['status'] ?? '';
+        $tanggal = $validated['tanggal'] ?? '';
 
-        $cutoffDate = null;
-        if ($tanggal && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
-            $cutoffDate = Carbon::parse($tanggal)->endOfDay();
-        }
+        // Build report data
+        $reportData = $this->buildSavingsRecapPrintData($statusFilter, $tanggal);
+
+        // Render the partial as HTML
+        $html = view('pages.report.partials.savings-recap-print-content', $reportData)->render();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'html' => $html
+            ]
+        ]);
+    }
+
+    /**
+     * Build print report data with filters
+     */
+    private function buildSavingsRecapPrintData(string $statusFilter, string $tanggal): array
+    {
+        $cutoffDate = $this->resolveSavingsRecapCutoffDate($tanggal);
+        $periodeLabel = $this->resolveSavingsRecapPeriodLabel($tanggal);
 
         $query = Customer::select('customers.*')
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
@@ -283,16 +301,9 @@ class ReportController extends Controller
             $totalSaldo += $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
         }
 
-        $periodeLabel = '';
-        if ($tanggal) {
-            $periodeLabel = Carbon::parse($tanggal)->isoFormat('D MMMM Y');
-        } else {
-            $periodeLabel = 'Semua Periode';
-        }
-
         $manager = User::where('role', 'manager')->first();
 
-        $pdf = PDF::loadView('pages.report.savings-recap-print', [
+        return [
             'title' => 'Laporan Rekap Simpanan Nasabah',
             'user' => auth()->user(),
             'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
@@ -301,11 +312,29 @@ class ReportController extends Controller
             'totalSaldo' => $totalSaldo,
             'statusFilter' => $statusFilter,
             'periodeLabel' => $periodeLabel,
-        ]);
-        $pdf->setPaper('A4', 'portrait');
+        ];
+    }
 
-        $filename = date('Y-m-d') . '_laporan_rekap_simpanan_' . time() . '.pdf';
-        return $pdf->download($filename);
+    /**
+     * Resolve cutoff date from string
+     */
+    private function resolveSavingsRecapCutoffDate(?string $tanggal): ?Carbon
+    {
+        if (!$tanggal || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return null;
+        }
+        return Carbon::parse($tanggal)->endOfDay();
+    }
+
+    /**
+     * Resolve period label for display
+     */
+    private function resolveSavingsRecapPeriodLabel(?string $tanggal): string
+    {
+        if ($tanggal) {
+            return Carbon::parse($tanggal)->isoFormat('D MMMM Y');
+        }
+        return 'Semua Periode';
     }
 
     /**
