@@ -161,17 +161,16 @@ class ReportController extends Controller
 
             $query->orderBy('name', 'asc');
 
-            // Hitung total dana simpanan nasabah hasil filter aktif
-            $filteredCustomers = (clone $query)->get();
-            $filteredTotalSaldo = 0;
-            foreach ($filteredCustomers as $cust) {
-                $depQ = Deposit::where('customer_id', $cust->id);
-                if ($cutoffDate) {
-                    $depQ->where('created_at', '<=', $cutoffDate);
-                }
-                $lastDep = $depQ->orderBy('id', 'desc')->first();
-                $filteredTotalSaldo += $lastDep ? ($lastDep->current_balance ?? 0) : 0;
-            }
+            // Query subquery untuk mendapatkan transaksi terakhir per nasabah secara efisien (1 query)
+            $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
+                ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
+                ->groupBy('customer_id');
+
+            // Hitung total dana simpanan nasabah hasil filter aktif via JOIN tunggal
+            $filteredTotalSaldo = Customer::when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+                ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
+                ->leftJoin('deposits', 'deposits.id', '=', 'latest_dep.max_id')
+                ->sum('deposits.current_balance') ?? 0;
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -193,7 +192,7 @@ class ReportController extends Controller
                     if ($cutoffDate) {
                         $q->where('created_at', '<=', $cutoffDate);
                     }
-                    $lastDeposit = $q->orderBy('created_at', 'desc')->orderBy('id', 'desc')->first();
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
                     $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                     return 'Rp ' . number_format($saldo, 0, ',', '.');
                 })
@@ -202,7 +201,7 @@ class ReportController extends Controller
                     if ($cutoffDate) {
                         $q->where('created_at', '<=', $cutoffDate);
                     }
-                    $lastDeposit = $q->orderBy('created_at', 'desc')->orderBy('id', 'desc')->first();
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
                     $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                     $rate = $row->interestRate->rate_percent ?? 0;
                     $bunga = floor($saldo * ($rate / 100) / 12);
@@ -213,7 +212,7 @@ class ReportController extends Controller
                     if ($cutoffDate) {
                         $q->where('created_at', '<=', $cutoffDate);
                     }
-                    $lastDeposit = $q->orderBy('created_at', 'desc')->orderBy('id', 'desc')->first();
+                    $lastDeposit = $q->orderBy('id', 'desc')->first();
                     return $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                 })
                 ->addColumn('status_nasabah', function ($row) {
