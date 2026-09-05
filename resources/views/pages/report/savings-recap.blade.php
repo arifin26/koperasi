@@ -112,6 +112,33 @@
                 </div>
             </div>
         </div>
+
+        {{-- Detail Transaction Card --}}
+        <div class="card mt-4" id="detail-card" style="display:none">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-2"></i>Detail Transaksi Simpanan
+                </h3>
+                <small class="text-muted" id="detail-card-subtitle"></small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="savings-detail-table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th width="40">No</th>
+                                <th>Tanggal</th>
+                                <th>Nama Nasabah</th>
+                                <th>Jenis Transaksi</th>
+                                <th>Jumlah</th>
+                                <th>Saldo Berjalan</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
@@ -186,30 +213,45 @@
             }
         });
 
-        // Kontrol interaktivitas Tanggal Mulai dan Tanggal Selesai
-        $('#filter_start_date').on('change', function () {
-            var startDate = $(this).val();
-            if (startDate) {
-                $('#filter_end_date').prop('disabled', false);
-                $('#filter_end_date').attr('min', startDate);
+        // Detail table management
+        var detailTable = null;
 
-                // Jika tanggal selesai belum diisi atau mendahului tanggal mulai, sesuaikan
-                var endDate = $('#filter_end_date').val();
-                if (endDate && endDate < startDate) {
-                    $('#filter_end_date').val(startDate);
+        function initDetailTable() {
+            if (detailTable) {
+                detailTable.destroy();
+            }
+            detailTable = $('#savings-detail-table').DataTable({
+                processing: true,
+                serverSide: true,
+                autoWidth: false,
+                responsive: true,
+                ajax: {
+                    url: "{{ route('report.savings-recap') }}",
+                    data: function (d) {
+                        d.mode = 'detail';
+                        d.status = activeFilter.status;
+                        d.tanggal = activeFilter.tanggal;
+                    }
+                },
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+                },
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'created_at', name: 'created_at' },
+                    { data: 'nama_nasabah', name: 'customer.name' },
+                    { data: 'jenis_transaksi', name: 'jenis_transaksi', orderable: false, searchable: false },
+                    { data: 'jumlah', name: 'amount' },
+                    { data: 'saldo_berjalan', name: 'current_balance' },
+                ],
+                order: [[1, 'asc']],
+                createdRow: function (row, data) {
+                    if (data.type_raw === 'penarikan') {
+                        $(row).addClass('table-danger');
+                    }
                 }
-            } else {
-                $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
-            }
-        });
-
-        $('#filter_end_date').on('change', function () {
-            var startDate = $('#filter_start_date').val();
-            var endDate = $(this).val();
-            if (startDate && endDate && endDate < startDate) {
-                $(this).val(startDate);
-            }
-        });
+            });
+        }
 
         // Eksekusi filter HANYA saat tombol "Terapkan Filter" diklik
         $('#btn_filter').click(function () {
@@ -221,6 +263,19 @@
             $('#print_tanggal').val(activeFilter.tanggal);
 
             table.draw();
+
+            // Show/hide detail card based on date filter
+            if (activeFilter.tanggal) {
+                $('#detail-card-subtitle').text('Per tanggal: ' + activeFilter.tanggal);
+                $('#detail-card').show();
+                initDetailTable();
+            } else {
+                $('#detail-card').hide();
+                if (detailTable) {
+                    detailTable.destroy();
+                    detailTable = null;
+                }
+            }
         });
 
         // Reset filter
@@ -235,6 +290,13 @@
             $('#print_tanggal').val('');
 
             table.draw();
+
+            // Hide detail card
+            $('#detail-card').hide();
+            if (detailTable) {
+                detailTable.destroy();
+                detailTable = null;
+            }
         });
     });
     </script>

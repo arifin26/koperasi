@@ -116,6 +116,45 @@ class ReportController extends Controller
                 $cutoffDate = Carbon::parse($tanggal)->endOfDay();
             }
 
+            // Handle detail mode - transaction breakdown
+            if ($request->mode === 'detail') {
+                if (!$tanggal) {
+                    return DataTables::of(collect([]))->make(true);
+                }
+
+                $query = Deposit::with('customer')
+                    ->where('created_at', '<=', $cutoffDate)
+                    ->when($statusFilter, function($q) use ($statusFilter) {
+                        $q->whereHas('customer', function($sq) use ($statusFilter) {
+                            $sq->where('status', $statusFilter);
+                        });
+                    })
+                    ->orderBy('created_at', 'asc')
+                    ->orderBy('id', 'asc');
+
+                return DataTables::of($query)
+                    ->addIndexColumn()
+                    ->editColumn('created_at', function($row) {
+                        return Carbon::parse($row->created_at)->isoFormat('DD MMM Y');
+                    })
+                    ->addColumn('nama_nasabah', function($row) {
+                        return $row->customer ? $row->customer->name : '-';
+                    })
+                    ->addColumn('jenis_transaksi', function($row) {
+                        return $row->type === 'penarikan' ? 'Penarikan' : 'Setoran';
+                    })
+                    ->addColumn('jumlah', function($row) {
+                        return 'Rp ' . number_format($row->amount, 0, ',', '.');
+                    })
+                    ->addColumn('saldo_berjalan', function($row) {
+                        return 'Rp ' . number_format($row->current_balance, 0, ',', '.');
+                    })
+                    ->addColumn('type_raw', function($row) {
+                        return $row->type;
+                    })
+                    ->make(true);
+            }
+
             $query = Customer::select('customers.*')
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with('interestRate');
@@ -245,12 +284,8 @@ class ReportController extends Controller
         }
 
         $periodeLabel = '';
-        if ($bulan && $tahun) {
-            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
-        } elseif ($tahun) {
-            $periodeLabel = 'Tahun ' . $tahun;
-        } elseif ($bulan) {
-            $periodeLabel = 'Bulan ' . Carbon::createFromDate(date('Y'), $bulan, 1)->isoFormat('MMMM');
+        if ($tanggal) {
+            $periodeLabel = Carbon::parse($tanggal)->isoFormat('D MMMM Y');
         } else {
             $periodeLabel = 'Semua Periode';
         }
