@@ -124,14 +124,30 @@
                                 <th>No. Nasabah</th>
                                 <th>Nama Nasabah</th>
                                 <th>Nominal</th>
-                                <th>Rate</th>
                                 <th>Bunga/Bulan</th>
+                                <th>Rate</th>
                                 <th>Tgl. Mulai</th>
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
                                 <th width="80">Aksi</th>
                             </tr>
                         </thead>
+                        <tfoot>
+                            <tr class="deposit-recap-summary-row">
+                                <th colspan="4" class="text-right align-middle">
+                                    <strong>Rekap Total (Hasil Filter)</strong>
+                                </th>
+                                <th class="text-right">
+                                    <div class="deposit-recap-summary-label">Total Nominal</div>
+                                    <div id="footer_total_nominal" class="deposit-recap-summary-value text-primary font-weight-bold">Rp -</div>
+                                </th>
+                                <th class="text-right">
+                                    <div class="deposit-recap-summary-label">Total Bunga/Bulan</div>
+                                    <div id="footer_total_bunga" class="deposit-recap-summary-value text-success font-weight-bold">Rp -</div>
+                                </th>
+                                <th colspan="5"></th>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
