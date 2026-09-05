@@ -56,7 +56,7 @@
             <div class="card-body">
                 {{-- Filter & Action --}}
                 <div class="row mb-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label>Filter Status Deposito:</label>
                         <select class="form-control" id="filter_status">
                             <option value="">Semua Status</option>
@@ -66,9 +66,32 @@
                             <option value="liquidated">Dicairkan</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label>Tanggal Per:</label>
-                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}">
+                    <div class="col-md-2">
+                        <label>Bulan:</label>
+                        <select class="form-control" id="filter_bulan">
+                            <option value="">Semua</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Tahun:</label>
+                        <select class="form-control" id="filter_tahun">
+                            <option value="">Semua</option>
+                            @for($y = 2020; $y <= date('Y') + 1; $y++)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
                     </div>
                     <div class="col-md-6 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
@@ -80,7 +103,8 @@
                         <form action="{{ route('report.deposit-recap.print') }}" method="POST" target="_blank" class="d-inline">
                             @csrf
                             <input type="hidden" name="status" id="print_status" value="">
-                            <input type="hidden" name="tanggal" id="print_tanggal" value="">
+                            <input type="hidden" name="bulan" id="print_bulan" value="">
+                            <input type="hidden" name="tahun" id="print_tahun" value="">
                             <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
                         </form>
                     </div>
@@ -112,6 +136,28 @@
                 </div>
             </div>
         </div>
+
+        {{-- Rekap Total Card --}}
+        <div class="card mt-3" id="rekap-total-card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-calculator mr-2"></i>Rekap Total</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="font-weight-bold" style="width:50%">Total Nominal Deposito</td>
+                            <td class="text-right font-weight-bold text-primary" id="rekap_total_nominal">Rp -</td>
+                        </tr>
+                        <tr>
+                            <td class="font-weight-bold">Total Bunga/Bulan</td>
+                            <td class="text-right font-weight-bold text-success" id="rekap_total_bunga">Rp -</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
@@ -141,7 +187,8 @@
     $(document).ready(function () {
         var activeFilter = {
             status: '',
-            tanggal: ''
+            bulan: '',
+            tahun: ''
         };
 
         var table = $('#deposit-recap-table').DataTable({
@@ -153,7 +200,8 @@
                 url: "{{ route('report.deposit-recap') }}",
                 data: function (d) {
                     d.status = activeFilter.status;
-                    d.tanggal = activeFilter.tanggal;
+                    d.bulan = activeFilter.bulan;
+                    d.tahun = activeFilter.tahun;
                 }
             },
             language: {
@@ -194,25 +242,39 @@
             }
         });
 
+        // Update Rekap Total when data is received
+        table.on('xhr', function () {
+            var json = table.ajax.json();
+            if (json && json.filtered_total_nominal_formatted !== undefined) {
+                $('#rekap_total_nominal').text('Rp ' + json.filtered_total_nominal_formatted);
+                $('#rekap_total_bunga').text('Rp ' + json.filtered_total_bunga_formatted);
+            }
+        });
+
         $('#btn_filter').click(function () {
             activeFilter.status = $('#filter_status').val();
-            activeFilter.tanggal = $('#filter_tanggal').val();
+            activeFilter.bulan = $('#filter_bulan').val();
+            activeFilter.tahun = $('#filter_tahun').val();
 
             $('#print_status').val(activeFilter.status);
-            $('#print_tanggal').val(activeFilter.tanggal);
+            $('#print_bulan').val(activeFilter.bulan);
+            $('#print_tahun').val(activeFilter.tahun);
 
             table.draw();
         });
 
         $('#btn_reset').click(function () {
             $('#filter_status').val('');
-            $('#filter_tanggal').val('');
+            $('#filter_bulan').val('');
+            $('#filter_tahun').val('');
 
             activeFilter.status = '';
-            activeFilter.tanggal = '';
+            activeFilter.bulan = '';
+            activeFilter.tahun = '';
 
             $('#print_status').val('');
-            $('#print_tanggal').val('');
+            $('#print_bulan').val('');
+            $('#print_tahun').val('');
 
             table.draw();
         });

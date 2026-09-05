@@ -325,6 +325,11 @@ class ReportController extends Controller
                 ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
                 ->orderBy('start_date', 'asc');
 
+            // Compute filter-aware totals
+            $filteredRows = (clone $data)->get(['amount', 'rate_percent']);
+            $filteredTotalNominal = $filteredRows->sum('amount');
+            $filteredTotalBunga = $filteredRows->sum(fn($row) => $row->monthly_interest);
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('no_deposito', fn($row) => $row->number ?? '-')
@@ -343,6 +348,10 @@ class ReportController extends Controller
                 ->addColumn('aksi', function ($row) {
                     return '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
                 })
+                ->with('filtered_total_nominal', $filteredTotalNominal)
+                ->with('filtered_total_nominal_formatted', number_format($filteredTotalNominal, 0, ',', '.'))
+                ->with('filtered_total_bunga', $filteredTotalBunga)
+                ->with('filtered_total_bunga_formatted', number_format($filteredTotalBunga, 0, ',', '.'))
                 ->rawColumns(['status_label', 'aksi'])
                 ->make(true);
         }
