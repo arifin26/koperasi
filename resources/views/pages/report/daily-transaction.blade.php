@@ -95,10 +95,16 @@ $(document).ready(function() {
             url: "{{ route('report.daily') }}",
             data: function(d) {
                 d.date = $('#filter_date').val();
+            },
+            error: function(xhr, error, thrown) {
+                console.error('DataTables error:', error, thrown);
+                alert('Terjadi kesalahan saat memuat data. Silakan refresh halaman.');
             }
         },
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+            url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json',
+            emptyTable: 'Tidak ada transaksi pada tanggal ini',
+            zeroRecords: 'Tidak ada transaksi yang ditemukan'
         },
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
@@ -107,14 +113,21 @@ $(document).ready(function() {
             {data: 'type', name: 'type'},
             {data: 'masuk', name: 'masuk', orderable: false, searchable: false},
             {data: 'keluar', name: 'keluar', orderable: false, searchable: false}
-        ]
+        ],
+        drawCallback: function(settings) {
+            // Update summary cards via AJAX when table is drawn
+            var api = this.api();
+            var json = api.ajax.json();
+            // Note: Summary cards still require page reload for full update
+        }
     });
 
     $('#filter_date').change(function() {
-        $('#print_date').val($(this).val());
+        var selectedDate = $(this).val();
+        $('#print_date').val(selectedDate);
         table.draw();
-        // Reload page for summary cards
-        window.location.href = "{{ route('report.daily') }}?date=" + $(this).val();
+        // Reload page for summary cards update
+        window.location.href = "{{ route('report.daily') }}?date=" + selectedDate;
     });
 });
 </script>
