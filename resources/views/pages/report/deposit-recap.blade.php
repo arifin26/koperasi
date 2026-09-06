@@ -130,6 +130,7 @@
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
                                 <th width="80">Aksi</th>
+                                <th style="display:none;">Days</th>
                             </tr>
                         </thead>
                         <tfoot>
