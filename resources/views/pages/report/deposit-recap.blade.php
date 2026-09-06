@@ -220,10 +220,32 @@
                     d.status = activeFilter.status;
                     d.bulan = activeFilter.bulan;
                     d.tahun = activeFilter.tahun;
+                },
+                error: function (xhr, error, thrown) {
+                    console.warn('DataTables AJAX error:', error, thrown);
                 }
             },
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+                processing:     "Sedang memproses...",
+                search:         "Cari:",
+                lengthMenu:     "Tampilkan _MENU_ data",
+                info:           "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
+                infoEmpty:      "Menampilkan 0 s/d 0 dari 0 data",
+                infoFiltered:   "(disaring dari _MAX_ total data)",
+                infoPostFix:    "",
+                loadingRecords: "Memuat...",
+                zeroRecords:    "Tidak ditemukan data yang sesuai",
+                emptyTable:     "Tidak ada data yang tersedia",
+                paginate: {
+                    first:    "Pertama",
+                    previous: "Sebelumnya",
+                    next:     "Berikutnya",
+                    last:     "Terakhir"
+                },
+                aria: {
+                    sortAscending:  ": aktifkan untuk mengurutkan kolom ke atas",
+                    sortDescending: ": aktifkan untuk mengurutkan kolom ke bawah"
+                }
             },
             columns: [
                 { data: 'DT_RowIndex',          name: 'DT_RowIndex', orderable: false, searchable: false },
