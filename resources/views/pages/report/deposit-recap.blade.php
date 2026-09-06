@@ -130,7 +130,6 @@
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
                                 <th width="80">Aksi</th>
-                                <th style="display:none;">Days</th>
                             </tr>
                         </thead>
                         <tfoot>
@@ -259,9 +258,7 @@
                 { data: 'start_date',            name: 'start_date' },
                 { data: 'maturity_date',         name: 'maturity_date' },
                 { data: 'status_label',          name: 'status', orderable: false },
-                { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false },
-                // Kolom helper (tidak ditampilkan)
-                { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },
+                { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false }
             ],
             order: [[7, 'asc']],
             createdRow: function (row, data) {
