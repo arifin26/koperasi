@@ -30,18 +30,10 @@ class AutoPostInterest
             return $response;
         }
 
-        // Register a callback to run after response is sent
-        if (method_exists($response, 'setCallback')) {
-            $response->setCallback(function () {
-                $this->triggerAutoPostIfNeeded();
-            });
-        } else {
-            // Fallback for older Laravel versions or when callback not available
-            // Run in terminate phase
-            app()->terminating(function () {
-                $this->triggerAutoPostIfNeeded();
-            });
-        }
+        // Register a terminating callback to run after response is sent
+        app()->terminating(function () {
+            $this->triggerAutoPostIfNeeded();
+        });
 
         return $response;
     }
