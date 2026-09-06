@@ -69,7 +69,7 @@
                     </div>
                     <div class="col-md-3">
                         <label>Tanggal Per:</label>
-                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}">
+                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
                     </div>
                     <div class="col-md-7 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
@@ -344,9 +344,10 @@
     <script>
     $(document).ready(function () {
         // State filter aktif yang diterapkan
+        var today = '{{ date('Y-m-d') }}';
         var activeFilter = {
             status: '',
-            tanggal: ''
+            tanggal: today
         };
 
         var table = $('#savings-recap-table').DataTable({
