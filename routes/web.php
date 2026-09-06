@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/api/nasabah/{id}/saldo', [CustomerController::class, 'currentBalanceByDeposit'])->name('customer.balance');
     Route::get('/api/hari-libur/cek', [App\Http\Controllers\HolidayController::class, 'check'])->name('holiday.check');
     Route::get('/api/bunga/rate-aktif', [App\Http\Controllers\InterestRateController::class, 'activeRates'])->name('interest.active');
+    Route::post('/api/bunga/posting-bulanan', [HomeController::class, 'postingBulanManual'])->name('bunga.posting-bulanan');
 
     Route::as('transaction.')->prefix('transaksi')->group(function() {
         Route::get('/simpanan/{simpanan}/kwitansi', [DepositController::class, 'receipt'])->name('deposit.receipt');
