@@ -163,7 +163,7 @@
         /* Print-specific styles */
         @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 0;
         }
 
         @media print {
@@ -200,6 +200,7 @@
                 font-size: 8pt;
                 line-height: 1.25;
                 font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                padding: 15mm 15mm 15mm 25mm;
             }
 
             /* Meta table */
