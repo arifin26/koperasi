@@ -31,7 +31,8 @@ class CustomerController extends Controller
             return DataTables::of(Customer::query())
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('customer.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
+                    return '<a href="' . route('fixed-deposit.create', ['customer_id' => $row->id]) . '" class="btn btn-info btn-xs px-2"> Deposito </a>
+                            <a href="' . route('customer.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
                             <a href="' . route('customer.edit', $row) . '" class="btn btn-primary btn-xs px-2 mx-1"> Edit </a>
                             <form class="d-inline" method="POST" action="' . route('customer.destroy', $row) . '">
                                 <input type="hidden" name="_method" value="DELETE">

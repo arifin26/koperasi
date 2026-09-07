@@ -58,7 +58,7 @@
                         <i class="fas fa-print"></i> Cetak Laporan
                     </button>
                     <a href="{{ route('fixed-deposit.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Buka Deposito Baru
+                        <i class="fas fa-plus"></i> Baru
                     </a>
                 </div>
             </div>
@@ -74,12 +74,17 @@
                             <option value="liquidated">Dicairkan</option>
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label>Cari Nomor Rekening Deposito:</label>
+                        <input type="text" class="form-control" id="filter_account_number" placeholder="Contoh: DEP-00001">
+                    </div>
                 </div>
                 <table class="table table-bordered table-striped" id="deposito-table">
                     <thead>
                         <tr>
                             <th>No</th>
                             <th>No. Deposito</th>
+                            <th>No. Rekening Deposito</th>
                             <th>Nasabah</th>
                             <th>Nominal</th>
                             <th>Tenor</th>
@@ -238,6 +243,7 @@ $(document).ready(function() {
             url: "{{ route('fixed-deposit.index') }}",
             data: function(d) {
                 d.status = $('#filter_status').val();
+                d.account_number = $('#filter_account_number').val();
             }
         },
         language: {
@@ -246,6 +252,7 @@ $(document).ready(function() {
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
             {data: 'number', name: 'number'},
+            {data: 'account_number', name: 'account_number'},
             {data: 'customer', name: 'customer.name'},
             {data: 'amount', name: 'amount'},
             {data: 'tenor_months', name: 'tenor_months'},
@@ -258,6 +265,7 @@ $(document).ready(function() {
     });
 
     $('#filter_status').change(function() { table.draw(); });
+    $('#filter_account_number').keyup(function() { table.draw(); });
 
     $('#formUpdateDepositBunga').on('submit', function(e) {
         e.preventDefault();

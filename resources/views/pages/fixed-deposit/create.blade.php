@@ -29,6 +29,9 @@
                         <label>Nasabah <span class="text-danger">*</span></label>
                         <select name="customer_id" id="customer_id" data-placeholder="Ketik beberapa kata nama nasabah untuk mencari..." class="form-control select2-ajax @error('customer_id') is-invalid @enderror" required>
                             <option value=""></option>
+                            @if($preselectedCustomer)
+                            <option value="{{ $preselectedCustomer->id }}" selected>{{ $preselectedCustomer->number }} - {{ $preselectedCustomer->name }}</option>
+                            @endif
                         </select>
                         @error('customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
 
@@ -49,6 +52,14 @@
                             Rekening Simpanan Aktif &bull; Saldo saat ini: <strong id="savings-balance-display">Rp 0</strong>
                             <small class="d-block text-muted">Bunga bulanan dan pencairan deposito akan langsung disalurkan ke simpanan ini.</small>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nomor Rekening Deposito <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number" class="form-control @error('account_number') is-invalid @enderror"
+                            value="{{ old('account_number') }}" placeholder="Contoh: DEP-00001" required>
+                        <small class="form-text text-muted">Nomor rekening deposito harus berbeda dengan nomor rekening simpanan nasabah.</small>
+                        @error('account_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">

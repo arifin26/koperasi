@@ -9,6 +9,7 @@ use App\Models\Deposit;
 use App\Models\InterestRate;
 use App\Models\User;
 use App\Helpers\TerbilangHelper;
+use App\Http\Requests\StoreFixedDepositRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,11 +36,17 @@ class FixedDepositController extends Controller
             if ($request->customer_id) {
                 $data->where('customer_id', $request->customer_id);
             }
+            if ($request->account_number) {
+                $data->where('account_number', 'LIKE', '%' . $request->account_number . '%');
+            }
 
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('number', function($row) {
                     return '<a href="'.route('fixed-deposit.show', $row).'">'.$row->number.'</a>';
+                })
+                ->addColumn('account_number', function($row) {
+                    return $row->account_number ?? '-';
                 })
                 ->editColumn('customer', function($row) {
                     if ($row->customer) {
@@ -133,7 +140,7 @@ class FixedDepositController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $rates = \App\Models\InterestRate::where('type', 'deposito')
             ->where('is_active', 1)
@@ -141,23 +148,24 @@ class FixedDepositController extends Controller
             ->get();
 
         $activeRate = $rates->first();
+        $preselectedCustomerId = $request->query('customer_id');
+        $preselectedCustomer = null;
+
+        if ($preselectedCustomerId) {
+            $preselectedCustomer = Customer::find($preselectedCustomerId);
+        }
 
         return view('pages.fixed-deposit.create', [
-            'title' => 'Buka Deposito Baru',
+            'title' => 'Buka Deposito',
             'rates'  => $rates,
-            'activeRate' => $activeRate
+            'activeRate' => $activeRate,
+            'preselectedCustomer' => $preselectedCustomer,
+            'preselectedCustomerId' => $preselectedCustomerId,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreFixedDepositRequest $request)
     {
-        $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'amount' => 'required|integer|min:1000000',
-            'tenor_months' => 'required|integer|min:1|max:120',
-            'rate_percent' => 'required|numeric|between:0,100',
-        ]);
-
         $customer = Customer::findOrFail($request->customer_id);
         if ($customer->status !== 'active') {
             return back()->withErrors(['customer_id' => 'Nasabah tidak aktif.'])->withInput();
@@ -176,6 +184,7 @@ class FixedDepositController extends Controller
 
         $deposit = FixedDeposit::create([
             'number' => FixedDeposit::generateNumber(),
+            'account_number' => $request->account_number,
             'customer_id' => $request->customer_id,
             'amount' => $request->amount,
             'tenor_months' => $request->tenor_months,
