@@ -67,12 +67,32 @@ class StoreFixedDepositRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Cek bahwa account_number tidak sama dengan customer.number
             $customer = \App\Models\Customer::find($this->customer_id);
-            if ($customer && $this->account_number === $customer->number) {
+
+            if (!$customer) {
+                return;
+            }
+
+            // Validation 1: Account number MUST NOT equal customer.number (savings account)
+            if ($this->account_number === $customer->number) {
                 $validator->errors()->add(
                     'account_number',
-                    'Nomor rekening deposito tidak boleh sama dengan nomor rekening simpanan'
+                    'Nomor rekening deposito tidak boleh sama dengan nomor rekening simpanan (' . $customer->number . '). Gunakan nomor rekening yang berbeda.'
+                );
+            }
+
+            // Validation 2: Check if customer already has active/extended deposit
+            // If so, block creation and ask to extend or liquidate existing one
+            $existingActive = \App\Models\FixedDeposit::where('customer_id', $customer->id)
+                ->whereIn('status', ['active', 'extended'])
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($existingActive) {
+                $validator->errors()->add(
+                    'customer_id',
+                    'Nasabah ini sudah memiliki deposito aktif (' . $existingActive->number . '). ' .
+                    'Silakan cairkan atau perpanjang deposito yang ada terlebih dahulu sebelum membuka deposito baru.'
                 );
             }
         });

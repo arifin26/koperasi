@@ -257,6 +257,7 @@ class FixedDepositController extends Controller
             $startDate = Carbon::today();
             FixedDeposit::create([
                 'number' => FixedDeposit::generateNumber(),
+                'account_number' => $fixed_deposit->account_number, // CRITICAL: Copy account_number from old deposit
                 'customer_id' => $fixed_deposit->customer_id,
                 'amount' => $fixed_deposit->amount,
                 'tenor_months' => $request->tenor_months,

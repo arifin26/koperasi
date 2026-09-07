@@ -204,6 +204,14 @@ class CustomerController extends Controller
             $depositCount = Deposit::where('customer_id', $id)->count();
             $hasDeposit = $depositCount > 0;
 
+            // NEW: Check for active/extended fixed deposits
+            $activeFixedDeposit = FixedDeposit::where('customer_id', $id)
+                ->whereIn('status', ['active', 'extended'])
+                ->whereNull('deleted_at')
+                ->first();
+            $hasActiveDeposit = $activeFixedDeposit !== null;
+            $activeDepositNumber = $hasActiveDeposit ? $activeFixedDeposit->number : null;
+
             $data = Deposit::where('customer_id', $id)->latest()->first();
             if ($data) {
                 $data->current_balance = $saldo;
@@ -212,6 +220,8 @@ class CustomerController extends Controller
                 $data->deposit_count = $depositCount;
                 $data->customer_name = $customer->name;
                 $data->customer_number = $customer->number;
+                $data->has_active_deposit = $hasActiveDeposit;
+                $data->active_deposit_number = $activeDepositNumber;
             } else {
                 $data = new \stdClass();
                 $data->current_balance = $saldo;
@@ -220,6 +230,8 @@ class CustomerController extends Controller
                 $data->deposit_count = $depositCount;
                 $data->customer_name = $customer->name;
                 $data->customer_number = $customer->number;
+                $data->has_active_deposit = $hasActiveDeposit;
+                $data->active_deposit_number = $activeDepositNumber;
             }
 
             return response()->json([
