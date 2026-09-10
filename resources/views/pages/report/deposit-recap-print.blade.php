@@ -234,22 +234,24 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 12%;">Rekening Deposito</th>
-                <th style="width: 16%;">Nama Nasabah</th>
-                <th style="width: 16%;">Alamat</th>
-                <th style="width: 7%;">Tenor</th>
+                <th style="width: 11%;">Rekening Deposito</th>
+                <th style="width: 10%;">No. Deposito</th>
+                <th style="width: 15%;">Nama Nasabah</th>
+                <th style="width: 14%;">Alamat</th>
+                <th style="width: 6%;">Tenor</th>
                 <th style="width: 8%;">Tgl Mulai</th>
                 <th style="width: 8%;">Jatuh Tempo</th>
                 <th style="width: 11%;">Nominal (Rp)</th>
-                <th style="width: 8%;">Bunga (%)</th>
-                <th style="width: 10%;">Bunga/Bulan</th>
+                <th style="width: 5%;">Bunga (%)</th>
+                <th style="width: 8%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
             @forelse($data as $i => $row)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center">{{ $row->account_number ?? $row->number ?? '-' }}</td>
+                <td class="text-center">{{ $row->account_number ?? '-' }}</td>
+                <td class="text-center">{{ $row->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
                 <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $row->tenor_months }} Bulan</td>
@@ -261,17 +263,17 @@
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center" style="padding: 15px; color: #000;">Tidak ada data deposito yang sesuai.</td>
+                <td colspan="11" class="text-center" style="padding: 15px; color: #000;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="7" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th colspan="8" class="text-right">TOTAL DANA DEPOSITO</th>
                 <th class="text-right" colspan="3">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
             </tr>
             <tr class="summary-row">
-                <th colspan="7" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
+                <th colspan="8" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
                 <th colspan="3" class="text-right">Rp {{ number_format($data->sum('monthly_interest'), 0, ',', '.') }}</th>
             </tr>
         </tfoot>

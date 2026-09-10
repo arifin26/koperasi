@@ -159,7 +159,7 @@ class ReportController extends Controller
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->with('interestRate');
 
-            $query->orderBy('name', 'asc');
+            $query->orderBy('number', 'asc');
 
             // Query subquery untuk mendapatkan transaksi terakhir per nasabah secara efisien (1 query)
             $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
@@ -280,7 +280,7 @@ class ReportController extends Controller
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->with('interestRate');
 
-        $data = $query->orderBy('name', 'asc')->get();
+        $data = $query->orderBy('number', 'asc')->get();
 
         $totalSaldo = 0;
         foreach ($data as $customer) {
@@ -351,7 +351,7 @@ class ReportController extends Controller
                 ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
                 ->when($bulan, fn($q) => $q->whereMonth('start_date', $bulan))
                 ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
-                ->orderBy('start_date', 'asc');
+                ->orderBy('account_number', 'asc');
 
             // Compute filter-aware totals
             $filteredRows = (clone $data)->get(['amount', 'rate_percent']);
@@ -420,7 +420,7 @@ class ReportController extends Controller
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->when($bulan, fn($q) => $q->whereMonth('start_date', $bulan))
             ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
-            ->orderBy('start_date', 'asc')
+            ->orderBy('account_number', 'asc')
             ->get();
 
         $totalNominal = $data->sum('amount');

@@ -283,4 +283,85 @@ class DepositRecapTest extends TestCase
         $this->assertEquals(1000000, $data['filtered_total_nominal']);
         $this->assertEquals(5000, $data['filtered_total_bunga']);
     }
+
+    /** @test */
+    public function deposit_recap_ajax_orders_by_account_number_ascending()
+    {
+        $customer = Customer::factory()->create(['status' => 'active']);
+
+        // Deposit with earlier start date but larger account_number
+        FixedDeposit::create([
+            'customer_id' => $customer->id,
+            'number' => 'DEP-2024-001',
+            'account_number' => 'REK-002',
+            'amount' => 1000000,
+            'rate_percent' => 6,
+            'tenor_months' => 12,
+            'start_date' => '2024-01-01',
+            'maturity_date' => '2025-01-01',
+            'status' => 'active'
+        ]);
+
+        // Deposit with later start date but smaller account_number
+        FixedDeposit::create([
+            'customer_id' => $customer->id,
+            'number' => 'DEP-2024-002',
+            'account_number' => 'REK-001',
+            'amount' => 2000000,
+            'rate_percent' => 6,
+            'tenor_months' => 12,
+            'start_date' => '2024-02-01',
+            'maturity_date' => '2025-02-01',
+            'status' => 'active'
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson(route('report.deposit-recap'), [
+                'HTTP_X-Requested-With' => 'XMLHttpRequest'
+            ]);
+
+        $response->assertStatus(200);
+
+        $data = $response->json('data');
+        $this->assertCount(2, $data);
+        $this->assertEquals('REK-001', $data[0]['rekening_deposito']);
+        $this->assertEquals('REK-002', $data[1]['rekening_deposito']);
+    }
+
+    /** @test */
+    public function deposit_recap_print_orders_by_account_number_and_renders_successfully()
+    {
+        $manager = User::factory()->create(['role' => 'manager']);
+        $customer = Customer::factory()->create(['status' => 'active']);
+
+        FixedDeposit::create([
+            'customer_id' => $customer->id,
+            'number' => 'DEP-2024-001',
+            'account_number' => 'REK-002',
+            'amount' => 1000000,
+            'rate_percent' => 6,
+            'tenor_months' => 12,
+            'start_date' => '2024-01-01',
+            'maturity_date' => '2025-01-01',
+            'status' => 'active'
+        ]);
+
+        FixedDeposit::create([
+            'customer_id' => $customer->id,
+            'number' => 'DEP-2024-002',
+            'account_number' => 'REK-001',
+            'amount' => 2000000,
+            'rate_percent' => 6,
+            'tenor_months' => 12,
+            'start_date' => '2024-02-01',
+            'maturity_date' => '2025-02-01',
+            'status' => 'active'
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('report.deposit-recap.print'));
+
+        $response->assertStatus(200);
+        $this->assertEquals('application/pdf', $response->headers->get('Content-Type'));
+    }
 }

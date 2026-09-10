@@ -120,8 +120,8 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th width="40">No</th>
-                                <th>No. Deposito</th>
                                 <th>Rekening Deposito</th>
+                                <th>No. Deposito</th>
                                 <th>Nama Nasabah</th>
                                 <th>Nominal</th>
                                 <th>Bunga/Bulan</th>
@@ -249,8 +249,8 @@
             },
             columns: [
                 { data: 'DT_RowIndex',          name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'no_deposito',           name: 'number' },
                 { data: 'rekening_deposito',     name: 'account_number' },
+                { data: 'no_deposito',           name: 'number' },
                 { data: 'nama_nasabah',          name: 'customer.name', orderable: false },
                 { data: 'amount',                name: 'amount', responsivePriority: 1 },
                 { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false, responsivePriority: 2 },
@@ -260,7 +260,7 @@
                 { data: 'status_label',          name: 'status', orderable: false },
                 { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false }
             ],
-            order: [[7, 'asc']],
+            order: [[1, 'asc']],
             createdRow: function (row, data) {
                 var days  = parseInt(data.days_until_maturity);
                 var status = data.status_label; // misal mengandung kata 'liquidated'

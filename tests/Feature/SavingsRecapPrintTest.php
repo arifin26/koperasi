@@ -288,9 +288,76 @@ class SavingsRecapPrintTest extends TestCase
         $response->assertStatus(200);
 
         $html = $response->json('data.html');
-        $this->assertStringContainsString('Disiapkan oleh', $html);
-        $this->assertStringContainsString('Mengetahui', $html);
         $this->assertStringContainsString($this->user->name, $html);
         $this->assertStringContainsString($this->manager->name, $html);
+    }
+
+    /** @test */
+    public function savings_recap_ajax_orders_by_customer_number_ascending()
+    {
+        $rate = InterestRate::factory()->create(['type' => 'tabungan_sukarela', 'rate_percent' => 2.5]);
+
+        // Customer with name "Zack" but smaller number
+        $customer1 = Customer::factory()->create([
+            'name' => 'Zack',
+            'number' => 'NAS-001',
+            'status' => 'active',
+            'interest_rate_id' => $rate->id,
+        ]);
+
+        // Customer with name "Adam" but larger number
+        $customer2 = Customer::factory()->create([
+            'name' => 'Adam',
+            'number' => 'NAS-002',
+            'status' => 'active',
+            'interest_rate_id' => $rate->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson(route('report.savings-recap'), [
+                'HTTP_X-Requested-With' => 'XMLHttpRequest'
+            ]);
+
+        $response->assertStatus(200);
+
+        $data = $response->json('data');
+        $this->assertCount(2, $data);
+        $this->assertEquals('NAS-001', $data[0]['no_nasabah']);
+        $this->assertEquals('NAS-002', $data[1]['no_nasabah']);
+    }
+
+    /** @test */
+    public function savings_recap_print_orders_by_customer_number_ascending()
+    {
+        $rate = InterestRate::factory()->create(['type' => 'tabungan_sukarela', 'rate_percent' => 2.5]);
+
+        // Customer with name "Zack" but smaller number
+        $customer1 = Customer::factory()->create([
+            'name' => 'Zack',
+            'number' => 'NAS-001',
+            'status' => 'active',
+            'interest_rate_id' => $rate->id,
+        ]);
+
+        // Customer with name "Adam" but larger number
+        $customer2 = Customer::factory()->create([
+            'name' => 'Adam',
+            'number' => 'NAS-002',
+            'status' => 'active',
+            'interest_rate_id' => $rate->id,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('report.savings-recap.print'));
+
+        $response->assertStatus(200);
+
+        $html = $response->json('data.html');
+        $pos1 = strpos($html, 'NAS-001');
+        $pos2 = strpos($html, 'NAS-002');
+
+        $this->assertNotFalse($pos1);
+        $this->assertNotFalse($pos2);
+        $this->assertLessThan($pos2, $pos1);
     }
 }

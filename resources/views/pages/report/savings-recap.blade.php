@@ -384,7 +384,7 @@
                 { data: 'bunga_bulanan', name: 'bunga_bulanan', orderable: false, searchable: false },
                 { data: 'aksi', name: 'aksi', orderable: false, searchable: false },
             ],
-            order: [[3, 'asc']],
+            order: [[1, 'asc']],
             createdRow: function (row, data) {
                 // Highlight baris nasabah dengan saldo 0
                 if (parseInt(data.saldo_raw) === 0) {
