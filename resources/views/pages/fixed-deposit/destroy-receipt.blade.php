@@ -17,7 +17,7 @@
         <td class="colon">:</td>
         <td class="value">
             <strong>{{ $fixed_deposit->customer->name ?? '-' }}</strong>
-            <span style="color: #666; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }} | NIK: {{ $fixed_deposit->customer->nik ?? '-' }})</span>
+            <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }} | NIK: {{ $fixed_deposit->customer->nik ?? '-' }})</span>
         </td>
     </tr>
     <tr>
@@ -28,7 +28,7 @@
     <tr>
         <td class="label">Tgl. Buka / Hapus</td>
         <td class="colon">:</td>
-        <td class="value">{{ $fixed_deposit->start_date->isoFormat('D MMM Y') }} / <span style="color: #dc3545; font-weight: bold;">{{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</span></td>
+        <td class="value">{{ $fixed_deposit->start_date->isoFormat('D MMM Y') }} / <span style="color: #000; font-weight: bold;">{{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</span></td>
     </tr>
     @if($fixed_deposit->notes)
     <tr>
@@ -40,19 +40,19 @@
 </table>
 
 <!-- Amount Box -->
-<div class="amount-box" style="background-color: #fff5f5; border-color: #dc3545;">
+<div class="amount-box" style="background-color: #f8f8f8; border-color: #000;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td style="width: 60%; vertical-align: middle;">
-                <div style="font-size: 6.5pt; color: #555;">NOMINAL DEPOSITO DIHAPUS:</div>
-                <div class="amount-val" style="color: #dc3545;">Rp {{ number_format($fixed_deposit->amount, 2, ',', '.') }}</div>
+                <div style="font-size: 6.5pt; color: #000;">NOMINAL DEPOSITO DIHAPUS:</div>
+                <div class="amount-val" style="color: #000;">Rp {{ number_format($fixed_deposit->amount, 2, ',', '.') }}</div>
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
-            <td style="width: 40%; vertical-align: middle; border-left: 1px dashed #dc3545; padding-left: 8px;">
-                <div style="background-color: #dc3545; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 7.5pt; letter-spacing: 0.5px;">
+            <td style="width: 40%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
+                <div style="background-color: #000; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 7.5pt; letter-spacing: 0.5px;">
                     DEPOSITO DIHAPUS
                 </div>
-                <div style="font-size: 6.2pt; color: #888; margin-top: 2px; text-align: center;">
+                <div style="font-size: 6.2pt; color: #000; margin-top: 2px; text-align: center;">
                     Bukti penghapusan dari sistem (non-tunai).
                 </div>
             </td>

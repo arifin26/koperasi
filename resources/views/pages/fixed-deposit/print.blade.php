@@ -11,27 +11,31 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
         }
-        body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #222; margin: 0; padding: 0; }
-        .header-table { width: 100%; border-bottom: 2px solid #1a5632; padding-bottom: 5px; margin-bottom: 8px; border-collapse: collapse; }
-        .header-logo { font-size: 11pt; font-weight: bold; color: #1a5632; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1; }
-        .header-sub { font-size: 7.5pt; color: #555; margin-top: 2px; line-height: 1.2; }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
+        }
+        body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #000; margin: 0; padding: 0; }
+        .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; border-collapse: collapse; }
+        .header-logo { font-size: 11pt; font-weight: bold; color: #000; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1; }
+        .header-sub { font-size: 7.5pt; color: #000; margin-top: 2px; line-height: 1.2; }
         .report-title-box { text-align: right; vertical-align: middle; }
-        .report-title { font-size: 10.5pt; font-weight: bold; color: #1a5632; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
-        .report-period { font-size: 8pt; font-weight: bold; color: #444; margin-top: 2px; }
+        .report-title { font-size: 10.5pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
+        .report-period { font-size: 8pt; font-weight: bold; color: #000; margin-top: 2px; }
         .meta-table { width: 100%; margin-bottom: 8px; font-size: 7.5pt; border-collapse: collapse; }
-        .meta-table td { padding: 1px 3px; vertical-align: top; border: none; }
-        .meta-label { width: 12%; font-weight: bold; color: #444; }
+        .meta-table td { padding: 1px 3px; vertical-align: top; border: none; color: #000; }
+        .meta-label { width: 12%; font-weight: bold; color: #000; }
         .meta-colon { width: 1%; text-align: center; }
         .meta-value { width: 37%; }
         table.data-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 8pt; }
-        table.data-table th, table.data-table td { border: 1px solid #333; padding: 3px 4px; vertical-align: middle; }
-        table.data-table th { background-color: #eee; font-weight: bold; text-align: center; }
+        table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 4px; vertical-align: middle; color: #000; }
+        table.data-table th { background-color: #eee; font-weight: bold; text-align: center; color: #000; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .footer { margin-top: 25px; page-break-inside: avoid; }
         .footer table { border: none; width: 100%; }
-        .footer td { border: none !important; text-align: center; padding-top: 40px; font-size: 7.5pt; width: 50%; }
+        .footer td { border: none !important; text-align: center; padding-top: 40px; font-size: 7.5pt; width: 50%; color: #000; }
     </style>
 </head>
 <body>
@@ -45,8 +49,8 @@
                 <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
                 <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
                 <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Telp. (0354) 393063</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Telp. (0354) 393063</div>
             </td>
             <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
         </tr>

@@ -12,6 +12,10 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
+        }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
         }
         html, body {
             margin: 0;
@@ -75,6 +79,7 @@
             padding: 1px 3px;
             vertical-align: top;
             border: none;
+            color: #000;
         }
         .meta-label {
             width: 12%;
@@ -98,6 +103,7 @@
             border: 1px solid #000;
             padding: 4px 5px;
             vertical-align: middle;
+            color: #000;
         }
         .data-table th {
             background-color: #f4f8f5;
@@ -140,6 +146,7 @@
             font-size: 14px;
             line-height: 1.2;
             border: none !important;
+            color: #000;
         }
         .sign-space {
             height: 45px;
@@ -226,22 +233,24 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 10%;">No. Rekening</th>
-                <th style="width: 16%;">Nama Nasabah</th>
-                <th style="width: 18%;">Alamat</th>
-                <th style="width: 7%;">Tenor</th>
+                <th style="width: 11%;">Rekening Deposito</th>
+                <th style="width: 10%;">No. Deposito</th>
+                <th style="width: 15%;">Nama Nasabah</th>
+                <th style="width: 14%;">Alamat</th>
+                <th style="width: 6%;">Tenor</th>
                 <th style="width: 8%;">Tgl Mulai</th>
                 <th style="width: 8%;">Jatuh Tempo</th>
                 <th style="width: 11%;">Nominal (Rp)</th>
-                <th style="width: 8%;">Bunga (%)</th>
-                <th style="width: 10%;">Bunga/Bulan</th>
+                <th style="width: 5%;">Bunga (%)</th>
+                <th style="width: 8%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
             @forelse($data as $i => $row)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center">{{ $row->customer->number ?? '-' }}</td>
+                <td class="text-center">{{ $row->account_number ?? '-' }}</td>
+                <td class="text-center">{{ $row->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
                 <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $row->tenor_months }} Bulan</td>
@@ -259,11 +268,11 @@
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="7" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th colspan="8" class="text-right">TOTAL DANA DEPOSITO</th>
                 <th class="text-right" colspan="3">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
             </tr>
             <tr class="summary-row">
-                <th colspan="7" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
+                <th colspan="8" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
                 <th colspan="3" class="text-right">Rp {{ number_format($data->sum('monthly_interest'), 0, ',', '.') }}</th>
             </tr>
         </tfoot>

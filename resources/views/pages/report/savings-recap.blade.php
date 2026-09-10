@@ -4,6 +4,9 @@
 <div class="row">
     <div class="col-12">
 
+        {{-- Screen-only UI --}}
+        <div class="savings-recap-screen-only">
+
         {{-- Summary Cards --}}
         <div class="row mb-3">
             <div class="col-12 col-sm-6 col-md-3">
@@ -64,28 +67,20 @@
                             <option value="blacklist">Blacklist</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label>Tanggal Mulai:</label>
-                        <input type="date" class="form-control" id="filter_start_date">
+                    <div class="col-md-3">
+                        <label>Tanggal Per:</label>
+                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
                     </div>
-                    <div class="col-md-2">
-                        <label>Tanggal Selesai:</label>
-                        <input type="date" class="form-control" id="filter_end_date" disabled>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-end">
+                    <div class="col-md-7 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
                         <button type="button" class="btn btn-outline-secondary mr-2" id="btn_reset">
                             <i class="fas fa-undo"></i> Reset
                         </button>
-                        <form action="{{ route('report.savings-recap.print') }}" method="POST" target="_blank" class="d-inline">
-                            @csrf
-                            <input type="hidden" name="status" id="print_status" value="">
-                            <input type="hidden" name="start_date" id="print_start_date" value="">
-                            <input type="hidden" name="end_date" id="print_end_date" value="">
-                            <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
-                        </form>
+                        <button type="button" class="btn btn-secondary" id="btn_print_savings_recap">
+                            <i class="fas fa-print"></i> Cetak
+                        </button>
                     </div>
                 </div>
 
@@ -117,6 +112,38 @@
                 </div>
             </div>
         </div>
+
+        {{-- Detail Transaction Card --}}
+        <div class="card mt-4" id="detail-card" style="display:none">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-2"></i>Detail Transaksi Simpanan
+                </h3>
+                <small class="text-muted" id="detail-card-subtitle"></small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="savings-detail-table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th width="40">No</th>
+                                <th>Tanggal</th>
+                                <th>Nama Nasabah</th>
+                                <th>Jenis Transaksi</th>
+                                <th>Jumlah</th>
+                                <th>Saldo Berjalan</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        </div>{{-- End savings-recap-screen-only --}}
+
+        {{-- Hidden Print Area --}}
+        <div id="savings-recap-print-area" aria-live="polite" aria-busy="false"></div>
+
     </div>
 </div>
 @endsection
@@ -127,6 +154,189 @@
     <style>
         #savings-recap-table td { vertical-align: middle; }
         .info-box-number { font-size: 1.3rem; }
+
+        /* Print Area - Hidden by default */
+        #savings-recap-print-area {
+            display: none;
+        }
+
+        /* Print-specific styles */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            /* Hide everything except print area */
+            .main-header,
+            .main-sidebar,
+            .content-header,
+            .main-footer,
+            .savings-recap-screen-only {
+                display: none !important;
+            }
+
+            .content-wrapper,
+            .content {
+                margin: 0 !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Show only print area */
+            #savings-recap-print-area {
+                display: block !important;
+                width: 100%;
+            }
+
+            #savings-recap-print-area,
+            #savings-recap-print-area * {
+                visibility: visible;
+                color: #000 !important;
+            }
+
+            /* Print document styles */
+            .savings-recap-print-document {
+                color: #000;
+                font-size: 8pt;
+                line-height: 1.25;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                padding: 15mm 15mm 15mm 25mm;
+            }
+
+            /* Meta table */
+            .savings-recap-print-meta {
+                width: 100%;
+                margin-bottom: 8px;
+                font-size: 7.5pt;
+                border-collapse: collapse;
+            }
+
+            .savings-recap-print-meta td {
+                padding: 1px 3px;
+                vertical-align: top;
+                border: none;
+                color: #000;
+            }
+
+            .meta-label {
+                width: 12%;
+                font-weight: bold;
+                color: #000;
+            }
+
+            .meta-colon {
+                width: 1%;
+                text-align: center;
+            }
+
+            .meta-value {
+                width: 37%;
+            }
+
+            /* Data table */
+            .savings-recap-print-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                margin-top: 4px;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-table th,
+            .savings-recap-print-table td {
+                border: 1px solid #000;
+                padding: 4px 6px;
+                vertical-align: middle;
+                overflow-wrap: anywhere;
+                color: #000;
+            }
+
+            .savings-recap-print-table th {
+                background-color: #f2f2f2;
+                color: #000;
+                font-weight: bold;
+                text-align: center;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-table thead {
+                display: table-header-group;
+            }
+
+            .savings-recap-print-table tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Summary section */
+            .savings-recap-print-summary {
+                margin-top: 8px;
+            }
+
+            .summary-row td {
+                font-weight: bold;
+                background-color: #f2f2f2;
+                color: #000;
+                border: 1px solid #000;
+                padding: 6px;
+            }
+
+            /* Signature section */
+            .savings-recap-print-signature {
+                width: 100%;
+                margin-top: 20px;
+                border-collapse: collapse;
+                font-size: 7.5pt;
+            }
+
+            .savings-recap-print-signature td {
+                border: none !important;
+                color: #000;
+            }
+
+            .sign-space {
+                height: 45px;
+            }
+
+            .sign-name {
+                font-weight: bold;
+                text-decoration: underline;
+                font-size: 8pt;
+                color: #000;
+            }
+
+            .sign-title {
+                font-size: 7pt;
+                color: #000;
+                margin-top: 2px;
+            }
+
+            /* Footer */
+            .savings-recap-print-footer {
+                margin-top: 15px;
+                font-size: 6.5pt;
+                color: #000;
+                border-top: 0.5px dotted #000;
+                padding-top: 2px;
+            }
+
+            /* Prevent breaking */
+            .print-avoid-break {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Utility classes */
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+
+            /* Force color printing */
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 @endpush
 
@@ -139,10 +349,10 @@
     <script>
     $(document).ready(function () {
         // State filter aktif yang diterapkan
+        var today = '{{ date('Y-m-d') }}';
         var activeFilter = {
             status: '',
-            start_date: '',
-            end_date: ''
+            tanggal: today
         };
 
         var table = $('#savings-recap-table').DataTable({
@@ -154,8 +364,7 @@
                 url: "{{ route('report.savings-recap') }}",
                 data: function (d) {
                     d.status = activeFilter.status;
-                    d.start_date = activeFilter.start_date;
-                    d.end_date = activeFilter.end_date;
+                    d.tanggal = activeFilter.tanggal;
                 }
             },
             language: {
@@ -175,7 +384,7 @@
                 { data: 'bunga_bulanan', name: 'bunga_bulanan', orderable: false, searchable: false },
                 { data: 'aksi', name: 'aksi', orderable: false, searchable: false },
             ],
-            order: [[3, 'asc']],
+            order: [[1, 'asc']],
             createdRow: function (row, data) {
                 // Highlight baris nasabah dengan saldo 0
                 if (parseInt(data.saldo_raw) === 0) {
@@ -193,60 +402,169 @@
             }
         });
 
-        // Kontrol interaktivitas Tanggal Mulai dan Tanggal Selesai
-        $('#filter_start_date').on('change', function () {
-            var startDate = $(this).val();
-            if (startDate) {
-                $('#filter_end_date').prop('disabled', false);
-                $('#filter_end_date').attr('min', startDate);
+        // Detail table management
+        var detailTable = null;
 
-                // Jika tanggal selesai belum diisi atau mendahului tanggal mulai, sesuaikan
-                var endDate = $('#filter_end_date').val();
-                if (endDate && endDate < startDate) {
-                    $('#filter_end_date').val(startDate);
+        function initDetailTable() {
+            if (detailTable) {
+                detailTable.destroy();
+            }
+            detailTable = $('#savings-detail-table').DataTable({
+                processing: true,
+                serverSide: true,
+                autoWidth: false,
+                responsive: true,
+                ajax: {
+                    url: "{{ route('report.savings-recap') }}",
+                    data: function (d) {
+                        d.mode = 'detail';
+                        d.status = activeFilter.status;
+                        d.tanggal = activeFilter.tanggal;
+                    }
+                },
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+                },
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'created_at', name: 'created_at' },
+                    { data: 'nama_nasabah', name: 'customer.name' },
+                    { data: 'jenis_transaksi', name: 'jenis_transaksi', orderable: false, searchable: false },
+                    { data: 'jumlah', name: 'amount' },
+                    { data: 'saldo_berjalan', name: 'current_balance' },
+                ],
+                order: [[1, 'asc']],
+                createdRow: function (row, data) {
+                    if (data.type_raw === 'penarikan') {
+                        $(row).addClass('table-danger');
+                    }
                 }
-            } else {
-                $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
-            }
-        });
-
-        $('#filter_end_date').on('change', function () {
-            var startDate = $('#filter_start_date').val();
-            var endDate = $(this).val();
-            if (startDate && endDate && endDate < startDate) {
-                $(this).val(startDate);
-            }
-        });
+            });
+        }
 
         // Eksekusi filter HANYA saat tombol "Terapkan Filter" diklik
         $('#btn_filter').click(function () {
             activeFilter.status = $('#filter_status').val();
-            activeFilter.start_date = $('#filter_start_date').val();
-            activeFilter.end_date = $('#filter_end_date').val();
+            activeFilter.tanggal = $('#filter_tanggal').val();
 
             // Sinkronkan ke form Cetak PDF
             $('#print_status').val(activeFilter.status);
-            $('#print_start_date').val(activeFilter.start_date);
-            $('#print_end_date').val(activeFilter.end_date);
+            $('#print_tanggal').val(activeFilter.tanggal);
 
             table.draw();
+
+            // Show/hide detail card based on date filter
+            if (activeFilter.tanggal) {
+                $('#detail-card-subtitle').text('Per tanggal: ' + activeFilter.tanggal);
+                $('#detail-card').show();
+                initDetailTable();
+            } else {
+                $('#detail-card').hide();
+                if (detailTable) {
+                    detailTable.destroy();
+                    detailTable = null;
+                }
+            }
         });
 
         // Reset filter
         $('#btn_reset').click(function () {
             $('#filter_status').val('');
-            $('#filter_start_date').val('');
-            $('#filter_end_date').val('').prop('disabled', true).removeAttr('min');
+            $('#filter_tanggal').val('');
 
             activeFilter.status = '';
-            activeFilter.start_date = '';
-            activeFilter.end_date = '';
+            activeFilter.tanggal = '';
 
             $('#print_status').val('');
-            $('#print_start_date').val('');
-            $('#print_end_date').val('');
+            $('#print_tanggal').val('');
 
             table.draw();
+
+            // Hide detail card
+            $('#detail-card').hide();
+            if (detailTable) {
+                detailTable.destroy();
+                detailTable = null;
+            }
+        });
+
+        // Native Print Button Handler
+        $('#btn_print_savings_recap').click(function() {
+            var btn = $(this);
+            var originalHtml = btn.html();
+
+            // Disable button and show loading
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan laporan...');
+            $('#savings-recap-print-area').attr('aria-busy', 'true');
+
+            // Send AJAX request with current active filters
+            $.ajax({
+                url: "{{ route('report.savings-recap.print') }}",
+                method: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    status: activeFilter.status,
+                    tanggal: activeFilter.tanggal
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data.html) {
+                        // Insert HTML into print area
+                        $('#savings-recap-print-area').html(response.data.html);
+
+                        // Wait for logo image to load before printing
+                        var logo = $('#savings-recap-print-area').find('img')[0];
+
+                        if (logo) {
+                            if (logo.complete) {
+                                // Image already loaded
+                                window.print();
+                            } else {
+                                // Wait for image to load
+                                logo.onload = function() {
+                                    window.print();
+                                };
+                                logo.onerror = function() {
+                                    // Print anyway even if logo fails
+                                    window.print();
+                                };
+                            }
+                        } else {
+                            // No logo found, print directly
+                            window.print();
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Gagal memuat laporan cetak. Silakan coba lagi.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = 'Gagal memuat laporan cetak.';
+
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        // Validation errors
+                        var errors = xhr.responseJSON.errors;
+                        var errorList = Object.values(errors).flat().join('<br>');
+                        errorMsg = errorList;
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        html: errorMsg
+                    });
+                },
+                complete: function() {
+                    // Re-enable button
+                    btn.prop('disabled', false).html(originalHtml);
+                    $('#savings-recap-print-area').attr('aria-busy', 'false');
+                }
+            });
         });
     });
     </script>

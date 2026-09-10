@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/api/nasabah/{id}/saldo', [CustomerController::class, 'currentBalanceByDeposit'])->name('customer.balance');
     Route::get('/api/hari-libur/cek', [App\Http\Controllers\HolidayController::class, 'check'])->name('holiday.check');
     Route::get('/api/bunga/rate-aktif', [App\Http\Controllers\InterestRateController::class, 'activeRates'])->name('interest.active');
+    Route::post('/api/bunga/posting-bulanan', [HomeController::class, 'postingBulanManual'])->name('bunga.posting-bulanan');
 
     Route::as('transaction.')->prefix('transaksi')->group(function() {
         Route::get('/simpanan/{simpanan}/kwitansi', [DepositController::class, 'receipt'])->name('deposit.receipt');
@@ -77,7 +78,10 @@ Route::middleware('auth')->group(function() {
     Route::get('deposito/{fixed_deposit}/kwitansi', [App\Http\Controllers\FixedDepositController::class, 'receipt'])->name('fixed-deposit.receipt');
     // Kwitansi penghapusan — menggunakan plain {id} karena record sudah soft-deleted
     Route::get('deposito/{id}/kwitansi-hapus', [App\Http\Controllers\FixedDepositController::class, 'destroyReceipt'])->name('fixed-deposit.destroy-receipt');
-    Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, ['names' => 'fixed-deposit'])->except(['edit', 'update']);
+    Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, [
+        'names' => 'fixed-deposit',
+        'parameters' => ['deposito' => 'fixed_deposit']
+    ]);
     Route::get('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extendForm'])->name('fixed-deposit.extend.form');
     Route::post('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extend'])->name('fixed-deposit.extend');
     Route::get('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidateForm'])->name('fixed-deposit.liquidate.form');

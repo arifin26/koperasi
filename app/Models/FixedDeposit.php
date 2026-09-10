@@ -13,6 +13,26 @@ class FixedDeposit extends Model
 
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'number',
+        'account_number',
+        'customer_id',
+        'amount',
+        'tenor_months',
+        'rate_percent',
+        'start_date',
+        'maturity_date',
+        'status',
+        'extended_from_id',
+        'liquidated_at',
+        'matured_at',
+        'notes',
+        'created_by',
+        'updated_by',
+        'validated_at',
+        'validated_by',
+    ];
+
     protected $casts = [
         'start_date' => 'date',
         'maturity_date' => 'date',

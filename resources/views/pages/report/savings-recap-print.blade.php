@@ -12,6 +12,10 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
+        }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
         }
         html, body {
             margin: 0;
@@ -75,6 +79,7 @@
             padding: 1px 3px;
             vertical-align: top;
             border: none;
+            color: #000;
         }
         .meta-label {
             width: 12%;
@@ -98,6 +103,7 @@
             border: 1px solid #000;
             padding: 4px 6px;
             vertical-align: middle;
+            color: #000;
         }
         .data-table th {
             background-color: #f4f8f5;
@@ -138,6 +144,7 @@
             font-size: 14px;
             line-height: 1.2;
             border: none !important;
+            color: #000;
         }
         .sign-space {
             height: 45px;
@@ -231,7 +238,7 @@
         <tbody>
             @forelse($data as $i => $customer)
             @php
-                $lastDeposit = $customer->last_deposit;
+                $lastDeposit = $customer->last_deposit ?? null;
                 $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
                 $rate = $customer->interestRate->rate_percent ?? 0;
                 $bungaBulan = floor($saldo * ($rate / 100) / 12);
@@ -264,7 +271,7 @@
                     @php
                         $totalBungaBulan = 0;
                         foreach ($data as $customer) {
-                            $lastDep = $customer->last_deposit;
+                            $lastDep = $customer->last_deposit ?? null;
                             $saldoCust = $lastDep ? ($lastDep->current_balance ?? 0) : 0;
                             $rateCust = $customer->interestRate->rate_percent ?? 0;
                             $totalBungaBulan += floor($saldoCust * ($rateCust / 100) / 12);

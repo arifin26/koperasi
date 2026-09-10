@@ -31,7 +31,8 @@ class CustomerController extends Controller
             return DataTables::of(Customer::query())
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('customer.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
+                    return '<a href="' . route('fixed-deposit.create', ['customer_id' => $row->id]) . '" class="btn btn-info btn-xs px-2"> Deposito </a>
+                            <a href="' . route('customer.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
                             <a href="' . route('customer.edit', $row) . '" class="btn btn-primary btn-xs px-2 mx-1"> Edit </a>
                             <form class="d-inline" method="POST" action="' . route('customer.destroy', $row) . '">
                                 <input type="hidden" name="_method" value="DELETE">
@@ -203,6 +204,14 @@ class CustomerController extends Controller
             $depositCount = Deposit::where('customer_id', $id)->count();
             $hasDeposit = $depositCount > 0;
 
+            // NEW: Check for active/extended fixed deposits
+            $activeFixedDeposit = FixedDeposit::where('customer_id', $id)
+                ->whereIn('status', ['active', 'extended'])
+                ->whereNull('deleted_at')
+                ->first();
+            $hasActiveDeposit = $activeFixedDeposit !== null;
+            $activeDepositNumber = $hasActiveDeposit ? $activeFixedDeposit->number : null;
+
             $data = Deposit::where('customer_id', $id)->latest()->first();
             if ($data) {
                 $data->current_balance = $saldo;
@@ -211,6 +220,8 @@ class CustomerController extends Controller
                 $data->deposit_count = $depositCount;
                 $data->customer_name = $customer->name;
                 $data->customer_number = $customer->number;
+                $data->has_active_deposit = $hasActiveDeposit;
+                $data->active_deposit_number = $activeDepositNumber;
             } else {
                 $data = new \stdClass();
                 $data->current_balance = $saldo;
@@ -219,6 +230,8 @@ class CustomerController extends Controller
                 $data->deposit_count = $depositCount;
                 $data->customer_name = $customer->name;
                 $data->customer_number = $customer->number;
+                $data->has_active_deposit = $hasActiveDeposit;
+                $data->active_deposit_number = $activeDepositNumber;
             }
 
             return response()->json([

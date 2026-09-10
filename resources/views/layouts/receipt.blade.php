@@ -12,6 +12,10 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
+        }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
         }
         html, body {
             margin: 0;
@@ -23,7 +27,7 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 7.5pt;
             line-height: 1.2;
-            color: #222;
+            color: #000;
             background-color: #fff;
         }
         .receipt-container {
@@ -85,6 +89,7 @@
             vertical-align: top;
             font-size: 7pt;
             line-height: 1.15;
+            color: #000;
         }
         .label {
             width: 22%;
@@ -128,6 +133,7 @@
             vertical-align: top;
             font-size: 6.8pt;
             line-height: 1.1;
+            color: #000;
         }
         .sign-space {
             height: 20px;
@@ -137,6 +143,7 @@
             text-decoration: underline;
             font-size: 7pt;
             line-height: 1.1;
+            color: #000;
         }
         .sign-title {
             font-size: 6.2pt;

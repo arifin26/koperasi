@@ -29,8 +29,15 @@
                         <label>Nasabah <span class="text-danger">*</span></label>
                         <select name="customer_id" id="customer_id" data-placeholder="Ketik beberapa kata nama nasabah untuk mencari..." class="form-control select2-ajax @error('customer_id') is-invalid @enderror" required>
                             <option value=""></option>
+                            @if($preselectedCustomer)
+                            <option value="{{ $preselectedCustomer->id }}" selected>{{ $preselectedCustomer->number }} - {{ $preselectedCustomer->name }}</option>
+                            @endif
                         </select>
                         @error('customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                        <!-- Warning: Customer sudah punya deposito aktif/extended -->
+                        <div id="active-deposit-warning" class="alert alert-danger mt-2 py-2" style="display: none;">
+                        </div>
 
                         <!-- Warning banner jika nasabah belum punya simpanan -->
                         <div id="no-savings-warning" class="alert alert-warning mt-2 py-2" style="display: none;">
@@ -49,6 +56,14 @@
                             Rekening Simpanan Aktif &bull; Saldo saat ini: <strong id="savings-balance-display">Rp 0</strong>
                             <small class="d-block text-muted">Bunga bulanan dan pencairan deposito akan langsung disalurkan ke simpanan ini.</small>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nomor Rekening Deposito <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number" class="form-control @error('account_number') is-invalid @enderror"
+                            value="{{ old('account_number') }}" placeholder="Contoh: DEP-00001" required>
+                        <small class="form-text text-muted">Nomor rekening deposito harus berbeda dengan nomor rekening simpanan nasabah.</small>
+                        @error('account_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
@@ -173,12 +188,13 @@ $(document).ready(function() {
         }
     });
 
-    // Handle customer change to verify savings account
+    // Handle customer change to verify savings account and check active deposits
     $('#customer_id').on('change', function() {
         var customerId = $(this).val();
         if (!customerId) {
             $('#no-savings-warning').hide();
             $('#savings-info-box').hide();
+            $('#active-deposit-warning').hide();
             $('#btnSubmitDeposito').prop('disabled', false);
             return;
         }
@@ -189,6 +205,23 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
+                    var hasActiveDeposit = response.data?.has_active_deposit || false;
+                    var activeDepositNumber = response.data?.active_deposit_number || '';
+
+                    // Check 1: Has active/extended deposit?
+                    if (hasActiveDeposit) {
+                        $('#active-deposit-warning').html(
+                            '<i class="fas fa-exclamation-circle mr-2"></i>' +
+                            '<strong>Nasabah sudah punya deposito aktif:</strong> ' + activeDepositNumber + '<br>' +
+                            '<small>Cairkan atau perpanjang deposito yang ada terlebih dahulu sebelum membuka deposito baru.</small>'
+                        ).slideDown();
+                        $('#btnSubmitDeposito').prop('disabled', true);
+                    } else {
+                        $('#active-deposit-warning').hide();
+                        $('#btnSubmitDeposito').prop('disabled', false);
+                    }
+
+                    // Check 2: Has savings account?
                     if (!response.has_deposit || response.deposit_count <= 0) {
                         // Nasabah belum punya rekening simpanan
                         $('#btn-create-savings-link').attr('href', createDepositBaseUrl + '?customer_id=' + customerId);
@@ -200,13 +233,16 @@ $(document).ready(function() {
                         $('#savings-balance-display').text(response.data.current_balance_formatted || 'Rp 0');
                         $('#savings-info-box').slideDown();
                         $('#no-savings-warning').hide();
-                        $('#btnSubmitDeposito').prop('disabled', false);
+                        if (!hasActiveDeposit) {
+                            $('#btnSubmitDeposito').prop('disabled', false);
+                        }
                     }
                 }
             },
             error: function() {
                 $('#no-savings-warning').hide();
                 $('#savings-info-box').hide();
+                $('#active-deposit-warning').hide();
                 $('#btnSubmitDeposito').prop('disabled', false);
             }
         });

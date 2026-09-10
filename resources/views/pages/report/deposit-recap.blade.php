@@ -56,7 +56,7 @@
             <div class="card-body">
                 {{-- Filter & Action --}}
                 <div class="row mb-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label>Filter Status Deposito:</label>
                         <select class="form-control" id="filter_status">
                             <option value="">Semua Status</option>
@@ -66,29 +66,34 @@
                             <option value="liquidated">Dicairkan</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label>Filter Bulan:</label>
+                    <div class="col-md-2">
+                        <label>Bulan:</label>
                         <select class="form-control" id="filter_bulan">
-                            <option value="">Semua Bulan</option>
-                            @foreach([
-                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-                            ] as $mKey => $mName)
-                                <option value="{{ $mKey }}">{{ $mName }}</option>
-                            @endforeach
+                            <option value="">Semua</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label>Filter Tahun:</label>
+                        <label>Tahun:</label>
                         <select class="form-control" id="filter_tahun">
-                            <option value="">Semua Tahun</option>
-                            @for($y = date('Y') + 1; $y >= 2020; $y--)
+                            <option value="">Semua</option>
+                            @for($y = 2020; $y <= date('Y') + 1; $y++)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-5 d-flex align-items-end">
+                    <div class="col-md-6 d-flex align-items-end">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
@@ -115,12 +120,12 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th width="40">No</th>
+                                <th>Rekening Deposito</th>
                                 <th>No. Deposito</th>
-                                <th>No. Nasabah</th>
                                 <th>Nama Nasabah</th>
                                 <th>Nominal</th>
-                                <th>Rate</th>
                                 <th>Bunga/Bulan</th>
+                                <th>Rate</th>
                                 <th>Tgl. Mulai</th>
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
@@ -128,10 +133,27 @@
                                 <th width="140">Aksi</th>
                             </tr>
                         </thead>
+                        <tfoot>
+                            <tr class="deposit-recap-summary-row">
+                                <th colspan="4" class="text-right align-middle">
+                                    <strong>Rekap Total (Hasil Filter)</strong>
+                                </th>
+                                <th class="text-right">
+                                    <div class="deposit-recap-summary-label">Total Nominal</div>
+                                    <div id="footer_total_nominal" class="deposit-recap-summary-value text-primary font-weight-bold">Rp -</div>
+                                </th>
+                                <th class="text-right">
+                                    <div class="deposit-recap-summary-label">Total Bunga/Bulan</div>
+                                    <div id="footer_total_bunga" class="deposit-recap-summary-value text-success font-weight-bold">Rp -</div>
+                                </th>
+                                <th colspan="5"></th>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 @endsection
@@ -148,6 +170,29 @@
         #deposit-recap-table tbody tr.row-overdue:hover td { background-color: #ffc9c9 !important; }
         #deposit-recap-table tbody tr.row-soon:hover    td { background-color: #c3f0d4 !important; }
         .legend-dot { display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:5px; vertical-align:middle; }
+
+        /* Footer styling */
+        #deposit-recap-table tfoot th {
+            background-color: #f8f9fa;
+            border-top: 2px solid #343a40;
+            padding: 12px 8px;
+            font-size: 0.9rem;
+        }
+
+        .deposit-recap-summary-row {
+            background-color: #f8f9fa !important;
+        }
+
+        .deposit-recap-summary-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .deposit-recap-summary-value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
     </style>
 @endpush
 
@@ -176,19 +221,41 @@
                     d.status = activeFilter.status;
                     d.bulan = activeFilter.bulan;
                     d.tahun = activeFilter.tahun;
+                },
+                error: function (xhr, error, thrown) {
+                    console.warn('DataTables AJAX error:', error, thrown);
                 }
             },
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+                processing:     "Sedang memproses...",
+                search:         "Cari:",
+                lengthMenu:     "Tampilkan _MENU_ data",
+                info:           "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
+                infoEmpty:      "Menampilkan 0 s/d 0 dari 0 data",
+                infoFiltered:   "(disaring dari _MAX_ total data)",
+                infoPostFix:    "",
+                loadingRecords: "Memuat...",
+                zeroRecords:    "Tidak ditemukan data yang sesuai",
+                emptyTable:     "Tidak ada data yang tersedia",
+                paginate: {
+                    first:    "Pertama",
+                    previous: "Sebelumnya",
+                    next:     "Berikutnya",
+                    last:     "Terakhir"
+                },
+                aria: {
+                    sortAscending:  ": aktifkan untuk mengurutkan kolom ke atas",
+                    sortDescending: ": aktifkan untuk mengurutkan kolom ke bawah"
+                }
             },
             columns: [
                 { data: 'DT_RowIndex',          name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'rekening_deposito',     name: 'account_number' },
                 { data: 'no_deposito',           name: 'number' },
-                { data: 'no_nasabah',            name: 'customer.number', searchable: false, orderable: false },
                 { data: 'nama_nasabah',          name: 'customer.name', orderable: false },
-                { data: 'amount',                name: 'amount' },
+                { data: 'amount',                name: 'amount', responsivePriority: 1 },
+                { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false, responsivePriority: 2 },
                 { data: 'rate_percent',          name: 'rate_percent' },
-                { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false },
                 { data: 'start_date',            name: 'start_date' },
                 { data: 'maturity_date',         name: 'maturity_date' },
                 { data: 'status_label',          name: 'status', orderable: false },
@@ -197,7 +264,7 @@
                 // Kolom helper (tidak ditampilkan)
                 { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },
             ],
-            order: [[7, 'asc']],
+            order: [[1, 'asc']],
             createdRow: function (row, data) {
                 var days  = parseInt(data.days_until_maturity);
                 var status = data.status_label; // misal mengandung kata 'liquidated'
@@ -215,6 +282,24 @@
                     $(row).addClass('row-soon');
                 }
             }
+        });
+
+        // Function to update footer totals
+        function updateDepositRecapFooter(json) {
+            if (json && json.filtered_total_nominal_formatted !== undefined) {
+                $('#footer_total_nominal').text('Rp ' + json.filtered_total_nominal_formatted);
+                $('#footer_total_bunga').text('Rp ' + json.filtered_total_bunga_formatted);
+            } else {
+                // Fallback to zero if metadata not available
+                $('#footer_total_nominal').text('Rp 0');
+                $('#footer_total_bunga').text('Rp 0');
+            }
+        }
+
+        // Update footer when data is received
+        table.on('xhr', function () {
+            var json = table.ajax.json();
+            updateDepositRecapFooter(json);
         });
 
         $('#btn_filter').click(function () {

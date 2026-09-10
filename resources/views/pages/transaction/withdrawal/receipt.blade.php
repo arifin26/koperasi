@@ -57,12 +57,12 @@
 </table>
 
 <!-- Amount Box -->
-<div class="amount-box">
+<div class="amount-box" style="background-color: #f8f8f8; border-color: #000;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td style="width: 58%; vertical-align: middle;">
                 <div style="font-size: 6.5pt; color: #000;">JUMLAH PENARIKAN:</div>
-                <div class="amount-val">Rp {{ number_format($deposit->amount, 2, ',', '.') }}</div>
+                <div class="amount-val" style="color: #000;">Rp {{ number_format($deposit->amount, 2, ',', '.') }}</div>
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
             <td style="width: 42%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
@@ -73,7 +73,7 @@
                     </tr>
                     <tr style="font-weight: bold; color: #000;">
                         <td>Sisa Saldo</td>
-                        <td style="text-align: right;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
+                        <td style="text-align: right; color: #000;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
                     </tr>
                 </table>
             </td>

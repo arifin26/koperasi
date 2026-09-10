@@ -12,6 +12,10 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
+        }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
         }
         html, body {
             margin: 0;
@@ -23,7 +27,7 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 14px;
             line-height: 1.25;
-            color: #222;
+            color: #000;
             background-color: #fff;
         }
         .header-table {
@@ -75,6 +79,7 @@
             padding: 1px 3px;
             vertical-align: top;
             border: none;
+            color: #000;
         }
         .meta-label {
             width: 10%;
@@ -98,6 +103,7 @@
             border: 1px solid #000;
             padding: 4px 5px;
             vertical-align: middle;
+            color: #000;
         }
         .data-table th {
             background-color: #f4f8f5;
@@ -128,6 +134,7 @@
             font-size: 14px;
             line-height: 1.2;
             border: none !important;
+            color: #000;
         }
         .sign-space {
             height: 45px;

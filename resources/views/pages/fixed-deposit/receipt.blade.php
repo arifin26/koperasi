@@ -34,7 +34,7 @@
         <td class="colon">:</td>
         <td class="value">
             <strong>{{ $fixed_deposit->customer->name ?? '-' }}</strong>
-            <span style="color: #666; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }} | Telp: {{ $fixed_deposit->customer->phone ?? '-' }})</span>
+            <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }} | Telp: {{ $fixed_deposit->customer->phone ?? '-' }})</span>
         </td>
     </tr>
     <tr>
