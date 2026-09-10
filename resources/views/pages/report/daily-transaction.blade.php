@@ -113,7 +113,8 @@ $(document).ready(function() {
             {data: 'customer', name: 'customer.name'},
             {data: 'type', name: 'type'},
             {data: 'masuk', name: 'masuk', orderable: false, searchable: false},
-            {data: 'keluar', name: 'keluar', orderable: false, searchable: false}
+            {data: 'keluar', name: 'keluar', orderable: false, searchable: false},
+            {data: 'aksi', name: 'aksi', orderable: false, searchable: false}
         ],
         drawCallback: function(settings) {
             // Update summary cards via AJAX when table is drawn

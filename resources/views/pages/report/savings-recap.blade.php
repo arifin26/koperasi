@@ -379,7 +379,7 @@
                 { data: 'phone',       name: 'phone' },
                 { data: 'rate_bunga',  name: 'interestRate.rate_percent', orderable: false, searchable: false },
                 { data: 'status_nasabah', name: 'status', orderable: false },
-                { data: 'total_transaksi', name: 'total_transaksi', searchable: false, orderable: false },
+                { data: 'total_transaksi', name: 'total_transaksi', className: 'text-center', searchable: false, orderable: false },
                 { data: 'saldo_simpanan', name: 'saldo_simpanan', orderable: false, searchable: false },
                 { data: 'bunga_bulanan', name: 'bunga_bulanan', orderable: false, searchable: false },
                 { data: 'aksi', name: 'aksi', orderable: false, searchable: false },

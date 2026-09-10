@@ -149,17 +149,6 @@
             font-size: 6.2pt;
             color: #000;
         }
-        .watermark {
-            position: absolute;
-            top: 25%;
-            left: 20%;
-            font-size: 24px;
-            font-weight: bold;
-            color: rgba(0, 0, 0, 0.04);
-            text-transform: uppercase;
-            transform: rotate(-8deg);
-            z-index: -1;
-        }
         .footer-note {
             margin-top: 2px;
             font-size: 5.8pt;
@@ -189,7 +178,6 @@
 </head>
 <body>
     <div class="receipt-container">
-        <div class="watermark">{{ config('app.name') }}</div>
         <div class="receipt-inner">
             <!-- Validation Strip -->
             @yield('validation-strip')

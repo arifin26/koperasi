@@ -146,7 +146,7 @@
                                     <div class="deposit-recap-summary-label">Total Bunga/Bulan</div>
                                     <div id="footer_total_bunga" class="deposit-recap-summary-value text-success font-weight-bold">Rp -</div>
                                 </th>
-                                <th colspan="5"></th>
+                                <th colspan="6"></th>
                             </tr>
                         </tfoot>
                     </table>
@@ -259,10 +259,8 @@
                 { data: 'start_date',            name: 'start_date' },
                 { data: 'maturity_date',         name: 'maturity_date' },
                 { data: 'status_label',          name: 'status', orderable: false },
-                { data: 'total_transaksi',       name: 'total_transaksi', orderable: false, searchable: false },
+                { data: 'total_transaksi',       name: 'total_transaksi', className: 'text-center', orderable: false, searchable: false },
                 { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false },
-                // Kolom helper (tidak ditampilkan)
-                { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },
             ],
             order: [[1, 'asc']],
             createdRow: function (row, data) {

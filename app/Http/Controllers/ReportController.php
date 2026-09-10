@@ -170,12 +170,6 @@ class ReportController extends Controller
                     ->make(true);
             }
 
-            $query = Customer::select('customers.*')
-                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-                ->with('interestRate');
-
-            $query->orderBy('number', 'asc');
-
             // Query subquery untuk mendapatkan transaksi terakhir per nasabah secara efisien (1 query)
             $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
                 ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
@@ -187,6 +181,19 @@ class ReportController extends Controller
                 ->leftJoin('deposits', 'deposits.id', '=', 'latest_dep.max_id')
                 ->sum('deposits.current_balance') ?? 0;
 
+            $query = Customer::select('customers.*', 'latest_deposit.current_balance as saldo_terakhir')
+                ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
+                ->with('interestRate')
+                ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
+                ->leftJoin('deposits as latest_deposit', 'latest_deposit.id', '=', 'latest_dep.max_id')
+                ->withCount(['deposits as total_transaksi' => function ($q) use ($cutoffDate) {
+                    if ($cutoffDate) {
+                        $q->where('created_at', '<=', $cutoffDate);
+                    }
+                }]);
+
+            $query->orderBy('customers.number', 'asc');
+
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('no_nasabah', fn($row) => $row->number ?? '-')
@@ -195,41 +202,18 @@ class ReportController extends Controller
                 ->addColumn('alamat', fn($row) => $row->address ?? '-')
                 ->addColumn('phone', fn($row) => $row->phone ?? '-')
                 ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
-                ->addColumn('total_transaksi', function ($row) use ($tanggal) {
-                    $q = Deposit::where('customer_id', $row->id);
-                    if ($tanggal) {
-                        $q->whereDate('created_at', $tanggal);
-                    }
-                    return $q->count() . ' kali';
-                })
-                ->addColumn('saldo_simpanan', function ($row) use ($cutoffDate) {
-                    $q = Deposit::where('customer_id', $row->id);
-                    if ($cutoffDate) {
-                        $q->where('created_at', '<=', $cutoffDate);
-                    }
-                    $lastDeposit = $q->orderBy('id', 'desc')->first();
-                    $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+                ->addColumn('total_transaksi', fn($row) => ($row->total_transaksi ?? 0) . ' kali')
+                ->addColumn('saldo_simpanan', function ($row) {
+                    $saldo = $row->saldo_terakhir ?? 0;
                     return 'Rp ' . number_format($saldo, 0, ',', '.');
                 })
-                ->addColumn('bunga_bulanan', function ($row) use ($cutoffDate) {
-                    $q = Deposit::where('customer_id', $row->id);
-                    if ($cutoffDate) {
-                        $q->where('created_at', '<=', $cutoffDate);
-                    }
-                    $lastDeposit = $q->orderBy('id', 'desc')->first();
-                    $saldo = $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+                ->addColumn('bunga_bulanan', function ($row) {
+                    $saldo = $row->saldo_terakhir ?? 0;
                     $rate = $row->interestRate->rate_percent ?? 0;
                     $bunga = floor($saldo * ($rate / 100) / 12);
                     return 'Rp ' . number_format($bunga, 0, ',', '.');
                 })
-                ->addColumn('saldo_raw', function ($row) use ($cutoffDate) {
-                    $q = Deposit::where('customer_id', $row->id);
-                    if ($cutoffDate) {
-                        $q->where('created_at', '<=', $cutoffDate);
-                    }
-                    $lastDeposit = $q->orderBy('id', 'desc')->first();
-                    return $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
-                })
+                ->addColumn('saldo_raw', fn($row) => (int) ($row->saldo_terakhir ?? 0))
                 ->addColumn('status_nasabah', function ($row) {
                     if ($row->status == 'blacklist') {
                         return '<span class="badge badge-danger">Blacklist</span>';
@@ -293,28 +277,28 @@ class ReportController extends Controller
         $cutoffDate = $this->resolveSavingsRecapCutoffDate($tanggal);
         $periodeLabel = $this->resolveSavingsRecapPeriodLabel($tanggal);
 
-        $query = Customer::select('customers.*')
-            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-            ->with('interestRate');
+        $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
+            ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
+            ->groupBy('customer_id');
 
-        $data = $query->orderBy('number', 'asc')->get();
+        $query = Customer::select('customers.*', 'latest_deposit.current_balance as saldo_terakhir')
+            ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
+            ->with('interestRate')
+            ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
+            ->leftJoin('deposits as latest_deposit', 'latest_deposit.id', '=', 'latest_dep.max_id')
+            ->withCount(['deposits as deposits_count' => function ($q) use ($cutoffDate) {
+                if ($cutoffDate) {
+                    $q->where('created_at', '<=', $cutoffDate);
+                }
+            }]);
+
+        $data = $query->orderBy('customers.number', 'asc')->get();
 
         $totalSaldo = 0;
         foreach ($data as $customer) {
-            $depQ = Deposit::where('customer_id', $customer->id);
-            if ($cutoffDate) {
-                $depQ->where('created_at', '<=', $cutoffDate);
-            }
-            $lastDeposit = $depQ->orderBy('created_at', 'desc')->orderBy('id', 'desc')->first();
-            $customer->last_deposit = $lastDeposit;
-
-            $txnCountQ = Deposit::where('customer_id', $customer->id);
-            if ($tanggal) {
-                $txnCountQ->whereDate('created_at', $tanggal);
-            }
-            $customer->deposits_count = $txnCountQ->count();
-
-            $totalSaldo += $lastDeposit ? ($lastDeposit->current_balance ?? 0) : 0;
+            $saldo = $customer->saldo_terakhir ?? 0;
+            $customer->last_deposit = (object) ['current_balance' => $saldo];
+            $totalSaldo += $saldo;
         }
 
         $manager = User::where('role', 'manager')->first();
@@ -398,13 +382,10 @@ class ReportController extends Controller
                     return $count . ' baris';
                 })
                 ->addColumn('aksi', function ($row) {
-                    $detailBtn = '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs mr-1"><i class="fas fa-eye"></i> Detail</a>';
-                    $passbookBtn = '';
-                    if ($row->customer) {
-                        $passbookBtn = '<button type="button" class="btn btn-secondary btn-xs px-2 print-passbook-btn" data-type="bulk" data-url="' . route('customer.passbook', $row->customer) . '" data-title="Buku Tabungan - ' . $row->customer->name . ' (' . ($row->customer->number ?? '') . ')"><i class="fas fa-book"></i> Cetak Buku</button>';
-                    }
-                    return $detailBtn . $passbookBtn;
                     $btn = '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs mr-1"><i class="fas fa-eye"></i> Detail</a>';
+                    if ($row->customer) {
+                        $btn .= '<button type="button" class="btn btn-secondary btn-xs px-2 mr-1 print-passbook-btn" data-type="bulk" data-url="' . route('customer.passbook', $row->customer) . '" data-title="Buku Tabungan - ' . $row->customer->name . ' (' . ($row->customer->number ?? '') . ')"><i class="fas fa-book"></i> Cetak Buku</button>';
+                    }
                     $btn .= '<a href="' . route('fixed-deposit.edit', $row) . '" class="btn btn-primary btn-xs mr-1"><i class="fas fa-edit"></i> Edit</a>';
                     if (auth()->user()->role == 'manager') {
                         $btn .= '<form class="d-inline" method="POST" action="' . route('fixed-deposit.destroy', $row) . '">
