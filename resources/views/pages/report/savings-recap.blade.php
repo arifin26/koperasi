@@ -192,11 +192,12 @@
             #savings-recap-print-area,
             #savings-recap-print-area * {
                 visibility: visible;
+                color: #000 !important;
             }
 
             /* Print document styles */
             .savings-recap-print-document {
-                color: #222;
+                color: #000;
                 font-size: 8pt;
                 line-height: 1.25;
                 font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -215,12 +216,13 @@
                 padding: 1px 3px;
                 vertical-align: top;
                 border: none;
+                color: #000;
             }
 
             .meta-label {
                 width: 12%;
                 font-weight: bold;
-                color: #444;
+                color: #000;
             }
 
             .meta-colon {
@@ -243,15 +245,16 @@
 
             .savings-recap-print-table th,
             .savings-recap-print-table td {
-                border: 1px solid #1a5632;
+                border: 1px solid #000;
                 padding: 4px 6px;
                 vertical-align: middle;
                 overflow-wrap: anywhere;
+                color: #000;
             }
 
             .savings-recap-print-table th {
-                background-color: #f4f8f5;
-                color: #1a5632;
+                background-color: #f2f2f2;
+                color: #000;
                 font-weight: bold;
                 text-align: center;
                 font-size: 7.5pt;
@@ -273,9 +276,9 @@
 
             .summary-row td {
                 font-weight: bold;
-                background-color: #f4f8f5;
-                color: #1a5632;
-                border: 1px solid #1a5632;
+                background-color: #f2f2f2;
+                color: #000;
+                border: 1px solid #000;
                 padding: 6px;
             }
 
@@ -289,6 +292,7 @@
 
             .savings-recap-print-signature td {
                 border: none !important;
+                color: #000;
             }
 
             .sign-space {
@@ -299,11 +303,12 @@
                 font-weight: bold;
                 text-decoration: underline;
                 font-size: 8pt;
+                color: #000;
             }
 
             .sign-title {
                 font-size: 7pt;
-                color: #555;
+                color: #000;
                 margin-top: 2px;
             }
 
@@ -311,8 +316,8 @@
             .savings-recap-print-footer {
                 margin-top: 15px;
                 font-size: 6.5pt;
-                color: #777;
-                border-top: 0.5px dotted #ccc;
+                color: #000;
+                border-top: 0.5px dotted #000;
                 padding-top: 2px;
             }
 

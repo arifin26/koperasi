@@ -361,8 +361,8 @@ class ReportController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('no_deposito', fn($row) => $row->number ?? '-')
+                ->addColumn('rekening_deposito', fn($row) => $row->account_number ?? '-')
                 ->addColumn('nama_nasabah', fn($row) => $row->customer ? $row->customer->name : '-')
-                ->addColumn('no_nasabah', fn($row) => $row->customer ? $row->customer->number : '-')
                 ->editColumn('amount', fn($row) => 'Rp ' . number_format($row->amount, 0, ',', '.'))
                 ->editColumn('rate_percent', fn($row) => $row->rate_percent . '%')
                 ->addColumn('bunga_bulanan', fn($row) => 'Rp ' . number_format($row->monthly_interest, 0, ',', '.'))
@@ -374,7 +374,16 @@ class ReportController extends Controller
                     return (int) Carbon::today()->diffInDays(Carbon::parse($row->maturity_date), false);
                 })
                 ->addColumn('aksi', function ($row) {
-                    return '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
+                    $btn = '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs mr-1"><i class="fas fa-eye"></i> Detail</a>';
+                    $btn .= '<a href="' . route('fixed-deposit.edit', $row) . '" class="btn btn-primary btn-xs mr-1"><i class="fas fa-edit"></i> Edit</a>';
+                    if (auth()->user()->role == 'manager') {
+                        $btn .= '<form class="d-inline" method="POST" action="' . route('fixed-deposit.destroy', $row) . '">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <input type="hidden" name="_token" value="' . csrf_token() . '" />
+                                    <button type="submit" class="btn btn-danger btn-xs delete-data"><i class="fas fa-trash"></i> Hapus</button>
+                                </form>';
+                    }
+                    return $btn;
                 })
                 ->with('filtered_total_nominal', $filteredTotalNominal)
                 ->with('filtered_total_nominal_formatted', number_format($filteredTotalNominal, 0, ',', '.'))

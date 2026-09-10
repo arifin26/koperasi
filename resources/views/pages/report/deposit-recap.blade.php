@@ -121,7 +121,7 @@
                             <tr>
                                 <th width="40">No</th>
                                 <th>No. Deposito</th>
-                                <th>No. Nasabah</th>
+                                <th>Rekening Deposito</th>
                                 <th>Nama Nasabah</th>
                                 <th>Nominal</th>
                                 <th>Bunga/Bulan</th>
@@ -129,7 +129,7 @@
                                 <th>Tgl. Mulai</th>
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
-                                <th width="80">Aksi</th>
+                                <th width="140">Aksi</th>
                             </tr>
                         </thead>
                         <tfoot>
@@ -250,7 +250,7 @@
             columns: [
                 { data: 'DT_RowIndex',          name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'no_deposito',           name: 'number' },
-                { data: 'no_nasabah',            name: 'customer.number', searchable: false, orderable: false },
+                { data: 'rekening_deposito',     name: 'account_number' },
                 { data: 'nama_nasabah',          name: 'customer.name', orderable: false },
                 { data: 'amount',                name: 'amount', responsivePriority: 1 },
                 { data: 'bunga_bulanan',         name: 'bunga_bulanan', orderable: false, searchable: false, responsivePriority: 2 },

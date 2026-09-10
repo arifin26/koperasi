@@ -10,6 +10,18 @@
                     <a href="{{ route('fixed-deposit.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-2">
                         <i class="fas fa-print mr-1"></i> Cetak Kwitansi
                     </a>
+                    <a href="{{ route('fixed-deposit.edit', $deposit) }}" class="btn btn-primary btn-sm mr-2">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </a>
+                    @if(auth()->user()->role == 'manager')
+                    <form class="d-inline" method="POST" action="{{ route('fixed-deposit.destroy', $deposit) }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm delete-data mr-2">
+                            <i class="fas fa-trash mr-1"></i> Hapus
+                        </button>
+                    </form>
+                    @endif
                     {!! $deposit->status_label !!}
                 </div>
             </div>
@@ -18,8 +30,9 @@
                     <div class="col-md-6">
                         <table class="table table-sm table-borderless">
                             <tr><th width="40%">No. Deposito</th><td>{{ $deposit->number }}</td></tr>
+                            <tr><th>Rekening Deposito</th><td class="font-weight-bold text-primary">{{ $deposit->account_number ?? '-' }}</td></tr>
                             <tr><th>Nasabah</th><td>{{ $deposit->customer->name ?? '-' }}</td></tr>
-                            <tr><th>No. Rekening</th><td>{{ $deposit->customer->number ?? '-' }}</td></tr>
+                            <tr><th>No. Rek. Simpanan</th><td>{{ $deposit->customer->number ?? '-' }}</td></tr>
                             <tr><th>Nominal</th><td class="font-weight-bold">Rp {{ number_format($deposit->amount, 0, ',', '.') }}</td></tr>
                         </table>
                     </div>

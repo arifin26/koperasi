@@ -13,6 +13,9 @@
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
+        html, body, .passbook-page, .passbook-table, .passbook-table td {
+            color: #000 !important;
+        }
         html, body {
             margin: 0 !important;
             padding: 0 !important;

@@ -10,6 +10,7 @@ use App\Models\InterestRate;
 use App\Models\User;
 use App\Helpers\TerbilangHelper;
 use App\Http\Requests\StoreFixedDepositRequest;
+use App\Http\Requests\UpdateFixedDepositRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,14 @@ class FixedDepositController extends Controller
                     $btn = '<a href="'.route('fixed-deposit.receipt', $row).'" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a> ';
                     $btn .= $validateBtn . ' ';
                     $btn .= '<a href="'.route('fixed-deposit.show', $row).'" class="btn btn-success btn-xs px-2 mx-1">Detail</a> ';
+                    $btn .= '<a href="'.route('fixed-deposit.edit', $row).'" class="btn btn-primary btn-xs px-2 mr-1">Edit</a> ';
+                    if (auth()->user()->role == 'manager') {
+                        $btn .= '<form class="d-inline" method="POST" action="' . route('fixed-deposit.destroy', $row) . '">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <input type="hidden" name="_token" value="' . csrf_token() . '" />
+                                    <button type="submit" class="btn btn-danger btn-xs px-2 delete-data mr-1"> Hapus </button>
+                                </form> ';
+                    }
                     if ($row->status == 'active') {
                         $btn .= '<a href="'.route('fixed-deposit.extend.form', $row).'" class="btn btn-info btn-xs px-2 mr-1">Perpanjang</a> ';
                         $btn .= '<a href="'.route('fixed-deposit.liquidate.form', $row).'" class="btn btn-warning btn-xs px-2">Cairkan</a>';
@@ -212,6 +221,54 @@ class FixedDepositController extends Controller
             'deposit' => $fixed_deposit,
             'fixed_deposit' => $fixed_deposit,
         ]);
+    }
+
+    public function edit(FixedDeposit $fixed_deposit)
+    {
+        $rates = InterestRate::where('type', 'deposito')
+            ->where('is_active', 1)
+            ->orderBy('effective_date', 'desc')
+            ->get();
+
+        $activeRate = $rates->first();
+
+        return view('pages.fixed-deposit.edit', [
+            'title' => 'Edit Deposito ' . $fixed_deposit->number,
+            'deposit' => $fixed_deposit,
+            'fixed_deposit' => $fixed_deposit,
+            'rates' => $rates,
+            'activeRate' => $activeRate,
+        ]);
+    }
+
+    public function update(UpdateFixedDepositRequest $request, FixedDeposit $fixed_deposit)
+    {
+        try {
+            DB::beginTransaction();
+
+            $startDate = $request->start_date ? Carbon::parse($request->start_date) : $fixed_deposit->start_date;
+            $tenorMonths = (int) $request->tenor_months;
+            $maturityDate = $startDate->copy()->addMonths($tenorMonths);
+
+            $fixed_deposit->update([
+                'account_number' => $request->account_number,
+                'amount' => $request->amount,
+                'tenor_months' => $tenorMonths,
+                'rate_percent' => $request->rate_percent,
+                'start_date' => $startDate,
+                'maturity_date' => $maturityDate,
+                'notes' => $request->notes,
+                'updated_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('fixed-deposit.index')
+                ->with('success', 'Berhasil memperbarui data deposito ' . $fixed_deposit->number . '!');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', $th->getMessage())->withInput();
+        }
     }
 
     // Perpanjangan

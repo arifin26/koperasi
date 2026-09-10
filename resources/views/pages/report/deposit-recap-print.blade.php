@@ -12,6 +12,10 @@
         * {
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+            color: #000 !important;
+        }
+        body, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6 {
+            color: #000 !important;
         }
         html, body {
             margin: 0;
@@ -23,12 +27,12 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 8pt;
             line-height: 1.25;
-            color: #222;
+            color: #000;
             background-color: #fff;
         }
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #1a5632;
+            border-bottom: 2px solid #000;
             padding-bottom: 5px;
             margin-bottom: 8px;
             border-collapse: collapse;
@@ -36,14 +40,14 @@
         .header-logo {
             font-size: 11pt;
             font-weight: bold;
-            color: #1a5632;
+            color: #000;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             line-height: 1.1;
         }
         .header-sub {
             font-size: 7.5pt;
-            color: #555;
+            color: #000;
             margin-top: 2px;
             line-height: 1.2;
         }
@@ -54,7 +58,7 @@
         .report-title {
             font-size: 10.5pt;
             font-weight: bold;
-            color: #1a5632;
+            color: #000;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             line-height: 1.1;
@@ -62,7 +66,7 @@
         .report-period {
             font-size: 8pt;
             font-weight: bold;
-            color: #444;
+            color: #000;
             margin-top: 2px;
         }
         .meta-table {
@@ -75,11 +79,12 @@
             padding: 1px 3px;
             vertical-align: top;
             border: none;
+            color: #000;
         }
         .meta-label {
             width: 12%;
             font-weight: bold;
-            color: #444;
+            color: #000;
         }
         .meta-colon {
             width: 1%;
@@ -95,13 +100,14 @@
             font-size: 7.5pt;
         }
         .data-table th, .data-table td {
-            border: 1px solid #1a5632;
+            border: 1px solid #000;
             padding: 4px 5px;
             vertical-align: middle;
+            color: #000;
         }
         .data-table th {
-            background-color: #f4f8f5;
-            color: #1a5632;
+            background-color: #f2f2f2;
+            color: #000;
             font-weight: bold;
             text-align: center;
             font-size: 7.5pt;
@@ -117,15 +123,16 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        .badge-success { background-color: #e6f9ee; color: #1a5632; border: 0.5px solid #1a5632; }
-        .badge-warning { background-color: #fff3cd; color: #856404; border: 0.5px solid #856404; }
-        .badge-info { background-color: #d1ecf1; color: #0c5460; border: 0.5px solid #0c5460; }
-        .badge-secondary { background-color: #e2e3e5; color: #383d41; border: 0.5px solid #383d41; }
+        .badge-success { background-color: #f2f2f2; color: #000; border: 0.5px solid #000; }
+        .badge-warning { background-color: #f2f2f2; color: #000; border: 0.5px solid #000; }
+        .badge-info { background-color: #f2f2f2; color: #000; border: 0.5px solid #000; }
+        .badge-secondary { background-color: #f2f2f2; color: #000; border: 0.5px solid #000; }
         .summary-row th, .summary-row td {
             font-weight: bold;
-            background-color: #f4f8f5;
-            color: #1a5632;
-            border-top: 2px solid #1a5632;
+            background-color: #f2f2f2;
+            color: #000;
+            border-top: 2px solid #000;
+            border-color: #000;
         }
         .signature-table {
             width: 100%;
@@ -140,6 +147,7 @@
             font-size: 7.5pt;
             line-height: 1.2;
             border: none !important;
+            color: #000;
         }
         .sign-space {
             height: 45px;
@@ -149,18 +157,18 @@
             text-decoration: underline;
             font-size: 8pt;
             line-height: 1.2;
-            color: #222;
+            color: #000;
         }
         .sign-title {
             font-size: 7pt;
-            color: #555;
+            color: #000;
             margin-top: 2px;
         }
         .footer-note {
             margin-top: 15px;
             font-size: 6.5pt;
-            color: #777;
-            border-top: 0.5px dotted #ccc;
+            color: #000;
+            border-top: 0.5px dotted #000;
             padding-top: 2px;
             line-height: 1.1;
         }
@@ -177,16 +185,16 @@
                 <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
                 <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
                 <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Telp. (0354) 393063</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Telp. (0354) 393063</div>
             </td>
             <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
         </tr>
     </table>
 
     <div style="text-align: center; margin-bottom: 8px;">
-        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #1a5632;">LAPORAN REKAP DEPOSITO</div>
-        <div style="font-size: 8pt; font-weight: bold; color: #444; margin-top: 2px;">Periode: {{ $periodeLabel ?? 'Semua Periode' }}</div>
+        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #000;">LAPORAN REKAP DEPOSITO</div>
+        <div style="font-size: 8pt; font-weight: bold; color: #000; margin-top: 2px;">Periode: {{ $periodeLabel ?? 'Semua Periode' }}</div>
     </div>
 
     <!-- Meta Info -->
@@ -226,9 +234,9 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 10%;">No. Rekening</th>
+                <th style="width: 12%;">Rekening Deposito</th>
                 <th style="width: 16%;">Nama Nasabah</th>
-                <th style="width: 18%;">Alamat</th>
+                <th style="width: 16%;">Alamat</th>
                 <th style="width: 7%;">Tenor</th>
                 <th style="width: 8%;">Tgl Mulai</th>
                 <th style="width: 8%;">Jatuh Tempo</th>
@@ -241,7 +249,7 @@
             @forelse($data as $i => $row)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td class="text-center">{{ $row->customer->number ?? '-' }}</td>
+                <td class="text-center">{{ $row->account_number ?? $row->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
                 <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $row->tenor_months }} Bulan</td>
@@ -253,7 +261,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center" style="padding: 15px; color: #888;">Tidak ada data deposito yang sesuai.</td>
+                <td colspan="10" class="text-center" style="padding: 15px; color: #000;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>

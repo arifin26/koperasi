@@ -13,6 +13,9 @@
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
+        html, body, .validation-slip, .validation-table, .validation-table td {
+            color: #000 !important;
+        }
         html, body {
             margin: 0;
             padding: 0;

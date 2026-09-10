@@ -9,16 +9,16 @@
                 <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
                 <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
                 <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
-                <div style="font-size: 7.5pt; line-height: 1.2; color: #222; margin-top: 1px;">Telp. (0354) 393063</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Telp. (0354) 393063</div>
             </td>
             <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
         </tr>
     </table>
 
     <div style="text-align: center; margin-bottom: 8px;">
-        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #1a5632;">REKAP SIMPANAN NASABAH</div>
-        <div style="font-size: 8pt; font-weight: bold; color: #444; margin-top: 2px;">Periode: {{ $periodeLabel ?? 'Semua Periode' }}</div>
+        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #000;">REKAP SIMPANAN NASABAH</div>
+        <div style="font-size: 8pt; font-weight: bold; color: #000; margin-top: 2px;">Periode: {{ $periodeLabel ?? 'Semua Periode' }}</div>
     </div>
 
     <!-- Meta Info -->
@@ -81,7 +81,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center" style="padding: 15px; color: #888;">Tidak ada data nasabah yang sesuai.</td>
+                <td colspan="7" class="text-center" style="padding: 15px; color: #000;">Tidak ada data nasabah yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
@@ -91,14 +91,14 @@
     <div class="savings-recap-print-summary print-avoid-break">
         <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
             <tr class="summary-row">
-                <td colspan="5" class="text-right" style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5; font-weight: bold; color: #1a5632;">TOTAL DANA SIMPANAN NASABAH</td>
-                <td class="text-right" style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5; font-weight: bold; color: #1a5632;">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
-                <td style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5;"></td>
+                <td colspan="5" class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">TOTAL DANA SIMPANAN NASABAH</td>
+                <td class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
+                <td style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; color: #000;"></td>
             </tr>
             <tr class="summary-row">
-                <td colspan="5" class="text-right" style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5; font-weight: bold; color: #1a5632;">TOTAL BUNGA DALAM 1 BULAN</td>
-                <td style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5;"></td>
-                <td class="text-right" style="border: 1px solid #1a5632; padding: 6px; background-color: #f4f8f5; font-weight: bold; color: #1a5632;">
+                <td colspan="5" class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">TOTAL BUNGA DALAM 1 BULAN</td>
+                <td style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; color: #000;"></td>
+                <td class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">
                     @php
                         $totalBungaBulan = 0;
                         foreach ($data as $customer) {

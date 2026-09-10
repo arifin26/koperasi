@@ -34,7 +34,7 @@
         <td class="colon">:</td>
         <td class="value">
             <strong>{{ $deposit->customer->name ?? '-' }}</strong>
-            <span style="color: #666; font-size: 6.5pt;">(No. Rek: {{ $deposit->customer->number ?? '-' }} | NIK: {{ $deposit->customer->nik ?? '-' }})</span>
+            <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $deposit->customer->number ?? '-' }} | NIK: {{ $deposit->customer->nik ?? '-' }})</span>
         </td>
     </tr>
     <tr>
@@ -57,23 +57,23 @@
 </table>
 
 <!-- Amount Box -->
-<div class="amount-box" style="background-color: #fff9f8; border-color: #d9534f;">
+<div class="amount-box" style="background-color: #f8f8f8; border-color: #000;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td style="width: 58%; vertical-align: middle;">
-                <div style="font-size: 6.5pt; color: #555;">JUMLAH PENARIKAN:</div>
-                <div class="amount-val" style="color: #d9534f;">Rp {{ number_format($deposit->amount, 2, ',', '.') }}</div>
+                <div style="font-size: 6.5pt; color: #000;">JUMLAH PENARIKAN:</div>
+                <div class="amount-val" style="color: #000;">Rp {{ number_format($deposit->amount, 2, ',', '.') }}</div>
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
-            <td style="width: 42%; vertical-align: middle; border-left: 1px dashed #d9534f; padding-left: 8px;">
+            <td style="width: 42%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
                 <table style="width: 100%; font-size: 6.8pt; border-collapse: collapse;">
                     <tr>
-                        <td style="color: #555;">Saldo Sebelumnya</td>
+                        <td style="color: #000;">Saldo Sebelumnya</td>
                         <td style="text-align: right;">Rp {{ number_format($deposit->previous_balance, 2, ',', '.') }}</td>
                     </tr>
-                    <tr style="font-weight: bold; color: #333;">
+                    <tr style="font-weight: bold; color: #000;">
                         <td>Sisa Saldo</td>
-                        <td style="text-align: right; color: #1a5632;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
+                        <td style="text-align: right; color: #000;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
                     </tr>
                 </table>
             </td>
