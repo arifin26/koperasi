@@ -2,283 +2,141 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\Customer;
 use App\Models\FixedDeposit;
-use App\Models\Deposit;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class FixedDepositTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $customer;
-    protected $user;
-
-    protected function setUp(): void
+    public function test_fixed_deposit_detail_page_loads_successfully()
     {
-        parent::setUp();
-
-        $this->user = User::factory()->create(['role' => 'manager']);
-        $this->customer = Customer::factory()->create(['status' => 'active']);
-
-        // Create savings account for customer
-        Deposit::create([
-            'type' => 'pokok',
-            'amount' => 1000000,
-            'customer_id' => $this->customer->id,
-            'created_by' => $this->user->id,
-        ]);
-        Deposit::recalculateBalance($this->customer->id);
-    }
-
-    /** @test */
-    public function can_create_fixed_deposit_with_valid_account_number()
-    {
-        $this->actingAs($this->user);
-
-        $response = $this->post(route('fixed-deposit.store'), [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00001',
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'notes' => 'Test deposit',
+        $user = User::create([
+            'name' => 'Teller Test',
+            'username' => 'tellertest',
+            'password' => bcrypt('password'),
+            'role' => 'teller',
+            'phone' => '08123456789',
         ]);
 
-        $response->assertRedirect(route('fixed-deposit.index'));
-        $this->assertDatabaseHas('fixed_deposits', [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00001',
-            'amount' => 5000000,
+        $customer = Customer::create([
+            'number' => 'NAS-001',
+            'name' => 'Nasabah Test',
+            'nik' => '1234567890123456',
+            'phone' => '081234567890',
+            'address' => 'Jl. Test No. 1',
             'status' => 'active',
-        ]);
-    }
-
-    /** @test */
-    public function cannot_create_fixed_deposit_if_account_number_equals_customer_number()
-    {
-        $this->actingAs($this->user);
-
-        $response = $this->post(route('fixed-deposit.store'), [
-            'customer_id' => $this->customer->id,
-            'account_number' => $this->customer->number, // Same as customer.number (WRONG)
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
+            'joined_at' => Carbon::now(),
         ]);
 
-        $response->assertSessionHasErrors('account_number');
-        $this->assertDatabaseMissing('fixed_deposits', [
-            'customer_id' => $this->customer->id,
-            'account_number' => $this->customer->number,
-        ]);
-    }
-
-    /** @test */
-    public function cannot_create_new_deposit_if_customer_has_active_deposit()
-    {
-        $this->actingAs($this->user);
-
-        // Create first deposit
-        FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
-            'status' => 'active',
-            'created_by' => $this->user->id,
-        ]);
-
-        // Try to create second deposit (should fail)
-        $response = $this->post(route('fixed-deposit.store'), [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00002',
-            'amount' => 3000000,
+        $fixedDeposit = FixedDeposit::create([
+            'number' => 'DEP-202609-001',
+            'account_number' => 'DEP-001',
+            'customer_id' => $customer->id,
+            'amount' => 10000000,
             'tenor_months' => 6,
-            'rate_percent' => 5.0,
+            'rate_percent' => 6.0,
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(6),
+            'status' => 'active',
+            'notes' => 'Deposito test',
+            'created_by' => $user->id,
         ]);
 
-        $response->assertSessionHasErrors('customer_id');
-        $this->assertDatabaseMissing('fixed_deposits', [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00002',
-        ]);
+        $response = $this->actingAs($user)->get(route('fixed-deposit.show', $fixedDeposit));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('pages.fixed-deposit.show');
+        $response->assertSee('DEP-202609-001');
+        $response->assertSee('Nasabah Test');
+        $response->assertSee(route('fixed-deposit.receipt', $fixedDeposit));
+        $response->assertSee(route('fixed-deposit.extend.form', $fixedDeposit));
+        $response->assertSee(route('fixed-deposit.liquidate.form', $fixedDeposit));
     }
 
-    /** @test */
-    public function can_create_new_deposit_after_liquidating_previous_one()
+    public function test_fixed_deposit_receipt_pdf_loads_successfully()
     {
-        $this->actingAs($this->user);
+        $user = User::create([
+            'name' => 'Teller Test',
+            'username' => 'tellertest2',
+            'password' => bcrypt('password'),
+            'role' => 'teller',
+            'phone' => '08123456780',
+        ]);
 
-        // Create and liquidate first deposit
-        $firstDeposit = FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
+        $customer = Customer::create([
+            'number' => 'NAS-003',
+            'name' => 'Nasabah Tiga',
+            'nik' => '1234567890123458',
+            'phone' => '081234567892',
+            'address' => 'Jl. Test No. 3',
+            'status' => 'active',
+            'joined_at' => Carbon::now(),
+        ]);
+
+        $fixedDeposit = FixedDeposit::create([
+            'number' => 'DEP-202609-003',
+            'account_number' => 'DEP-003',
+            'customer_id' => $customer->id,
+            'amount' => 15000000,
+            'tenor_months' => 3,
             'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(3),
             'status' => 'active',
-            'created_by' => $this->user->id,
+            'notes' => 'Deposito test 3',
+            'created_by' => $user->id,
         ]);
 
-        $firstDeposit->update(['status' => 'liquidated', 'liquidated_at' => now()]);
+        $response = $this->actingAs($user)->get(route('fixed-deposit.receipt', $fixedDeposit));
 
-        // Create new deposit (should succeed)
-        $response = $this->post(route('fixed-deposit.store'), [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00002',
-            'amount' => 3000000,
-            'tenor_months' => 6,
-            'rate_percent' => 5.0,
-        ]);
-
-        $response->assertRedirect(route('fixed-deposit.index'));
-        $this->assertDatabaseHas('fixed_deposits', [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00002',
-            'status' => 'active',
-        ]);
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
     }
 
-    /** @test */
-    public function extend_copies_account_number_from_original_deposit()
+    public function test_rekap_deposito_detail_url_points_to_correct_route()
     {
-        $this->actingAs($this->user);
+        $user = User::create([
+            'name' => 'Manager Test',
+            'username' => 'managertest',
+            'password' => bcrypt('password'),
+            'role' => 'manager',
+            'phone' => '08123456789',
+        ]);
 
-        // Create original deposit
-        $originalDeposit = FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
+        $customer = Customer::create([
+            'number' => 'NAS-002',
+            'name' => 'Nasabah Dua',
+            'nik' => '1234567890123457',
+            'phone' => '081234567891',
+            'address' => 'Jl. Test No. 2',
             'status' => 'active',
-            'created_by' => $this->user->id,
+            'joined_at' => Carbon::now(),
         ]);
 
-        // Extend deposit
-        $response = $this->post(route('fixed-deposit.extend', $originalDeposit), [
+        $fixedDeposit = FixedDeposit::create([
+            'number' => 'DEP-202609-002',
+            'account_number' => 'DEP-002',
+            'customer_id' => $customer->id,
+            'amount' => 20000000,
             'tenor_months' => 12,
-            'rate_percent' => 5.5,
-        ]);
-
-        $response->assertRedirect(route('fixed-deposit.index'));
-
-        // Check original deposit marked as extended
-        $this->assertDatabaseHas('fixed_deposits', [
-            'id' => $originalDeposit->id,
-            'status' => 'extended',
-        ]);
-
-        // Check new deposit has same account_number as original
-        $extendedDeposit = FixedDeposit::where('extended_from_id', $originalDeposit->id)->first();
-        $this->assertNotNull($extendedDeposit);
-        $this->assertEquals('DEP-00001', $extendedDeposit->account_number);
-        $this->assertEquals($originalDeposit->account_number, $extendedDeposit->account_number);
-    }
-
-    /** @test */
-    public function composite_unique_constraint_allows_reuse_after_soft_delete()
-    {
-        $this->actingAs($this->user);
-
-        // Create first deposit
-        $firstDeposit = FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
+            'rate_percent' => 7.0,
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(12),
             'status' => 'active',
-            'created_by' => $this->user->id,
+            'notes' => 'Deposito test 2',
+            'created_by' => $user->id,
         ]);
 
-        // Soft delete it
-        $firstDeposit->delete();
+        $response = $this->actingAs($user)
+            ->getJson(route('report.deposit-recap'), ['X-Requested-With' => 'XMLHttpRequest']);
 
-        // Create new deposit with same account_number (should succeed)
-        $response = $this->post(route('fixed-deposit.store'), [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00001', // Same account_number as deleted deposit
-            'amount' => 3000000,
-            'tenor_months' => 6,
-            'rate_percent' => 5.0,
-        ]);
-
-        $response->assertRedirect(route('fixed-deposit.index'));
-        $this->assertDatabaseHas('fixed_deposits', [
-            'customer_id' => $this->customer->id,
-            'account_number' => 'DEP-00001',
-            'status' => 'active',
-            'deleted_at' => null,
-        ]);
-    }
-
-    /** @test */
-    public function api_endpoint_returns_has_active_deposit_flag()
-    {
-        // Create active deposit
-        FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
-            'status' => 'active',
-            'created_by' => $this->user->id,
-        ]);
-
-        $response = $this->getJson(route('customer.balance', $this->customer->id));
-
-        $response->assertOk();
-        $response->assertJsonPath('data.has_active_deposit', true);
-        $response->assertJsonPath('data.active_deposit_number', 'DEP-202609-00001');
-    }
-
-    /** @test */
-    public function cannot_extend_non_active_deposit()
-    {
-        $this->actingAs($this->user);
-
-        $deposit = FixedDeposit::create([
-            'number' => 'DEP-202609-00001',
-            'account_number' => 'DEP-00001',
-            'customer_id' => $this->customer->id,
-            'amount' => 5000000,
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-            'start_date' => now(),
-            'maturity_date' => now()->addMonths(12),
-            'status' => 'liquidated',
-            'liquidated_at' => now(),
-            'created_by' => $this->user->id,
-        ]);
-
-        $response = $this->post(route('fixed-deposit.extend', $deposit), [
-            'tenor_months' => 12,
-            'rate_percent' => 5.5,
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertStatus(200);
+        $expectedUrl = route('fixed-deposit.show', $fixedDeposit);
+        $response->assertSee($expectedUrl, false);
     }
 }

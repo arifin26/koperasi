@@ -209,7 +209,8 @@ class FixedDepositController extends Controller
 
         return view('pages.fixed-deposit.show', [
             'title' => 'Detail Deposito ' . $fixed_deposit->number,
-            'deposit' => $fixed_deposit
+            'deposit' => $fixed_deposit,
+            'fixed_deposit' => $fixed_deposit,
         ]);
     }
 
