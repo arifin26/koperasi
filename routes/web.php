@@ -81,7 +81,7 @@ Route::middleware('auth')->group(function() {
     Route::resource('deposito', App\Http\Controllers\FixedDepositController::class, [
         'names' => 'fixed-deposit',
         'parameters' => ['deposito' => 'fixed_deposit']
-    ])->except(['edit', 'update']);
+    ]);
     Route::get('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extendForm'])->name('fixed-deposit.extend.form');
     Route::post('deposito/{fixed_deposit}/perpanjang', [App\Http\Controllers\FixedDepositController::class, 'extend'])->name('fixed-deposit.extend');
     Route::get('deposito/{fixed_deposit}/cairkan', [App\Http\Controllers\FixedDepositController::class, 'liquidateForm'])->name('fixed-deposit.liquidate.form');
