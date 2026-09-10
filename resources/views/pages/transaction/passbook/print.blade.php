@@ -39,6 +39,8 @@
         .passbook-table tr {
             height: 6.8mm;
             max-height: 6.8mm;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .passbook-table td {
             padding: 0 2px;
@@ -123,7 +125,11 @@
 </head>
 <body>
     <div class="print-toolbar no-print">
-        <span>Baris Awal: <strong>Baris {{ $startRow ?? 1 }}</strong> | Total Baris: <strong>{{ count($transactions) }}</strong></span>
+        @if (($startRow ?? 1) == 1 && count($transactions) > 1)
+            <span>Mode: <strong>Bulk Print (Baris 1 s/d {{ count($transactions) }})</strong> | Total: <strong>{{ count($transactions) }} Baris</strong></span>
+        @else
+            <span>Baris Awal: <strong>Baris {{ $startRow ?? 1 }}</strong> | Total Baris: <strong>{{ count($transactions) }}</strong></span>
+        @endif
         <button onclick="window.print()"><i class="fas fa-print"></i> Cetak Ulang</button>
         <button onclick="window.close()" style="background:#6c757d;">Tutup</button>
     </div>

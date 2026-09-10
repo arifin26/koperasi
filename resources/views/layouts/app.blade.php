@@ -288,7 +288,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
     @stack('script')
     <script>
         // Global Passbook Print Modal Selector
-        function openPassbookModal(passbookUrl, title) {
+        function openPassbookModal(passbookUrl, title, isBulk = false) {
+            // Jika bulk print: otomatis cetak seluruh data dari baris pertama tanpa meminta nomor baris
+            if (isBulk) {
+                const targetUrl = passbookUrl + (passbookUrl.includes('?') ? '&' : '?') + 'row=1';
+                window.open(targetUrl, '_blank', 'width=800,height=700');
+                return;
+            }
+
             Swal.fire({
                 title: 'Cetak Buku Tabungan',
                 html: `
@@ -328,7 +335,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 e.preventDefault();
                 const url = $(this).data('url');
                 const title = $(this).data('title');
-                openPassbookModal(url, title);
+                const type = $(this).data('type');
+                const isBulk = (type === 'bulk') || (url && url.includes('/nasabah/') && url.includes('/buku-tabungan'));
+                openPassbookModal(url, title, isBulk);
             });
 
             @if (session('receipt_url') && session('passbook_url'))

@@ -62,6 +62,7 @@
                             <th>Jenis</th>
                             <th>Masuk</th>
                             <th>Keluar</th>
+                            <th width="90">Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -106,7 +107,8 @@ $(document).ready(function() {
             {data: 'customer', name: 'customer.name'},
             {data: 'type', name: 'type'},
             {data: 'masuk', name: 'masuk', orderable: false, searchable: false},
-            {data: 'keluar', name: 'keluar', orderable: false, searchable: false}
+            {data: 'keluar', name: 'keluar', orderable: false, searchable: false},
+            {data: 'aksi', name: 'aksi', orderable: false, searchable: false}
         ]
     });
 

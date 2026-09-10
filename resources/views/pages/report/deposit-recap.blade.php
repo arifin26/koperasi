@@ -124,7 +124,8 @@
                                 <th>Tgl. Mulai</th>
                                 <th>Jatuh Tempo</th>
                                 <th>Status</th>
-                                <th width="80">Aksi</th>
+                                <th>Jml. Transaksi</th>
+                                <th width="140">Aksi</th>
                             </tr>
                         </thead>
                     </table>
@@ -191,6 +192,7 @@
                 { data: 'start_date',            name: 'start_date' },
                 { data: 'maturity_date',         name: 'maturity_date' },
                 { data: 'status_label',          name: 'status', orderable: false },
+                { data: 'total_transaksi',       name: 'total_transaksi', orderable: false, searchable: false },
                 { data: 'aksi',                  name: 'aksi', orderable: false, searchable: false },
                 // Kolom helper (tidak ditampilkan)
                 { data: 'days_until_maturity',   name: 'days_until_maturity', visible: false, searchable: false, orderable: false },

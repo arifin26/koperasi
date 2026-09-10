@@ -104,7 +104,7 @@
                                 <th>Jml. Transaksi</th>
                                 <th>Saldo Simpanan</th>
                                 <th>Bunga/Bulan</th>
-                                <th width="60">Aksi</th>
+                                <th width="140">Aksi</th>
                             </tr>
                         </thead>
                         <tfoot>

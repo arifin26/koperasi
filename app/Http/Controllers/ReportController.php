@@ -53,6 +53,21 @@ class ReportController extends Controller
                     }
                     return '-';
                 })
+                ->addColumn('aksi', function($row) {
+                    if (!$row->customer) {
+                        return '-';
+                    }
+                    $code = $this->buildTransactionCode($row->id);
+                    if ($row->type === 'penarikan') {
+                        $url = route('transaction.withdrawal.passbook', $row);
+                        $title = 'Penarikan ' . $code . ' - ' . ($row->customer->name ?? '');
+                    } else {
+                        $url = route('transaction.deposit.passbook', $row);
+                        $title = 'Simpanan ' . $code . ' - ' . ($row->customer->name ?? '');
+                    }
+                    return '<button type="button" class="btn btn-info btn-xs px-2 print-passbook-btn" data-url="' . $url . '" data-title="' . $title . '"><i class="fas fa-book"></i> Cetak Buku</button>';
+                })
+                ->rawColumns(['aksi'])
                 ->make(true);
         }
 
@@ -208,7 +223,9 @@ class ReportController extends Controller
                     return '<span class="badge badge-success">Aktif</span>';
                 })
                 ->addColumn('aksi', function ($row) {
-                    return '<a href="' . route('customer.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
+                    $detailBtn = '<a href="' . route('customer.show', $row) . '" class="btn btn-info btn-xs mr-1"><i class="fas fa-eye"></i> Detail</a>';
+                    $passbookBtn = '<button type="button" class="btn btn-secondary btn-xs px-2 print-passbook-btn" data-type="bulk" data-url="' . route('customer.passbook', $row) . '" data-title="Buku Tabungan - ' . $row->name . ' (' . ($row->number ?? '') . ')"><i class="fas fa-book"></i> Cetak Buku</button>';
+                    return $detailBtn . $passbookBtn;
                 })
                 ->with('filtered_total_saldo', $filteredTotalSaldo)
                 ->with('filtered_total_saldo_formatted', number_format($filteredTotalSaldo, 0, ',', '.'))
@@ -352,8 +369,20 @@ class ReportController extends Controller
                     // Positif = hari tersisa, negatif = sudah lewat jatuh tempo
                     return (int) Carbon::today()->diffInDays(Carbon::parse($row->maturity_date), false);
                 })
+                ->addColumn('total_transaksi', function ($row) {
+                    if (!$row->customer_id) {
+                        return '0 baris';
+                    }
+                    $count = Deposit::where('customer_id', $row->customer_id)->count();
+                    return $count . ' baris';
+                })
                 ->addColumn('aksi', function ($row) {
-                    return '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> Detail</a>';
+                    $detailBtn = '<a href="' . route('fixed-deposit.show', $row) . '" class="btn btn-info btn-xs mr-1"><i class="fas fa-eye"></i> Detail</a>';
+                    $passbookBtn = '';
+                    if ($row->customer) {
+                        $passbookBtn = '<button type="button" class="btn btn-secondary btn-xs px-2 print-passbook-btn" data-type="bulk" data-url="' . route('customer.passbook', $row->customer) . '" data-title="Buku Tabungan - ' . $row->customer->name . ' (' . ($row->customer->number ?? '') . ')"><i class="fas fa-book"></i> Cetak Buku</button>';
+                    }
+                    return $detailBtn . $passbookBtn;
                 })
                 ->rawColumns(['status_label', 'aksi'])
                 ->make(true);

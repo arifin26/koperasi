@@ -42,7 +42,7 @@
         <td class="colon">:</td>
         <td class="value">
             <strong>{{ $fixed_deposit->tenor_months }} Bulan ({{ $fixed_deposit->rate_percent }}% p.a.)</strong> 
-            <span style="color: #1a5632; font-weight: bold; font-size: 6.5pt;">&bull; Est. Bunga: Rp {{ number_format($fixed_deposit->monthly_interest, 0, ',', '.') }}/bln</span>
+            <span style="color: #000; font-weight: bold; font-size: 6.5pt;">&bull; Est. Bunga: Rp {{ number_format($fixed_deposit->monthly_interest, 0, ',', '.') }}/bln</span>
         </td>
     </tr>
     <tr>
@@ -60,21 +60,21 @@
 </table>
 
 <!-- Amount Box -->
-<div class="amount-box" style="background-color: #f0f7ff; border-color: #007bff;">
+<div class="amount-box" style="background-color: #ffffff; border-color: #000;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td style="width: 58%; vertical-align: middle;">
-                <div style="font-size: 6.5pt; color: #555;">NOMINAL PENEMPATAN DEPOSITO:</div>
-                <div class="amount-val" style="color: #0056b3;">Rp {{ number_format($fixed_deposit->amount, 2, ',', '.') }}</div>
+                <div style="font-size: 6.5pt; color: #000;">NOMINAL PENEMPATAN DEPOSITO:</div>
+                <div class="amount-val" style="color: #000;">Rp {{ number_format($fixed_deposit->amount, 2, ',', '.') }}</div>
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
-            <td style="width: 42%; vertical-align: middle; border-left: 1px dashed #007bff; padding-left: 8px;">
+            <td style="width: 42%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
                 <table style="width: 100%; font-size: 6.8pt; border-collapse: collapse;">
                     <tr>
-                        <td style="color: #555;">Tanggal Buka</td>
+                        <td style="color: #000;">Tanggal Buka</td>
                         <td style="text-align: right;">{{ $fixed_deposit->start_date->isoFormat('DD-MM-Y') }}</td>
                     </tr>
-                    <tr style="font-weight: bold; color: #d9534f;">
+                    <tr style="font-weight: bold; color: #000;">
                         <td>Jatuh Tempo</td>
                         <td style="text-align: right;">{{ $fixed_deposit->maturity_date->isoFormat('DD-MM-Y') }}</td>
                     </tr>
