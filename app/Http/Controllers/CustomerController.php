@@ -199,7 +199,7 @@ class CustomerController extends Controller
         try {
             $customer = Customer::findOrFail($id);
             $balances = Deposit::recalculateBalance($id);
-            $saldo = $balances['simpanan'] ?? 0;
+            $saldo = (int) ($balances['simpanan'] ?? 0);
 
             $depositCount = Deposit::where('customer_id', $id)->count();
             $hasDeposit = $depositCount > 0;
@@ -240,12 +240,18 @@ class CustomerController extends Controller
                 'has_deposit' => $hasDeposit,
                 'deposit_count' => $depositCount,
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 404,
+                'message' => 'Data nasabah tidak ditemukan.'
+            ], 404);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
-                'code' => $th->getCode(),
+                'code' => $th->getCode() ?: 500,
                 'message' => $th->getMessage()
-            ]);
+            ], 500);
         }
     }
 
