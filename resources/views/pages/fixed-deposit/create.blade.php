@@ -86,27 +86,31 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Rate Bunga (% p.a.) <span class="text-danger">*</span></label>
+                        <label>Pilihan Bunga Deposito (% p.a.) <span class="text-danger">*</span></label>
                         @if($rates->isNotEmpty())
-                            <select name="rate_percent" id="rate_percent"
-                                class="form-control font-weight-bold @error('rate_percent') is-invalid @enderror"
+                            <select name="interest_rate_id" id="interest_rate_id"
+                                class="form-control font-weight-bold @error('interest_rate_id') is-invalid @enderror"
                                 required>
+                                <option value="">-- Pilih Paket Bunga Deposito --</option>
                                 @foreach($rates as $rate)
-                                <option value="{{ $rate->rate_percent }}"
-                                    {{ old('rate_percent', $activeRate?->rate_percent) == $rate->rate_percent ? 'selected' : '' }}>
-                                    {{ $rate->rate_percent }}% p.a.
-                                    (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
+                                @php
+                                    $desc = $rate->notes ? ' — ' . $rate->notes : '';
+                                    $selected = (old('interest_rate_id', $activeRate?->id) == $rate->id) ? 'selected' : '';
+                                @endphp
+                                <option value="{{ $rate->id }}" data-rate="{{ $rate->rate_percent }}" {{ $selected }}>
+                                    {{ number_format($rate->rate_percent, 2, ',', '.') }}% p.a.{{ $desc }} (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
                                 </option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="rate_percent" id="rate_percent" value="{{ old('rate_percent', $activeRate?->rate_percent) }}">
                             <small class="form-text text-muted">
-                                <i class="fas fa-info-circle text-primary"></i>
-                                Rate dari Manajemen Bunga. Rate aktif otomatis dipilih.
+                                <i class="fas fa-info-circle text-primary mr-1"></i>
+                                Pilih paket bunga deposito dari database master data.
                             </small>
                         @else
                             <div class="alert alert-warning py-1 mb-1" style="font-size:.85rem">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                Rate Deposito belum diatur.
+                                Rate Deposito belum diatur di master data.
                                 <a href="{{ route('interest.create') }}" target="_blank">Tambah sekarang</a>
                             </div>
                             <div class="input-group">
@@ -118,6 +122,7 @@
                                 <div class="input-group-append"><span class="input-group-text">% p.a.</span></div>
                             </div>
                         @endif
+                        @error('interest_rate_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         @error('rate_percent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
 
@@ -252,7 +257,14 @@ $(document).ready(function() {
     function recalculate() {
         var amount = parseInt($('input[name="amount"]').val()) || 0;
         var tenor = parseInt($('#tenor_months').val()) || 0;
-        var rate = parseFloat($('#rate_percent').val()) || 0;
+        var selectedRateOpt = $('#interest_rate_id option:selected');
+        var rate = 0;
+        if (selectedRateOpt.length && selectedRateOpt.data('rate') !== undefined) {
+            rate = parseFloat(selectedRateOpt.data('rate')) || 0;
+            $('#rate_percent').val(rate);
+        } else {
+            rate = parseFloat($('#rate_percent').val()) || 0;
+        }
 
         if (tenor <= 0) {
             $('#maturity_display').val('-');
@@ -272,7 +284,7 @@ $(document).ready(function() {
             var monthlyInterest = Math.floor(amount * (rate / 100) / 12);
             var totalInterest = monthlyInterest * tenor;
 
-            $('#monthly_interest_display').val('Rp ' + monthlyInterest.toLocaleString('id-ID') + ' / bulan');
+            $('#monthly_interest_display').val('Rp ' + monthlyInterest.toLocaleString('id-ID') + ' / bulan (' + rate.toFixed(2) + '%)');
             $('#total_interest_display').val('Rp ' + totalInterest.toLocaleString('id-ID') + ' (selama ' + tenor + ' bulan)');
         } else {
             $('#monthly_interest_display').val('-');
@@ -280,7 +292,7 @@ $(document).ready(function() {
         }
     }
 
-    $('input[name="amount"], #tenor_months, #rate_percent').on('input change', recalculate);
+    $('input[name="amount"], #tenor_months, #interest_rate_id, #rate_percent').on('input change', recalculate);
     recalculate();
 });
 </script>

@@ -195,6 +195,7 @@ class FixedDepositController extends Controller
             'number' => FixedDeposit::generateNumber(),
             'account_number' => $request->account_number,
             'customer_id' => $request->customer_id,
+            'interest_rate_id' => $request->interest_rate_id,
             'amount' => $request->amount,
             'tenor_months' => $request->tenor_months,
             'rate_percent' => $request->rate_percent,
@@ -252,6 +253,7 @@ class FixedDepositController extends Controller
 
             $fixed_deposit->update([
                 'account_number' => $request->account_number,
+                'interest_rate_id' => $request->interest_rate_id ?? $fixed_deposit->interest_rate_id,
                 'amount' => $request->amount,
                 'tenor_months' => $tenorMonths,
                 'rate_percent' => $request->rate_percent,

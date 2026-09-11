@@ -69,6 +69,21 @@
                                         name="last_education" value="{{ old('last_education', $user->last_education) }}"
                                         placeholder="Pendidikan Terakhir">
                                 </div>
+                                <div class="form-group">
+                                    <label>Suku Bunga Simpanan</label>
+                                    <div>
+                                        @if($user->interestRate)
+                                            <span class="badge badge-success px-2 py-1" style="font-size: 0.95rem;">
+                                                <i class="fas fa-percentage mr-1"></i> {{ number_format($user->interestRate->rate_percent, 2, ',', '.') }}% p.a.
+                                                {{ $user->interestRate->notes ? '(' . $user->interestRate->notes . ')' : '' }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-info px-2 py-1" style="font-size: 0.95rem;">
+                                                <i class="fas fa-check-circle mr-1"></i> Mengikuti Default Koperasi
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-12 col-md-4">
                                 <label>Foto</label>

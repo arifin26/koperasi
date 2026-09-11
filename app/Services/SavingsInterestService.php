@@ -29,7 +29,9 @@ class SavingsInterestService
         $dateStr = $targetDate->format('Y-m-d');
 
         // Validasi Rate Bunga Aktif
-        $simpananRate = InterestRate::where('type', 'simpanan')->where('is_active', 1)->first();
+        $simpananRate = InterestRate::savings()->active()->where('is_default', true)->first()
+            ?? InterestRate::savings()->active()->orderBy('effective_date', 'desc')->first();
+
         if (!$simpananRate) {
             throw new \RuntimeException('Tidak ditemukan konfigurasi suku bunga simpanan yang aktif pada Manajemen Bunga.');
         }

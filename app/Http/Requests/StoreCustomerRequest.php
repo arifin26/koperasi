@@ -34,6 +34,7 @@ class StoreCustomerRequest extends FormRequest
             'phone' => ['required', Rule::unique('customers', 'phone')->whereNull('deleted_at')],
             'last_education' => 'required',
             'profession' => 'required',
+            'interest_rate_id' => 'nullable|exists:interest_rates,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }

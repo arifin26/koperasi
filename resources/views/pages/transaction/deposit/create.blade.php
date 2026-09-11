@@ -39,32 +39,24 @@
                                 <span class="error invalid-feedback">{{ $errors->first('type') }}</span>
                             </div>
                             <div class="form-group">
-                                <label>Pilihan Rate Bunga Simpanan <small class="text-info">(Otomatis tertanam pada profil nasabah)</small></label>
-                                <select class="form-control @error('interest_rate_id') is-invalid @enderror" name="interest_rate_id">
-                                    <option value="">-- Abaikan (Gunakan Rate Sebelumnya/Global) --</option>
+                                <label>Pilihan Rate Bunga Simpanan <small class="text-info">(Pilih suku bunga dari database untuk nasabah)</small></label>
+                                <select class="form-control @error('interest_rate_id') is-invalid @enderror" name="interest_rate_id" id="interest_rate_id">
+                                    <option value="">-- Gunakan Rate Sebelumnya / Default Koperasi --</option>
                                     @foreach ($rates as $rate)
                                     @php
-                                        $label = 'Simpanan';
-                                        $isActive = $rate->is_active ? ' ✔ (Aktif)' : '';
+                                        $isDefault = $rate->is_default ? ' [Default Koperasi]' : '';
+                                        $desc = $rate->notes ? ' — ' . $rate->notes : '';
                                         $selected = ($activeRate && $activeRate->id == $rate->id) ? 'selected' : '';
                                     @endphp
                                     <option value="{{ $rate->id }}" {{ $selected }}>
-                                        {{ $label }} — {{ $rate->rate_percent }}% p.a. (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }}){{ $isActive }}
+                                        {{ number_format($rate->rate_percent, 2, ',', '.') }}% p.a.{{ $desc }}{{ $isDefault }} (Berlaku: {{ \Carbon\Carbon::parse($rate->effective_date)->format('d/m/Y') }})
                                     </option>
                                     @endforeach
                                 </select>
-                                @if($activeRate)
                                 <small class="form-text text-muted">
-                                    <i class="fas fa-info-circle text-primary"></i>
-                                    Rate aktif: <strong>{{ $activeRate->rate_percent }}% p.a.</strong>
-                                    (berlaku sejak {{ \Carbon\Carbon::parse($activeRate->effective_date)->isoFormat('D MMM Y') }}) telah dipilih otomatis.
+                                    <i class="fas fa-info-circle text-primary mr-1"></i>
+                                    Rate bunga master data yang dipilih akan langsung diterapkan pada profil nasabah ini.
                                 </small>
-                                @else
-                                <small class="form-text text-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Rate Simpanan belum diatur di <a href="{{ route('interest.create') }}" target="_blank">Manajemen Bunga</a>.
-                                </small>
-                                @endif
                                 <span class="error invalid-feedback">{{ $errors->first('interest_rate_id') }}</span>
                             </div>
                             <button type="submit" class="btn btn-success">Simpan</button>

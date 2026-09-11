@@ -66,7 +66,8 @@ class CustomerController extends Controller
     public function create()
     {
         return view('pages.customer.create', [
-            'title' => $this->buildTitle('baru')
+            'title' => $this->buildTitle('baru'),
+            'savingsRates' => InterestRate::savings()->active()->orderBy('rate_percent', 'asc')->get(),
         ]);
     }
 
@@ -102,8 +103,9 @@ class CustomerController extends Controller
      */
     public function show(Customer $nasabah)
     {
+        $nasabah->load('interestRate');
         $balances = Deposit::recalculateBalance($nasabah->id);
-        
+
         return view('pages.customer.show', [
             'title' => $this->buildTitle('detail'),
             'user' => $nasabah,
@@ -119,9 +121,11 @@ class CustomerController extends Controller
      */
     public function edit(Customer $nasabah)
     {
+        $nasabah->load('interestRate');
         return view('pages.customer.edit', [
             'title' => $this->buildTitle('edit'),
-            'user' => $nasabah
+            'user' => $nasabah,
+            'savingsRates' => InterestRate::savings()->active()->orderBy('rate_percent', 'asc')->get(),
         ]);
     }
 

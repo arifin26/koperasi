@@ -17,6 +17,7 @@ class FixedDeposit extends Model
         'number',
         'account_number',
         'customer_id',
+        'interest_rate_id',
         'amount',
         'tenor_months',
         'rate_percent',
@@ -44,6 +45,11 @@ class FixedDeposit extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function interestRate()
+    {
+        return $this->belongsTo(InterestRate::class, 'interest_rate_id');
     }
 
     public function interestPayments()

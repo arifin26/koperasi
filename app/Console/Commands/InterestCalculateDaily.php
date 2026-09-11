@@ -43,10 +43,19 @@ class InterestCalculateDaily extends Command
             return 0;
         }
 
-        // 2. Ambil Rate Bunga
-        $simpananRate = InterestRate::where('type', 'simpanan')->where('is_active', 1)->first();
+        // 2. Ambil Default / Fallback Rate Bunga Simpanan
+        $defaultSimpananRate = InterestRate::savings()
+            ->active()
+            ->where('is_default', true)
+            ->where('effective_date', '<=', $dateStr)
+            ->orderBy('effective_date', 'desc')
+            ->first() ?? InterestRate::savings()
+            ->active()
+            ->where('effective_date', '<=', $dateStr)
+            ->orderBy('effective_date', 'desc')
+            ->first();
 
-        if (!$simpananRate) {
+        if (!$defaultSimpananRate) {
             $this->error('No active interest rate found for simpanan.');
             if (!$dryRun) {
                 InterestEngineLog::updateOrCreate(
@@ -69,7 +78,7 @@ class InterestCalculateDaily extends Command
         $totalInterestCalculated = 0;
 
         // 4. Proses per nasabah menggunakan chunk (batch processing)
-        Customer::where('status', 'active')->with('interestRate')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $simpananRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
+        Customer::where('status', 'active')->with('interestRate')->chunkById(100, function ($customers) use ($date, $dateStr, $workdayCount, $defaultSimpananRate, &$totalCustomersProcessed, &$totalInterestCalculated, $dryRun) {
             $inserts = [];
 
             foreach ($customers as $customer) {
@@ -87,8 +96,13 @@ class InterestCalculateDaily extends Command
 
                 $saldo = ($balances->sum_masuk ?? 0) - ($balances->sum_keluar ?? 0);
 
-                // Tentukan rate untuk nasabah ini (Gunakan rate pribadi jika ada, jika tidak fallback ke global)
-                $rate = $customer->interestRate ?? $simpananRate;
+                // Tentukan rate untuk nasabah ini:
+                // 1. Cek custom rate nasabah jika aktif dan sudah mulai berlaku
+                // 2. Jika tidak ada / tidak aktif, gunakan default simpanan rate
+                $rate = $defaultSimpananRate;
+                if ($customer->interestRate && $customer->interestRate->is_active && $customer->interestRate->effective_date->format('Y-m-d') <= $dateStr) {
+                    $rate = $customer->interestRate;
+                }
 
                 if ($saldo > 0 && $rate) {
                     $bunga = floor(($saldo * ($rate->rate_percent / 100)) / $workdayCount);
