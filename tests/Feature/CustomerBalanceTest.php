@@ -108,6 +108,41 @@ class CustomerBalanceTest extends TestCase
         ]);
     }
 
+    public function test_customer_balance_requires_authentication()
+    {
+        $response = $this->getJson(route('customer.balance', $this->customer->id));
+
+        $response->assertStatus(401);
+    }
+
+    public function test_customer_balance_includes_active_fixed_deposit_details()
+    {
+        \App\Models\FixedDeposit::create([
+            'customer_id' => $this->customer->id,
+            'number' => 'DEP-202609-001',
+            'account_number' => 'DEP-001',
+            'amount' => 10000000,
+            'tenor_months' => 6,
+            'rate_percent' => 6.0,
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(6),
+            'status' => 'active',
+            'notes' => 'Deposito test',
+            'created_by' => $this->teller->id,
+        ]);
+
+        $response = $this->actingAs($this->teller)->getJson(route('customer.balance', $this->customer->id));
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+            'data' => [
+                'has_active_deposit' => true,
+                'active_deposit_number' => 'DEP-202609-001',
+            ],
+        ]);
+    }
+
     public function test_customer_balance_returns_404_when_customer_not_found()
     {
         $response = $this->actingAs($this->teller)->getJson(route('customer.balance', 999999));

@@ -27,11 +27,11 @@
                             </div>
                             <div class="form-group">
                                 <label>Saldo Tersedia (Rp)</label>
-                                <input type="text" class="form-control" id="balance" name="balance" value="Rp0,00" placeholder="Saldo" readonly>
+                                <input type="text" class="form-control" id="balance" value="Rp0,00" placeholder="Saldo" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Nominal Penarikan (Rp)</label>
-                                <input type="number" min="0" class="form-control @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount', 0) }}" placeholder="Nominal Penarikan">
+                                <input type="number" min="1" class="form-control @error('amount') is-invalid @enderror" name="amount" id="amount" value="{{ old('amount') }}" placeholder="Nominal Penarikan">
                                 <span class="error invalid-feedback" id="amount-error">{{ $errors->first('amount') }}</span>
                             </div>
                             <button type="submit" class="btn btn-success" id="btnSubmit">Simpan</button>

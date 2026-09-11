@@ -212,31 +212,20 @@ class CustomerController extends Controller
             $hasActiveDeposit = $activeFixedDeposit !== null;
             $activeDepositNumber = $hasActiveDeposit ? $activeFixedDeposit->number : null;
 
-            $data = Deposit::where('customer_id', $id)->latest()->first();
-            if ($data) {
-                $data->current_balance = $saldo;
-                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
-                $data->has_deposit = $hasDeposit;
-                $data->deposit_count = $depositCount;
-                $data->customer_name = $customer->name;
-                $data->customer_number = $customer->number;
-                $data->has_active_deposit = $hasActiveDeposit;
-                $data->active_deposit_number = $activeDepositNumber;
-            } else {
-                $data = new \stdClass();
-                $data->current_balance = $saldo;
-                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
-                $data->has_deposit = $hasDeposit;
-                $data->deposit_count = $depositCount;
-                $data->customer_name = $customer->name;
-                $data->customer_number = $customer->number;
-                $data->has_active_deposit = $hasActiveDeposit;
-                $data->active_deposit_number = $activeDepositNumber;
-            }
+            $responseData = [
+                'current_balance' => $saldo,
+                'current_balance_formatted' => 'Rp' . number_format($saldo, 2, ',', '.'),
+                'has_deposit' => $hasDeposit,
+                'deposit_count' => $depositCount,
+                'customer_name' => $customer->name,
+                'customer_number' => $customer->number,
+                'has_active_deposit' => $hasActiveDeposit,
+                'active_deposit_number' => $activeDepositNumber,
+            ];
 
             return response()->json([
                 'status' => 'success',
-                'data' => $data,
+                'data' => $responseData,
                 'has_deposit' => $hasDeposit,
                 'deposit_count' => $depositCount,
             ]);
@@ -247,10 +236,14 @@ class CustomerController extends Controller
                 'message' => 'Data nasabah tidak ditemukan.'
             ], 404);
         } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::error('Customer balance lookup failed: ' . $th->getMessage(), [
+                'customer_id' => $id,
+            ]);
+
             return response()->json([
                 'status' => 'error',
-                'code' => $th->getCode() ?: 500,
-                'message' => $th->getMessage()
+                'code' => 500,
+                'message' => config('app.debug') ? $th->getMessage() : 'Terjadi kesalahan saat memuat saldo nasabah.'
             ], 500);
         }
     }
