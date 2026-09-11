@@ -303,4 +303,127 @@ class InterestRateManagementTest extends TestCase
         $response->assertJsonCount(1, 'data');
         $response->assertJsonFragment(['rate_percent' => '2.50']);
     }
+
+    /**
+     * 8. Daily deposit check runs on its anniversary date and pays interest.
+     */
+    public function test_auto_interest_service_pays_deposit_interest_on_anniversary_day()
+    {
+        $depRate = InterestRate::create([
+            'type' => 'deposito',
+            'rate_percent' => 12.00, // 12% p.a. -> 1% per bulan
+            'effective_date' => '2026-01-01',
+            'notes' => 'Deposito 12%',
+            'is_active' => true,
+        ]);
+
+        $customer = Customer::create([
+            'number' => 'NAS-004',
+            'name' => 'Nasabah Auto Deposito',
+            'nik' => '1234567890123459',
+            'phone' => '081234567893',
+            'address' => 'Jl. Test',
+            'gender' => 'L',
+            'birth' => '1990-01-01',
+            'last_education' => 'S1',
+            'profession' => 'Wiraswasta',
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        // Start date pada tanggal 11 bulan lalu
+        $startDate = Carbon::parse('2026-08-11');
+        $fixedDeposit = FixedDeposit::create([
+            'number' => 'DEP-202608-001',
+            'account_number' => 'DEP-004',
+            'customer_id' => $customer->id,
+            'interest_rate_id' => $depRate->id,
+            'amount' => 10000000,
+            'tenor_months' => 6,
+            'rate_percent' => 12.00,
+            'start_date' => $startDate,
+            'maturity_date' => $startDate->copy()->addMonths(6),
+            'status' => 'active',
+            'created_by' => $this->teller->id,
+        ]);
+
+        // Jalankan daily deposit check untuk tanggal 11 bulan ini (2026-09-11)
+        $autoService = app(\App\Services\AutoInterestService::class);
+        $result = $autoService->runDailyDepositCheck('2026-09-11');
+
+        $this->assertTrue($result['success']);
+
+        // Harus ada pembayaran bunga deposito sebesar Rp 100.000 (10jt * 12% / 12)
+        $this->assertDatabaseHas('deposit_interest_payments', [
+            'fixed_deposit_id' => $fixedDeposit->id,
+            'period' => '2026-09',
+            'interest_amount' => 100000,
+        ]);
+
+        // Harus ada transaksi kredit simpanan bertipe bunga
+        $this->assertDatabaseHas('deposits', [
+            'customer_id' => $customer->id,
+            'type' => 'bunga',
+            'amount' => 100000,
+        ]);
+    }
+
+    /**
+     * 9. Monthly savings interest catch-up runs seamlessly when unposted.
+     */
+    public function test_auto_interest_service_runs_monthly_savings_catch_up()
+    {
+        $rate = InterestRate::create([
+            'type' => 'simpanan',
+            'rate_percent' => 6.00,
+            'effective_date' => '2026-01-01',
+            'notes' => 'Simpanan Reguler 6%',
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+
+        $customer = Customer::create([
+            'number' => 'NAS-005',
+            'name' => 'Nasabah Auto Simpanan',
+            'nik' => '1234567890123460',
+            'phone' => '081234567894',
+            'address' => 'Jl. Test',
+            'gender' => 'L',
+            'birth' => '1990-01-01',
+            'last_education' => 'S1',
+            'profession' => 'Wiraswasta',
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        // Simulasikan akumulasi bunga harian belum diposting untuk bulan lalu (2026-08)
+        \App\Models\DailyInterestAccumulation::create([
+            'customer_id' => $customer->id,
+            'savings_type' => 'simpanan',
+            'calculation_date' => '2026-08-15',
+            'base_balance' => 5000000,
+            'rate_percent' => 6.00,
+            'interest_amount' => 1250,
+            'is_posted' => false,
+        ]);
+
+        $autoService = app(\App\Services\AutoInterestService::class);
+        $result = $autoService->runMonthlySavingsPostingIfNeeded('2026-08');
+
+        $this->assertTrue($result['success']);
+
+        // Akumulasi harus sudah ditandai posted
+        $this->assertDatabaseHas('daily_interest_accumulations', [
+            'customer_id' => $customer->id,
+            'calculation_date' => '2026-08-15',
+            'is_posted' => true,
+        ]);
+
+        // Transaksi bunga simpanan harus terbuat
+        $this->assertDatabaseHas('deposits', [
+            'customer_id' => $customer->id,
+            'type' => 'bunga',
+            'amount' => 1250,
+        ]);
+    }
 }

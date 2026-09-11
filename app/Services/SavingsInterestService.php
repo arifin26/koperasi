@@ -213,14 +213,16 @@ class SavingsInterestService
                     ]);
 
                 // Record log posting
-                InterestPostingLog::create([
-                    'period' => $targetDate->format('Y-m') . '-' . date('d-His'),
-                    'status' => 'manual',
-                    'total_customers' => $postedCount,
-                    'total_interest' => $totalPostedAmount,
-                    'posted_by' => $userId,
-                    'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
-                ]);
+                InterestPostingLog::updateOrCreate(
+                    ['period' => $targetDate->format('Y-m')],
+                    [
+                        'status' => 'success',
+                        'total_customers' => $postedCount,
+                        'total_interest' => $totalPostedAmount,
+                        'posted_by' => $userId,
+                        'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
+                    ]
+                );
             }
 
             DB::commit();
