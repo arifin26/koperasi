@@ -290,8 +290,45 @@ class CustomerController extends Controller
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc');
 
-        if ($request->filled('limit')) {
-            $query->limit((int) $request->limit);
+        if ($request->ajax() || $request->wantsJson() || $request->query('format') === 'json') {
+            $allTransactions = $query->get();
+            return response()->json([
+                'status' => 'success',
+                'customer' => [
+                    'id' => $nasabah->id,
+                    'name' => $nasabah->name,
+                    'number' => $nasabah->number,
+                ],
+                'transactions' => $allTransactions->map(function ($txn, $idx) {
+                    $isDebit = ($txn->type === 'penarikan');
+                    $notesLower = strtolower($txn->notes ?? '');
+                    if ($isDebit) {
+                        $code = '2';
+                    } elseif ($txn->type === 'bunga') {
+                        $code = str_contains($notesLower, 'deposito') ? '3' : '4';
+                    } else {
+                        $code = '1';
+                    }
+
+                    return [
+                        'id' => $txn->id,
+                        'row_num' => $idx + 1,
+                        'date' => \Carbon\Carbon::parse($txn->created_at)->format('d/m/y'),
+                        'code' => $code,
+                        'type_label' => $isDebit ? 'Penarikan' : ($txn->type === 'bunga' ? 'Bunga' : 'Setoran'),
+                        'debit' => $isDebit ? number_format($txn->amount, 0, ',', '.') : '-',
+                        'credit' => !$isDebit ? number_format($txn->amount, 0, ',', '.') : '-',
+                        'balance' => number_format($txn->current_balance, 0, ',', '.'),
+                    ];
+                })
+            ]);
+        }
+
+        if ($request->filled('transaction_ids')) {
+            $ids = is_array($request->transaction_ids)
+                ? $request->transaction_ids
+                : explode(',', $request->transaction_ids);
+            $query->whereIn('id', $ids);
         }
 
         $transactions = $query->get();
