@@ -129,8 +129,10 @@
                     <hr>
 
                     <div class="form-group">
-                        <label>Tanggal Mulai</label>
-                        <input type="text" class="form-control" value="{{ date('d F Y') }}" disabled>
+                        <label>Tanggal Mulai <span class="text-danger">*</span></label>
+                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') is-invalid @enderror"
+                            value="{{ old('start_date') }}" required>
+                        @error('start_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group">
                         <label>Tanggal Jatuh Tempo</label>
@@ -273,8 +275,16 @@ $(document).ready(function() {
             return;
         }
 
-        // Maturity date calculation
-        var maturity = new Date();
+        // Maturity date calculation based on selected start_date
+        var startVal = $('#start_date').val();
+        if (!startVal) {
+            $('#maturity_display').val('-');
+            $('#monthly_interest_display').val('-');
+            $('#total_interest_display').val('-');
+            return;
+        }
+        var parts = startVal.split('-');
+        var maturity = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
         maturity.setMonth(maturity.getMonth() + tenor);
         var options = { day: '2-digit', month: 'long', year: 'numeric' };
         $('#maturity_display').val(maturity.toLocaleDateString('id-ID', options));
@@ -292,7 +302,7 @@ $(document).ready(function() {
         }
     }
 
-    $('input[name="amount"], #tenor_months, #interest_rate_id, #rate_percent').on('input change', recalculate);
+    $('input[name="amount"], #tenor_months, #interest_rate_id, #rate_percent, #start_date').on('input change', recalculate);
     recalculate();
 });
 </script>

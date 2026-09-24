@@ -188,7 +188,7 @@ class FixedDepositController extends Controller
             ])->with('require_deposit', true)->with('customer_id', $customer->id)->withInput();
         }
 
-        $startDate = Carbon::today();
+        $startDate = Carbon::parse($request->start_date);
         $maturityDate = $startDate->copy()->addMonths((int)$request->tenor_months);
 
         $deposit = FixedDeposit::create([

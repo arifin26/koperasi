@@ -36,6 +36,7 @@ class StoreFixedDepositRequest extends FormRequest
             'amount' => 'required|integer|min:1000000',
             'tenor_months' => 'required|integer|min:1|max:120',
             'rate_percent' => 'required|numeric|between:0,100',
+            'start_date' => 'required|date',
             'notes' => 'nullable|string',
         ];
     }
@@ -59,6 +60,8 @@ class StoreFixedDepositRequest extends FormRequest
             'tenor_months.max' => 'Tenor maksimal 120 bulan',
             'rate_percent.required' => 'Suku bunga harus diisi',
             'rate_percent.between' => 'Suku bunga harus antara 0-100%',
+            'start_date.required' => 'Tanggal mulai harus diisi',
+            'start_date.date' => 'Tanggal mulai tidak valid',
         ];
     }
 
