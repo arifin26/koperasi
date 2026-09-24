@@ -26,6 +26,7 @@ class StoreFixedDepositRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|exists:customers,id',
+            'interest_rate_id' => 'nullable|exists:interest_rates,id',
             'account_number' => [
                 'required',
                 'string',

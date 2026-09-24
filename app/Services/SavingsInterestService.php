@@ -29,7 +29,9 @@ class SavingsInterestService
         $dateStr = $targetDate->format('Y-m-d');
 
         // Validasi Rate Bunga Aktif
-        $simpananRate = InterestRate::where('type', 'simpanan')->where('is_active', 1)->first();
+        $simpananRate = InterestRate::savings()->active()->where('is_default', true)->first()
+            ?? InterestRate::savings()->active()->orderBy('effective_date', 'desc')->first();
+
         if (!$simpananRate) {
             throw new \RuntimeException('Tidak ditemukan konfigurasi suku bunga simpanan yang aktif pada Manajemen Bunga.');
         }
@@ -211,14 +213,16 @@ class SavingsInterestService
                     ]);
 
                 // Record log posting
-                InterestPostingLog::create([
-                    'period' => $targetDate->format('Y-m') . '-' . date('d-His'),
-                    'status' => 'manual',
-                    'total_customers' => $postedCount,
-                    'total_interest' => $totalPostedAmount,
-                    'posted_by' => $userId,
-                    'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
-                ]);
+                InterestPostingLog::updateOrCreate(
+                    ['period' => $targetDate->format('Y-m')],
+                    [
+                        'status' => 'success',
+                        'total_customers' => $postedCount,
+                        'total_interest' => $totalPostedAmount,
+                        'posted_by' => $userId,
+                        'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
+                    ]
+                );
             }
 
             DB::commit();

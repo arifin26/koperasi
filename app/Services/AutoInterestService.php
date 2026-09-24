@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AutoInterestRunLog;
+use App\Models\InterestPostingLog;
 use Illuminate\Support\Facades\Log;
 
 class AutoInterestService
@@ -19,78 +20,80 @@ class AutoInterestService
     }
 
     /**
-     * Run auto-posting for the given period if needed
+     * Run daily deposit interest check & payout
+     * Executed daily whenever users are active, paying any deposits that reached their anniversary day.
      *
-     * @param string $period Period in Y-m format (e.g., '2026-09')
-     * @param bool $force Force run even if already processed
-     * @return array Result containing status and details
+     * @param string|null $processDateStr Format YYYY-MM-DD
+     * @return array
      */
-    public function runIfNeeded(string $period, bool $force = false): array
+    public function runDailyDepositCheck(?string $processDateStr = null): array
     {
+        $today = $processDateStr ?? now()->format('Y-m-d');
         try {
-            // Check if already successfully processed
-            if (!$force && AutoInterestRunLog::isProcessedFor($period)) {
-                Log::info("Auto interest run skipped for period {$period}: already processed");
+            $depositResult = $this->processDepositInterest($today);
+            return [
+                'success' => true,
+                'date' => $today,
+                'deposit' => $depositResult,
+            ];
+        } catch (\Exception $e) {
+            Log::error("Daily deposit interest check failed for {$today}: {$e->getMessage()}", [
+                'exception' => $e,
+            ]);
+            return [
+                'success' => false,
+                'date' => $today,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Run monthly savings interest posting for the given period (default: last month)
+     *
+     * @param string|null $period Period in Y-m format (e.g., '2026-08')
+     * @param bool $force Force run even if already processed
+     * @return array
+     */
+    public function runMonthlySavingsPostingIfNeeded(?string $period = null, bool $force = false): array
+    {
+        $period = $period ?? self::getLastMonthPeriod();
+
+        try {
+            // Check if already posted in InterestPostingLog or AutoInterestRunLog
+            $alreadyLogged = !$force && (
+                InterestPostingLog::where('period', $period)->where('status', 'success')->exists() ||
+                AutoInterestRunLog::isProcessedFor($period)
+            );
+
+            if ($alreadyLogged) {
                 return ['already_done' => true, 'period' => $period];
             }
 
-            // Check if there's a stale pending run (older than 5 minutes)
-            if (!$force && AutoInterestRunLog::hasStalePendingFor($period)) {
-                Log::warning("Auto interest run retrying for period {$period}: previous run stale");
-                // Continue with retry
-            }
-
-            // Create or update pending log
             $log = AutoInterestRunLog::getOrCreatePending($period);
 
-            // Calculate date range for this period
-            // If posting on tanggal 1, we want to post bunga for bulan kemarin (last month)
             $periodDate = \Carbon\Carbon::createFromFormat('Y-m', $period);
             $endOfPeriod = $periodDate->endOfMonth()->format('Y-m-d');
-            $today = now()->format('Y-m-d');
 
-            Log::info("Starting auto interest posting for period {$period}", [
-                'end_of_period' => $endOfPeriod,
-                'today' => $today,
-            ]);
-
-            // Process savings interest
             $savingsResult = $this->processSavingsInterest($endOfPeriod);
-            Log::info("Savings interest processed", ['result' => $savingsResult]);
-
-            // Process deposit interest
+            $today = now()->format('Y-m-d');
             $depositResult = $this->processDepositInterest($today);
-            Log::info("Deposit interest processed", ['result' => $depositResult]);
 
-            // Mark as success
             $log->markSuccess($savingsResult, $depositResult);
-
-            Log::info("Auto interest posting completed successfully for period {$period}");
 
             return [
                 'success' => true,
                 'period' => $period,
                 'savings' => $savingsResult,
                 'deposit' => $depositResult,
-                'timestamp' => $log->triggered_at,
             ];
         } catch (\Exception $e) {
-            Log::error("Auto interest posting failed for period {$period}: {$e->getMessage()}", [
+            Log::error("Monthly savings interest posting failed for period {$period}: {$e->getMessage()}", [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString(),
             ]);
 
-            // Mark as failed
             if (isset($log)) {
                 $log->markFailed($e->getMessage());
-            } else {
-                // If log creation itself failed, try to create failed log
-                try {
-                    $failLog = AutoInterestRunLog::getOrCreatePending($period);
-                    $failLog->markFailed($e->getMessage());
-                } catch (\Exception $logE) {
-                    Log::critical("Failed to log auto interest error", ['original_error' => $e->getMessage()]);
-                }
             }
 
             return [
@@ -99,6 +102,14 @@ class AutoInterestService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Run auto-posting for the given period if needed (full workflow)
+     */
+    public function runIfNeeded(string $period, bool $force = false): array
+    {
+        return $this->runMonthlySavingsPostingIfNeeded($period, $force);
     }
 
     /**
@@ -137,7 +148,6 @@ class AutoInterestService
 
     /**
      * Check for missed periods and run catch-up
-     * Called to handle cases where tanggal 1 was missed (e.g., long holidays)
      */
     public function runCatchUp(): array
     {
@@ -145,20 +155,19 @@ class AutoInterestService
         $now = now();
 
         // Check up to 3 months back for unprocessed periods
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $checkDate = $now->copy()->subMonths($i);
             $period = $checkDate->format('Y-m');
 
-            // Skip if already successfully processed
-            if (AutoInterestRunLog::isProcessedFor($period)) {
+            if (InterestPostingLog::where('period', $period)->where('status', 'success')->exists() ||
+                AutoInterestRunLog::isProcessedFor($period)) {
                 continue;
             }
 
-            Log::info("Running catch-up for missed period: {$period}");
-            $result = $this->runIfNeeded($period, force: false);
+            Log::info("Running catch-up for missed savings interest period: {$period}");
+            $result = $this->runMonthlySavingsPostingIfNeeded($period, force: false);
             $results[$period] = $result;
 
-            // If any period failed, stop catch-up to avoid cascading failures
             if (isset($result['success']) && !$result['success']) {
                 Log::warning("Catch-up stopped due to failure in period {$period}");
                 break;

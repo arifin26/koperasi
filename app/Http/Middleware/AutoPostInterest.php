@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\AutoInterestRunLog;
 use App\Services\AutoInterestService;
 use Closure;
 use Illuminate\Http\Request;
@@ -30,7 +29,7 @@ class AutoPostInterest
             return $response;
         }
 
-        // Register a terminating callback to run after response is sent
+        // Register a terminating callback to run asynchronously after response is sent
         app()->terminating(function () {
             $this->triggerAutoPostIfNeeded();
         });
@@ -39,88 +38,40 @@ class AutoPostInterest
     }
 
     /**
-     * Terminate phase: Run after response sent
+     * Terminate phase: Run after response sent to user
      */
     public function terminate(Request $request, $response): void
     {
-        // Double-check auth is available
         if (Auth::check()) {
             $this->triggerAutoPostIfNeeded();
         }
     }
 
     /**
-     * Trigger auto-posting if conditions are met
+     * Trigger auto-posting for deposit and savings interest
      */
     protected function triggerAutoPostIfNeeded(): void
     {
         try {
             $now = now();
+            $today = $now->format('Y-m-d');
 
-            // Only trigger on the 1st of the month
-            if ($now->day !== 1) {
-                // But also check for catch-up on other days if there are missed periods
-                $this->checkForMissedPeriods();
-                return;
-            }
+            // 1. CEK HARIAN DEPOSITO (Setiap hari mengecek bunga deposito yang jatuh tempo pada tanggal pendaftarannya)
+            $this->autoInterestService->runDailyDepositCheck($today);
 
-            // Get the period to post (last month, since we're on the 1st)
-            $period = AutoInterestService::getLastMonthPeriod();
-
-            Log::info("Auto interest middleware triggered on day 1", ['period' => $period]);
-
-            // Check if already processed for this period
-            if (AutoInterestRunLog::isProcessedFor($period)) {
-                Log::debug("Auto interest already processed for period {$period}");
-                return;
-            }
-
-            // Run the auto-posting
-            $result = $this->autoInterestService->runIfNeeded($period);
-
-            if (isset($result['success']) && $result['success']) {
-                Log::info("Auto interest posting successful", ['period' => $period, 'result' => $result]);
+            // 2. CEK BULANAN SIMPANAN (Setiap tanggal 1 memposting bunga simpanan bulan lalu, atau catch-up jika terlewat)
+            if ($now->day === 1) {
+                $lastMonthPeriod = AutoInterestService::getLastMonthPeriod();
+                $this->autoInterestService->runMonthlySavingsPostingIfNeeded($lastMonthPeriod);
             } else {
-                Log::warning("Auto interest posting failed", ['period' => $period, 'result' => $result]);
+                // Catch-up jika tanggal 1 kemarin libur / tidak ada aktivitas
+                $this->autoInterestService->runCatchUp();
             }
         } catch (\Exception $e) {
-            // Catch all exceptions to prevent middleware from breaking the app
+            // Tangkap semua exception agar tidak pernah mengganggu response HTTP
             Log::error("Auto interest middleware error: {$e->getMessage()}", [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString(),
             ]);
-        }
-    }
-
-    /**
-     * Check for periods that were missed and run catch-up
-     * This handles cases where tanggal 1 was not accessed (long holidays, etc.)
-     */
-    protected function checkForMissedPeriods(): void
-    {
-        try {
-            // Check if there are any periods older than today that haven't been processed
-            $now = now();
-            $currentPeriod = $now->format('Y-m');
-            $lastMonthPeriod = $now->subMonth()->format('Y-m');
-
-            // Check if last month was processed
-            if (!AutoInterestRunLog::isProcessedFor($lastMonthPeriod) &&
-                !AutoInterestRunLog::pending()->forPeriod($lastMonthPeriod)->exists()) {
-
-                // This means last month was completely missed
-                Log::warning("Detected missed interest posting period, running catch-up", [
-                    'missed_period' => $lastMonthPeriod,
-                ]);
-
-                // Only run catch-up on certain times to prevent excessive runs
-                // Run only between 06:00-07:00 to limit overhead
-                if ($now->hour === 6 && rand(1, 100) <= 20) {
-                    $this->autoInterestService->runCatchUp();
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Catch-up check failed: {$e->getMessage()}", ['exception' => $e]);
         }
     }
 }

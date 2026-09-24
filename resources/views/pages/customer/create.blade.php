@@ -62,6 +62,23 @@
                                 <span class="error invalid-feedback">{{ $errors->first('last_education') }}</span>
                             </div>
                             <div class="form-group">
+                                <label>Paket Bunga Simpanan Khusus <small class="text-muted">(Opsional)</small></label>
+                                <select class="form-control @error('interest_rate_id') is-invalid @enderror" name="interest_rate_id">
+                                    <option value="">-- Gunakan Rate Default Koperasi --</option>
+                                    @foreach($savingsRates as $rate)
+                                    @php
+                                        $desc = $rate->notes ? ' — ' . $rate->notes : '';
+                                        $isDef = $rate->is_default ? ' [Default Koperasi]' : '';
+                                    @endphp
+                                    <option value="{{ $rate->id }}" {{ old('interest_rate_id') == $rate->id ? 'selected' : '' }}>
+                                        {{ number_format($rate->rate_percent, 2, ',', '.') }}% p.a.{{ $desc }}{{ $isDef }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                <small class="form-text text-muted">Jika dikosongkan, nasabah akan menggunakan suku bunga default koperasi.</small>
+                                <span class="error invalid-feedback">{{ $errors->first('interest_rate_id') }}</span>
+                            </div>
+                            <div class="form-group">
                                 <label>Foto</label>
                                 <div class="input-group">
                                     <div class="custom-file">

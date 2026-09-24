@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
+use App\Models\FixedDeposit;
 use App\Models\User;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -65,7 +66,8 @@ class CustomerController extends Controller
     public function create()
     {
         return view('pages.customer.create', [
-            'title' => $this->buildTitle('baru')
+            'title' => $this->buildTitle('baru'),
+            'savingsRates' => InterestRate::savings()->active()->orderBy('rate_percent', 'asc')->get(),
         ]);
     }
 
@@ -101,8 +103,9 @@ class CustomerController extends Controller
      */
     public function show(Customer $nasabah)
     {
+        $nasabah->load('interestRate');
         $balances = Deposit::recalculateBalance($nasabah->id);
-        
+
         return view('pages.customer.show', [
             'title' => $this->buildTitle('detail'),
             'user' => $nasabah,
@@ -118,9 +121,11 @@ class CustomerController extends Controller
      */
     public function edit(Customer $nasabah)
     {
+        $nasabah->load('interestRate');
         return view('pages.customer.edit', [
             'title' => $this->buildTitle('edit'),
-            'user' => $nasabah
+            'user' => $nasabah,
+            'savingsRates' => InterestRate::savings()->active()->orderBy('rate_percent', 'asc')->get(),
         ]);
     }
 
@@ -199,7 +204,7 @@ class CustomerController extends Controller
         try {
             $customer = Customer::findOrFail($id);
             $balances = Deposit::recalculateBalance($id);
-            $saldo = $balances['simpanan'] ?? 0;
+            $saldo = (int) ($balances['simpanan'] ?? 0);
 
             $depositCount = Deposit::where('customer_id', $id)->count();
             $hasDeposit = $depositCount > 0;
@@ -212,40 +217,39 @@ class CustomerController extends Controller
             $hasActiveDeposit = $activeFixedDeposit !== null;
             $activeDepositNumber = $hasActiveDeposit ? $activeFixedDeposit->number : null;
 
-            $data = Deposit::where('customer_id', $id)->latest()->first();
-            if ($data) {
-                $data->current_balance = $saldo;
-                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
-                $data->has_deposit = $hasDeposit;
-                $data->deposit_count = $depositCount;
-                $data->customer_name = $customer->name;
-                $data->customer_number = $customer->number;
-                $data->has_active_deposit = $hasActiveDeposit;
-                $data->active_deposit_number = $activeDepositNumber;
-            } else {
-                $data = new \stdClass();
-                $data->current_balance = $saldo;
-                $data->current_balance_formatted = 'Rp' . number_format($data->current_balance, 2, ',', '.');
-                $data->has_deposit = $hasDeposit;
-                $data->deposit_count = $depositCount;
-                $data->customer_name = $customer->name;
-                $data->customer_number = $customer->number;
-                $data->has_active_deposit = $hasActiveDeposit;
-                $data->active_deposit_number = $activeDepositNumber;
-            }
+            $responseData = [
+                'current_balance' => $saldo,
+                'current_balance_formatted' => 'Rp' . number_format($saldo, 2, ',', '.'),
+                'has_deposit' => $hasDeposit,
+                'deposit_count' => $depositCount,
+                'customer_name' => $customer->name,
+                'customer_number' => $customer->number,
+                'has_active_deposit' => $hasActiveDeposit,
+                'active_deposit_number' => $activeDepositNumber,
+            ];
 
             return response()->json([
                 'status' => 'success',
-                'data' => $data,
+                'data' => $responseData,
                 'has_deposit' => $hasDeposit,
                 'deposit_count' => $depositCount,
             ]);
-        } catch (\Throwable $th) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'code' => $th->getCode(),
-                'message' => $th->getMessage()
+                'code' => 404,
+                'message' => 'Data nasabah tidak ditemukan.'
+            ], 404);
+        } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::error('Customer balance lookup failed: ' . $th->getMessage(), [
+                'customer_id' => $id,
             ]);
+
+            return response()->json([
+                'status' => 'error',
+                'code' => 500,
+                'message' => config('app.debug') ? $th->getMessage() : 'Terjadi kesalahan saat memuat saldo nasabah.'
+            ], 500);
         }
     }
 

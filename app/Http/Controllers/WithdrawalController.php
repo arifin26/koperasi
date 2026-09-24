@@ -148,14 +148,14 @@ class WithdrawalController extends Controller
                 return back()->with('error', 'Saldo tidak mencukupi. Saldo tersedia: Rp ' . number_format($saldo, 0, ',', '.'));
             }
 
-            $data = $request->all();
+            $data = $request->validated();
             if ($request->filled('created_at')) {
                 $data['created_at'] = Carbon::parse($request->created_at)->setTimeFrom(now());
             }
             $data['previous_balance'] = 0;
             $data['current_balance'] = 0;
             $data['created_by'] = auth()->id();
-            
+
             $deposit = Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
             

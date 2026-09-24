@@ -35,6 +35,7 @@ class UpdateCustomerRequest extends FormRequest
             'last_education' => 'required',
             'profession' => 'required',
             'status' => 'required',
+            'interest_rate_id' => 'nullable|exists:interest_rates,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
