@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\User;
 use App\Helpers\TerbilangHelper;
+use App\Helpers\ReceiptPrintHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -63,7 +64,7 @@ class DepositController extends Controller
                     }
 
                     if ($row->customer) {
-                        return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a>
+                        return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 receipt-print-btn"><i class="fas fa-print"></i> Kwitansi</a>
                                 <button type="button" class="btn btn-info btn-xs px-2 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-book"></i> Buku</button>
                                 ' . $validateBtn . '
                                 <a href="' . route('transaction.deposit.show', $row) . '" class="btn btn-success btn-xs px-2 mx-1"> Detail </a>
@@ -75,7 +76,7 @@ class DepositController extends Controller
                                 </form>';
                     }
 
-                    return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1"><i class="fas fa-print"></i> Kwitansi</a>
+                    return '<a href="' . route('transaction.deposit.receipt', $row) . '" target="_blank" class="btn btn-secondary btn-xs px-2 mr-1 receipt-print-btn"><i class="fas fa-print"></i> Kwitansi</a>
                         <button type="button" class="btn btn-info btn-xs px-2 mr-1 print-passbook-btn" data-url="' . route('transaction.deposit.passbook', $row) . '" data-title="Simpanan ' . $this->buildTransactionCode($row->id) . '"><i class="fas fa-book"></i> Buku</button>
                         ' . $validateBtn . '
                         <form class="d-inline" method="POST" action="' . route('transaction.deposit.destroy', $row) . '">
@@ -341,13 +342,16 @@ class DepositController extends Controller
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
+        $paperSetting = ReceiptPrintHelper::resolve(request());
+
         $pdf = Pdf::loadView('pages.transaction.deposit.receipt', [
             'title' => 'Kwitansi Simpanan ' . $code,
             'deposit' => $simpanan,
             'code' => $code,
             'terbilang' => $terbilang,
+            'pageSizeCss' => $paperSetting['css'],
         ]);
-        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
 
         $filename = 'Kwitansi_Simpanan_' . $code . '_' . time() . '.pdf';
         return $pdf->stream($filename);
@@ -403,14 +407,17 @@ class DepositController extends Controller
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
+        $paperSetting = ReceiptPrintHelper::resolve(request());
+
         $pdf = Pdf::loadView('pages.transaction.deposit.destroy-receipt', [
             'title'     => 'Bukti Penghapusan Simpanan ' . $code,
             'deposit'   => $simpanan,
             'code'      => $code,
             'terbilang' => $terbilang,
             'deletedBy' => auth()->user()->name ?? '-',
+            'pageSizeCss' => $paperSetting['css'],
         ]);
-        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
 
         $filename = 'Bukti_Hapus_Simpanan_' . $code . '_' . time() . '.pdf';
         return $pdf->stream($filename);

@@ -7,7 +7,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Detail Deposito {{ $deposit->number }}</h3>
                 <div class="card-tools ml-auto">
-                    <a href="{{ route('fixed-deposit.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-2">
+                    <a href="{{ route('fixed-deposit.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-2 receipt-print-btn">
                         <i class="fas fa-print mr-1"></i> Cetak Kwitansi
                     </a>
                     <a href="{{ route('fixed-deposit.edit', $deposit) }}" class="btn btn-primary btn-sm mr-2">

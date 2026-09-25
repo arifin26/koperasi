@@ -8,7 +8,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title font-weight-bold">Detail Penarikan {{ $code }}</h3>
                         <div class="ml-auto">
-                            <a href="{{ route('transaction.withdrawal.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-1">
+                            <a href="{{ route('transaction.withdrawal.receipt', $deposit) }}" target="_blank" class="btn btn-secondary btn-sm mr-1 receipt-print-btn">
                                 <i class="fas fa-print mr-1"></i> Cetak Kwitansi
                             </a>
                             <button type="button" class="btn btn-info btn-sm mr-1 print-passbook-btn" data-url="{{ route('transaction.withdrawal.passbook', $deposit) }}" data-title="Penarikan {{ $code }} - {{ $deposit->customer->name ?? '' }}">

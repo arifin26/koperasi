@@ -6,7 +6,7 @@
     <title>{{ $title ?? 'Kwitansi Transaksi' }}</title>
     <style>
         @page {
-            size: 215mm 75mm;
+            size: {{ $pageSizeCss ?? '215mm 75mm' }};
             margin: 2.5mm 4mm 2.5mm 4mm;
         }
         * {

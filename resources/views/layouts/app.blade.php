@@ -579,7 +579,116 @@ scratch. This page gets rid of all links and provides the needed markup only.
             });
         }
 
+        function openReceiptModal(receiptUrl, title) {
+            if (!receiptUrl) return;
+
+            Swal.fire({
+                title: 'Pengaturan Cetak Kwitansi',
+                html: `
+                    <div class="text-left" style="font-size: 13px;">
+                        ${title ? `<p class="mb-3 text-muted"><strong>${title}</strong></p>` : ''}
+                        <div class="form-group mb-3">
+                            <label for="swal-receipt-size" class="font-weight-bold mb-1">
+                                <i class="fas fa-file-alt mr-1"></i> Ukuran Kertas:
+                            </label>
+                            <select id="swal-receipt-size" class="form-control">
+                                <option value="default" selected>Default (Kwitansi 215 × 75 mm)</option>
+                                <optgroup label="Standar ISO A">
+                                    <option value="a4">A4 (210 × 297 mm)</option>
+                                    <option value="a3">A3 (297 × 420 mm)</option>
+                                    <option value="a5">A5 (148 × 210 mm)</option>
+                                </optgroup>
+                                <optgroup label="Folio / Standar Lain">
+                                    <option value="f4">F4 / Folio (215 × 330 mm)</option>
+                                    <option value="b5">B5 (176 × 250 mm)</option>
+                                </optgroup>
+                                <optgroup label="Amplop Seri C">
+                                    <option value="c4">C4 (229 × 324 mm)</option>
+                                    <option value="c5">C5 (162 × 229 mm)</option>
+                                    <option value="c6">C6 (114 × 162 mm)</option>
+                                </optgroup>
+                                <optgroup label="Foto / Kartu (Seri R)">
+                                    <option value="3r">3R (89 × 127 mm)</option>
+                                    <option value="4r">4R (102 × 152 mm)</option>
+                                    <option value="10r">10R (254 × 305 mm)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="font-weight-bold mb-1">
+                                <i class="fas fa-arrows-alt mr-1"></i> Posisi / Orientasi Kertas:
+                            </label>
+                            <div class="d-flex align-items-center" style="gap: 15px;">
+                                <div class="custom-control custom-radio mr-3">
+                                    <input type="radio" id="swal-receipt-land" name="swal_receipt_orient" class="custom-control-input" value="landscape" checked>
+                                    <label class="custom-control-label font-weight-normal" for="swal-receipt-land" style="cursor: pointer;">
+                                        <i class="fas fa-arrows-alt-h text-muted mr-1"></i> Horizontal (Landscape)
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="swal-receipt-port" name="swal_receipt_orient" class="custom-control-input" value="portrait">
+                                    <label class="custom-control-label font-weight-normal" for="swal-receipt-port" style="cursor: pointer;">
+                                        <i class="fas fa-arrows-alt-v text-muted mr-1"></i> Vertikal (Portrait)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle mr-1"></i> Pengaturan ukuran dan posisi kertas akan diterapkan langsung pada dokumen cetak PDF.
+                        </small>
+                    </div>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-print"></i> Buka & Cetak Kwitansi',
+                cancelButtonText: 'Batal',
+                didOpen: () => {
+                    const sizeSelect = document.getElementById('swal-receipt-size');
+                    const landRadio = document.getElementById('swal-receipt-land');
+                    const portRadio = document.getElementById('swal-receipt-port');
+                    let userManuallyChangedOrientation = false;
+
+                    landRadio.addEventListener('change', () => { userManuallyChangedOrientation = true; });
+                    portRadio.addEventListener('change', () => { userManuallyChangedOrientation = true; });
+
+                    sizeSelect.addEventListener('change', function() {
+                        if (!userManuallyChangedOrientation) {
+                            if (this.value === 'default') {
+                                landRadio.checked = true;
+                            } else {
+                                portRadio.checked = true;
+                            }
+                        }
+                    });
+                },
+                preConfirm: () => {
+                    const size = document.getElementById('swal-receipt-size').value;
+                    const orientation = document.querySelector('input[name="swal_receipt_orient"]:checked')?.value || 'landscape';
+                    return { size, orientation };
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const { size, orientation } = result.value;
+                    let targetUrl = receiptUrl;
+                    targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'size=' + encodeURIComponent(size) + '&orientation=' + encodeURIComponent(orientation);
+                    window.open(targetUrl, '_blank');
+                }
+            });
+        }
+
         $(document).ready(function() {
+            // Handler tombol cetak kwitansi di tabel atau link
+            $(document).on('click', '.receipt-print-btn, a[href*="/kwitansi"], a[href*="/kwitansi-hapus"]', function(e) {
+                const url = $(this).attr('href');
+                if (url && (url.includes('/kwitansi') || url.includes('/kwitansi-hapus'))) {
+                    e.preventDefault();
+                    const title = $(this).attr('title') || $(this).data('title') || $(this).text().trim() || 'Kwitansi Transaksi';
+                    openReceiptModal(url, title);
+                }
+            });
+
             // Handler tombol cetak buku tabungan di tabel/tombol
             $(document).on('click', '.print-passbook-btn', function(e) {
                 e.preventDefault();
@@ -605,7 +714,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     cancelButtonText: 'Selesai',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.open("{{ session('receipt_url') }}", '_blank');
+                        openReceiptModal("{{ session('receipt_url') }}", 'Kwitansi Transaksi');
                     } else if (result.isDenied) {
                         openPassbookModal("{{ session('passbook_url') }}", 'Transaksi Terakhir');
                     }
@@ -622,7 +731,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     cancelButtonText: 'Selesai',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.open("{{ session('receipt_url') }}", '_blank');
+                        openReceiptModal("{{ session('receipt_url') }}", 'Kwitansi Transaksi');
                     }
                 });
             @elseif (session('deletion_receipt_url'))
@@ -637,7 +746,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     cancelButtonText: 'Selesai',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.open("{{ session('deletion_receipt_url') }}", '_blank');
+                        openReceiptModal("{{ session('deletion_receipt_url') }}", 'Kwitansi Penghapusan Transaksi');
                     }
                 });
             @elseif (session('success'))

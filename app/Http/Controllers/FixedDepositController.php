@@ -9,6 +9,7 @@ use App\Models\Deposit;
 use App\Models\InterestRate;
 use App\Models\User;
 use App\Helpers\TerbilangHelper;
+use App\Helpers\ReceiptPrintHelper;
 use App\Http\Requests\StoreFixedDepositRequest;
 use App\Http\Requests\UpdateFixedDepositRequest;
 use Carbon\Carbon;
@@ -82,7 +83,7 @@ class FixedDepositController extends Controller
                         $validateBtn = '<button type="button" class="btn btn-warning btn-xs px-2 mr-1 btn-validate" data-url="' . route('fixed-deposit.validate', $row) . '" data-title="Deposito ' . $row->number . ' - ' . ($row->customer->name ?? '') . '"><i class="fas fa-check"></i> Validasi</button>';
                     }
 
-                    $btn = '<a href="'.route('fixed-deposit.receipt', $row).'" target="_blank" class="btn btn-secondary btn-xs px-2"><i class="fas fa-print"></i> Kwitansi</a> ';
+                    $btn = '<a href="'.route('fixed-deposit.receipt', $row).'" target="_blank" class="btn btn-secondary btn-xs px-2 receipt-print-btn"><i class="fas fa-print"></i> Kwitansi</a> ';
                     $btn .= $validateBtn . ' ';
                     $btn .= '<a href="'.route('fixed-deposit.show', $row).'" class="btn btn-success btn-xs px-2 mx-1">Detail</a> ';
                     $btn .= '<a href="'.route('fixed-deposit.edit', $row).'" class="btn btn-primary btn-xs px-2 mr-1">Edit</a> ';
@@ -430,12 +431,15 @@ class FixedDepositController extends Controller
         $fixed_deposit->load(['customer', 'creator', 'validator']);
         $terbilang = TerbilangHelper::make($fixed_deposit->amount);
 
+        $paperSetting = ReceiptPrintHelper::resolve(request());
+
         $pdf = Pdf::loadView('pages.fixed-deposit.receipt', [
             'title' => 'Tanda Terima Deposito ' . $fixed_deposit->number,
             'fixed_deposit' => $fixed_deposit,
             'terbilang' => $terbilang,
+            'pageSizeCss' => $paperSetting['css'],
         ]);
-        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
 
         $filename = 'Kwitansi_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
         return $pdf->stream($filename);
@@ -502,13 +506,16 @@ class FixedDepositController extends Controller
 
         $terbilang = TerbilangHelper::make($fixed_deposit->amount);
 
+        $paperSetting = ReceiptPrintHelper::resolve(request());
+
         $pdf = Pdf::loadView('pages.fixed-deposit.destroy-receipt', [
             'title'         => 'Bukti Penghapusan Deposito ' . $fixed_deposit->number,
             'fixed_deposit' => $fixed_deposit,
             'terbilang'     => $terbilang,
             'deletedBy'     => auth()->user()->name ?? '-',
+            'pageSizeCss'   => $paperSetting['css'],
         ]);
-        $pdf->setPaper([0, 0, 609.45, 212.60], 'landscape');
+        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
 
         $filename = 'Bukti_Hapus_Deposito_' . $fixed_deposit->number . '_' . time() . '.pdf';
         return $pdf->stream($filename);
