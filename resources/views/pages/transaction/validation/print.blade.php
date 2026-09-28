@@ -31,7 +31,7 @@
             padding-left: {{ $leftMargin ?? '10mm' }};
             padding-right: {{ $rightMargin ?? '10mm' }};
             padding-bottom: 3mm;
-            border-bottom: 1px solid #000;
+            /* border-bottom: 1px solid; */
         }
         .validation-table {
             width: 100%;
