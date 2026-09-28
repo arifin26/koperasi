@@ -25,31 +25,31 @@
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 7.5pt;
-            line-height: 1.2;
+            font-size: 12px;
+            line-height: 1.15;
             color: #000;
             background-color: #fff;
         }
         .receipt-container {
             border: 1.5px solid #000;
-            padding: 3px 5px;
+            padding: 2px 4px;
             position: relative;
             background-color: #fff;
             page-break-inside: avoid;
         }
         .receipt-inner {
             border: 0.5px solid #000;
-            padding: 3px 6px;
+            padding: 2px 4px;
         }
         .header-table {
             width: 100%;
             border-bottom: 1.5px solid #000;
-            padding-bottom: 2px;
-            margin-bottom: 3px;
+            padding-bottom: 1px;
+            margin-bottom: 2px;
             border-collapse: collapse;
         }
         .header-logo {
-            font-size: 9.5pt;
+            font-size: 13px;
             font-weight: bold;
             color: #000;
             letter-spacing: 0.3px;
@@ -57,7 +57,7 @@
             line-height: 1.1;
         }
         .header-sub {
-            font-size: 6.5pt;
+            font-size: 10px;
             color: #000;
             margin-top: 1px;
             line-height: 1.1;
@@ -66,7 +66,7 @@
             text-align: right;
         }
         .receipt-title {
-            font-size: 8.5pt;
+            font-size: 13px;
             font-weight: bold;
             color: #000;
             text-transform: uppercase;
@@ -74,7 +74,7 @@
             line-height: 1.1;
         }
         .receipt-no {
-            font-size: 7.5pt;
+            font-size: 11px;
             font-weight: bold;
             color: #000;
             margin-top: 1px;
@@ -87,7 +87,7 @@
         .content-table td {
             padding: 1px 2px;
             vertical-align: top;
-            font-size: 7pt;
+            font-size: 12px;
             line-height: 1.15;
             color: #000;
         }
@@ -106,17 +106,17 @@
         .amount-box {
             background-color: #fff;
             border: 1px dashed #000;
-            padding: 3px 6px;
-            margin: 3px 0;
+            padding: 2px 5px;
+            margin: 2px 0;
         }
         .amount-val {
-            font-size: 9.5pt;
+            font-size: 13px;
             font-weight: bold;
             color: #000;
             line-height: 1.1;
         }
         .terbilang-text {
-            font-size: 6.5pt;
+            font-size: 11px;
             font-style: italic;
             color: #000;
             margin-top: 1px;
@@ -124,42 +124,42 @@
         }
         .signature-table {
             width: 100%;
-            margin-top: 2px;
+            margin-top: 1px;
             border-collapse: collapse;
         }
         .signature-table td {
             width: 50%;
             text-align: center;
             vertical-align: top;
-            font-size: 6.8pt;
+            font-size: 11px;
             line-height: 1.1;
             color: #000;
         }
         .sign-space {
-            height: 20px;
+            height: 14px;
         }
         .sign-name {
             font-weight: bold;
             text-decoration: underline;
-            font-size: 7pt;
+            font-size: 12px;
             line-height: 1.1;
             color: #000;
         }
         .sign-title {
-            font-size: 6.2pt;
+            font-size: 10px;
             color: #000;
         }
         .footer-note {
-            margin-top: 2px;
-            font-size: 5.8pt;
+            margin-top: 1px;
+            font-size: 9.5px;
             color: #000;
             border-top: 0.5px dotted #000;
             padding-top: 1px;
             line-height: 1.1;
         }
         .validation-strip {
-            margin-bottom: 3px;
-            padding-bottom: 2px;
+            margin-bottom: 2px;
+            padding-bottom: 1px;
             border-bottom: 0.5px dashed #000;
             font-family: 'Courier New', Courier, monospace;
         }
@@ -168,7 +168,7 @@
             border-collapse: collapse;
         }
         .validation-table td {
-            font-size: 6.5pt;
+            font-size: 11px;
             line-height: 1.15;
             color: #000;
             font-family: 'Courier New', Courier, monospace;
