@@ -187,7 +187,7 @@
                 <tr>
                     <td style="width: 58%; vertical-align: middle;">
                         <div class="header-logo">{{ config('app.name') }}</div>
-                        <div class="header-sub">Jl. Sesama No. 47 RT. 16 &bull; Telp: 0851-4306-4088 &bull; Badan Hukum KSP</div>
+                        <div class="header-sub">Jl. Gadungan-Kepung, RT.04/RW.04 &bull; Telp: 0857-0677-3839 &bull; Kec. Puncu &bull; Kab. Kediri</div>
                     </td>
                     <td style="width: 42%; vertical-align: middle;" class="receipt-title-box">
                         <div class="receipt-title">@yield('receipt-title', 'KWITANSI TRANSAKSI')</div>
