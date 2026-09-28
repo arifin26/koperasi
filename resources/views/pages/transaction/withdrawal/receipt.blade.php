@@ -45,7 +45,7 @@
     <tr>
         <td class="label">Tanggal & Waktu</td>
         <td class="colon">:</td>
-        <td class="value">{{ $deposit->created_at->isoFormat('dddd, D MMMM Y - HH:mm') }} WIB</td>
+        <td class="value">{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y HH:mm') }} WIB</td>
     </tr>
     @if($deposit->notes)
     <tr>

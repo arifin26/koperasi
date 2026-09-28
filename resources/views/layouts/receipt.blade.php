@@ -209,7 +209,7 @@
                         <div class="sign-title">Nasabah</div>
                     </td>
                     <td>
-                        <div>@yield('sign-city', 'Kota Terkait'), @yield('sign-date', date('d/m/Y'))</div>
+                        <div>@yield('sign-city', 'Kediri'), @yield('sign-date', date('d/m/Y'))</div>
                         <div style="margin-top: 1px;">@yield('sign-right-label', 'Petugas / Teller,')</div>
                         <div class="sign-space"></div>
                         <div class="sign-name">@yield('sign-right-name', auth()->user()->name ?? 'Kasir')</div>
