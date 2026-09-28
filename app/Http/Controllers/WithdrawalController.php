@@ -289,19 +289,12 @@ class WithdrawalController extends Controller
         $code = $this->buildTransactionCode($penarikan->id);
         $terbilang = TerbilangHelper::make($penarikan->amount);
 
-        $paperSetting = ReceiptPrintHelper::resolve(request());
-
-        $pdf = Pdf::loadView('pages.transaction.withdrawal.receipt', [
-            'title' => 'Kwitansi Penarikan ' . $code,
-            'deposit' => $penarikan,
-            'code' => $code,
-            'terbilang' => $terbilang,
-            'pageSizeCss' => $paperSetting['css'],
+        return view('pages.transaction.withdrawal.receipt', [
+            'title'      => 'Kwitansi Penarikan ' . $code,
+            'deposit'    => $penarikan,
+            'code'       => $code,
+            'terbilang'  => $terbilang,
         ]);
-        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
-
-        $filename = 'Kwitansi_Penarikan_' . $code . '_' . time() . '.pdf';
-        return $pdf->stream($filename);
     }
 
     public function validateTransaction(Deposit $penarikan)

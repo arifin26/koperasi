@@ -6,8 +6,8 @@
     <title>{{ $title ?? 'Kwitansi Transaksi' }}</title>
     <style>
         @page {
-            size: {{ $pageSizeCss ?? '215mm 75mm' }};
-            margin: 2.5mm 4mm 2.5mm 4mm;
+            size: auto;
+            margin: 10mm 12mm;
         }
         * {
             box-sizing: border-box;
@@ -174,6 +174,46 @@
             font-family: 'Courier New', Courier, monospace;
             padding: 0 1px;
         }
+        .print-toolbar {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: sans-serif;
+            font-size: 12px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .print-toolbar button {
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .print-toolbar .btn-print {
+            background: #28a745;
+            color: #fff;
+        }
+        .print-toolbar .btn-close {
+            background: #6c757d;
+            color: #fff;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -223,5 +263,19 @@
             </div>
         </div>
     </div>
+
+    <div class="print-toolbar no-print">
+        <span style="color: #fff; font-size: 11px;">Kwitansi Transaksi</span>
+        <button class="btn-print" onclick="window.print()">&#128424; Cetak</button>
+        <button class="btn-close" onclick="window.close()">&#x2715; Tutup</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 300);
+        };
+    </script>
 </body>
 </html>

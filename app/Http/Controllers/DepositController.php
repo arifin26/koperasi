@@ -342,19 +342,12 @@ class DepositController extends Controller
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
-        $paperSetting = ReceiptPrintHelper::resolve(request());
-
-        $pdf = Pdf::loadView('pages.transaction.deposit.receipt', [
-            'title' => 'Kwitansi Simpanan ' . $code,
-            'deposit' => $simpanan,
-            'code' => $code,
-            'terbilang' => $terbilang,
-            'pageSizeCss' => $paperSetting['css'],
+        return view('pages.transaction.deposit.receipt', [
+            'title'      => 'Kwitansi Simpanan ' . $code,
+            'deposit'    => $simpanan,
+            'code'       => $code,
+            'terbilang'  => $terbilang,
         ]);
-        $pdf->setPaper($paperSetting['paper'], $paperSetting['orientation']);
-
-        $filename = 'Kwitansi_Simpanan_' . $code . '_' . time() . '.pdf';
-        return $pdf->stream($filename);
     }
 
     public function validateTransaction(Deposit $simpanan)
