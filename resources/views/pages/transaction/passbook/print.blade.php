@@ -56,12 +56,16 @@
             letter-spacing: 0.2px;
         }
         /* Kolom Passbook */
+        .col-no {
+            width: 8mm;
+            text-align: center;
+        }
         .col-date {
-            width: 19mm;
+            width: 16mm;
             text-align: left;
         }
         .col-code {
-            width: 16mm;
+            width: 8mm;
             text-align: center;
         }
         .col-debit {
@@ -73,11 +77,11 @@
             text-align: right;
         }
         .col-balance {
-            width: 33mm;
+            width: 36mm;
             text-align: right;
         }
         .col-teller {
-            width: 14mm;
+            width: 18mm;
             text-align: center;
         }
         /* Baris kosong penyesuai posisi awal */
@@ -143,6 +147,7 @@
                 {{-- Baris kosong sebelum baris awal --}}
                 @for ($i = 1; $i < ($startRow ?? 1); $i++)
                     <tr class="empty-row">
+                        <td class="col-no">&nbsp;</td>
                         <td class="col-date">&nbsp;</td>
                         <td class="col-code">&nbsp;</td>
                         <td class="col-debit">&nbsp;</td>
@@ -183,6 +188,7 @@
                         $tellerInitial = strtoupper(substr(trim($teller), 0, 3));
                     @endphp
                     <tr>
+                        <td class="col-no">{{ ($startRow ?? 1) + $loop->index }}</td>
                         <td class="col-date">{{ \Carbon\Carbon::parse($txn->created_at)->format('d/m/y') }}</td>
                         <td class="col-code">{{ $code }}</td>
                         <td class="col-debit">{{ $debitVal }}</td>
