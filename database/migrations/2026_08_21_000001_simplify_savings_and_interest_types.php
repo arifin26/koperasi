@@ -22,7 +22,7 @@ return new class extends Migration
         $activeSimpananId = DB::table('interest_rates')
             ->whereIn('type', ['simpanan', 'tabungan_sukarela', 'tabungan_wajib'])
             ->where('is_active', 1)
-            ->orderByRaw("FIELD(type, 'simpanan', 'tabungan_sukarela', 'tabungan_wajib')")
+            ->orderByRaw("CASE type WHEN 'simpanan' THEN 1 WHEN 'tabungan_sukarela' THEN 2 WHEN 'tabungan_wajib' THEN 3 ELSE 4 END")
             ->orderBy('effective_date', 'desc')
             ->orderBy('id', 'desc')
             ->value('id');
@@ -30,7 +30,7 @@ return new class extends Migration
         $activeDepositoId = DB::table('interest_rates')
             ->whereIn('type', ['deposito', 'deposito_12_bulan', 'deposito_6_bulan', 'deposito_3_bulan'])
             ->where('is_active', 1)
-            ->orderByRaw("FIELD(type, 'deposito', 'deposito_12_bulan', 'deposito_6_bulan', 'deposito_3_bulan')")
+            ->orderByRaw("CASE type WHEN 'deposito' THEN 1 WHEN 'deposito_12_bulan' THEN 2 WHEN 'deposito_6_bulan' THEN 3 WHEN 'deposito_3_bulan' THEN 4 ELSE 5 END")
             ->orderBy('effective_date', 'desc')
             ->orderBy('id', 'desc')
             ->value('id');
@@ -61,7 +61,9 @@ return new class extends Migration
         // ------------------------------------------------------------------
         // Dilonggarkan ke VARCHAR dulu supaya nilai baru bisa ditulis, baru
         // dikunci lagi sebagai ENUM di akhir.
-        DB::statement("ALTER TABLE deposits MODIFY type VARCHAR(20) NOT NULL DEFAULT 'simpanan'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE deposits MODIFY type VARCHAR(20) NOT NULL DEFAULT 'simpanan'");
+        }
 
         DB::table('deposits')
             ->whereIn('type', ['pokok', 'wajib', 'sukarela'])
@@ -73,12 +75,16 @@ return new class extends Migration
             ->update(['type' => 'bunga']);
 
         // 'bunga' sebelumnya ditulis engine tanpa pernah masuk daftar ENUM.
-        DB::statement("ALTER TABLE deposits MODIFY type ENUM('simpanan', 'penarikan', 'bunga') NOT NULL DEFAULT 'simpanan'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE deposits MODIFY type ENUM('simpanan', 'penarikan', 'bunga') NOT NULL DEFAULT 'simpanan'");
+        }
 
         // ------------------------------------------------------------------
         // 3. daily_interest_accumulations — sukarela + wajib jadi 'simpanan'
         // ------------------------------------------------------------------
-        DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type VARCHAR(20) NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type VARCHAR(20) NOT NULL");
+        }
 
         // Unique key uq_customer_date_type (customer_id, calculation_date,
         // savings_type) akan bentrok kalau satu nasabah punya baris sukarela
@@ -115,20 +121,27 @@ return new class extends Migration
 
         DB::table('daily_interest_accumulations')->update(['savings_type' => 'simpanan']);
 
-        DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type ENUM('simpanan') NOT NULL DEFAULT 'simpanan'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type ENUM('simpanan') NOT NULL DEFAULT 'simpanan'");
+        }
     }
 
     public function down()
     {
         // Peleburan data tidak bisa dipulihkan — kolom dikembalikan ke definisi
         // lama dengan seluruh baris dipetakan ke 'sukarela'.
-        DB::statement("ALTER TABLE deposits MODIFY type VARCHAR(20) NOT NULL DEFAULT 'sukarela'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE deposits MODIFY type VARCHAR(20) NOT NULL DEFAULT 'sukarela'");
+        }
         DB::table('deposits')->whereIn('type', ['simpanan', 'bunga'])->update(['type' => 'sukarela']);
-        DB::statement("ALTER TABLE deposits MODIFY type ENUM('wajib', 'sukarela', 'pokok', 'penarikan') NOT NULL DEFAULT 'sukarela'");
-
-        DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type VARCHAR(20) NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE deposits MODIFY type ENUM('wajib', 'sukarela', 'pokok', 'penarikan') NOT NULL DEFAULT 'sukarela'");
+            DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type VARCHAR(20) NOT NULL");
+        }
         DB::table('daily_interest_accumulations')->update(['savings_type' => 'sukarela']);
-        DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type ENUM('sukarela', 'wajib') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE daily_interest_accumulations MODIFY savings_type ENUM('sukarela', 'wajib') NOT NULL");
+        }
 
         DB::table('interest_rates')->where('type', 'simpanan')->update(['type' => 'tabungan_sukarela']);
         DB::table('interest_rates')->where('type', 'deposito')->update(['type' => 'deposito_12_bulan']);

@@ -52,7 +52,7 @@
     <tr>
         <td class="label">Tanggal & Waktu</td>
         <td class="colon">:</td>
-        <td class="value">{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y HH:mm') }} WIB</td>
+        <td class="value">{{ $deposit->created_at->isoFormat('D MMMM Y HH:mm') }} WIB</td>
     </tr>
     @if($deposit->notes)
     <tr>
@@ -79,9 +79,15 @@
                         <td style="text-align: right;">Rp {{ number_format($deposit->previous_balance, 2, ',', '.') }}</td>
                     </tr>
                     <tr style="font-weight: bold; color: #000;">
-                        <td>Saldo Akhir</td>
+                        <td>Saldo Setelah Transaksi</td>
                         <td style="text-align: right;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
                     </tr>
+                    @if(isset($latestBalance) && $latestBalance != $deposit->current_balance)
+                    <tr style="color: #000; border-top: 1px dotted #999;">
+                        <td style="padding-top: 2px;">Saldo Terkini Rekening</td>
+                        <td style="text-align: right; padding-top: 2px; font-weight: bold;">Rp {{ number_format($latestBalance, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
                 </table>
             </td>
         </tr>

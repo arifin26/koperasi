@@ -10,13 +10,7 @@ return new class extends Migration
     {
         Schema::create('interest_rates', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', [
-                'tabungan_sukarela',
-                'tabungan_wajib',
-                'deposito_3_bulan',
-                'deposito_6_bulan',
-                'deposito_12_bulan'
-            ]);
+            $table->string('type', 50);
             $table->decimal('rate_percent', 5, 2);
             $table->date('effective_date');
             $table->boolean('is_active')->default(1);

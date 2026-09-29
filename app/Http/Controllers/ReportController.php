@@ -170,22 +170,27 @@ class ReportController extends Controller
                     ->make(true);
             }
 
-            // Query subquery untuk mendapatkan transaksi terakhir per nasabah secara efisien (1 query)
-            $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
-                ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
-                ->groupBy('customer_id');
+            // Query subquery untuk mendapatkan transaksi terakhir per nasabah secara kronologis (1 query)
+            $latestDepositQuery = Deposit::select(
+                'id',
+                'customer_id',
+                'current_balance',
+                DB::raw('ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC, id DESC) as rn')
+            )->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate));
+
+            $latestDepositSub = DB::table($latestDepositQuery, 'ranked_deposits')
+                ->select('id', 'customer_id', 'current_balance')
+                ->where('rn', 1);
 
             // Hitung total dana simpanan nasabah hasil filter aktif via JOIN tunggal
-            $filteredTotalSaldo = Customer::when($statusFilter, fn($q) => $q->where('status', $statusFilter))
-                ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
-                ->leftJoin('deposits', 'deposits.id', '=', 'latest_dep.max_id')
-                ->sum('deposits.current_balance') ?? 0;
+            $filteredTotalSaldo = Customer::when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
+                ->leftJoinSub($latestDepositSub, 'latest_deposit', fn($join) => $join->on('customers.id', '=', 'latest_deposit.customer_id'))
+                ->sum('latest_deposit.current_balance') ?? 0;
 
             $query = Customer::select('customers.*', 'latest_deposit.current_balance as saldo_terakhir')
                 ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
                 ->with('interestRate')
-                ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
-                ->leftJoin('deposits as latest_deposit', 'latest_deposit.id', '=', 'latest_dep.max_id')
+                ->leftJoinSub($latestDepositSub, 'latest_deposit', fn($join) => $join->on('customers.id', '=', 'latest_deposit.customer_id'))
                 ->withCount(['deposits as total_transaksi' => function ($q) use ($cutoffDate) {
                     if ($cutoffDate) {
                         $q->where('created_at', '<=', $cutoffDate);
@@ -232,11 +237,15 @@ class ReportController extends Controller
         }
 
         // Summary total saldo semua nasabah
-        $totalSaldo = DB::table('deposits as d1')
-            ->join(DB::raw('(SELECT customer_id, MAX(id) as max_id FROM deposits WHERE deleted_at IS NULL GROUP BY customer_id) as d2'), function ($join) {
-                $join->on('d1.customer_id', '=', 'd2.customer_id')->on('d1.id', '=', 'd2.max_id');
-            })
-            ->sum('d1.current_balance');
+        $latestDepositQuery = Deposit::select(
+            'customer_id',
+            'current_balance',
+            DB::raw('ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC, id DESC) as rn')
+        );
+
+        $totalSaldo = DB::table($latestDepositQuery, 'ranked_deposits')
+            ->where('rn', 1)
+            ->sum('current_balance') ?? 0;
 
         $totalNasabah = Customer::count();
         $nasabahAktif = Customer::where('status', 'active')->count();
@@ -277,15 +286,21 @@ class ReportController extends Controller
         $cutoffDate = $this->resolveSavingsRecapCutoffDate($tanggal);
         $periodeLabel = $this->resolveSavingsRecapPeriodLabel($tanggal);
 
-        $lastDepositSub = Deposit::select('customer_id', DB::raw('MAX(id) as max_id'))
-            ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
-            ->groupBy('customer_id');
+        $latestDepositQuery = Deposit::select(
+            'id',
+            'customer_id',
+            'current_balance',
+            DB::raw('ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC, id DESC) as rn')
+        )->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate));
+
+        $latestDepositSub = DB::table($latestDepositQuery, 'ranked_deposits')
+            ->select('id', 'customer_id', 'current_balance')
+            ->where('rn', 1);
 
         $query = Customer::select('customers.*', 'latest_deposit.current_balance as saldo_terakhir')
             ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
             ->with('interestRate')
-            ->leftJoinSub($lastDepositSub, 'latest_dep', fn($join) => $join->on('customers.id', '=', 'latest_dep.customer_id'))
-            ->leftJoin('deposits as latest_deposit', 'latest_deposit.id', '=', 'latest_dep.max_id')
+            ->leftJoinSub($latestDepositSub, 'latest_deposit', fn($join) => $join->on('customers.id', '=', 'latest_deposit.customer_id'))
             ->withCount(['deposits as deposits_count' => function ($q) use ($cutoffDate) {
                 if ($cutoffDate) {
                     $q->where('created_at', '<=', $cutoffDate);

@@ -22,16 +22,26 @@ return new class extends Migration
 
         // Add new composite unique constraint: (customer_id, account_number)
         // This ensures 1 customer = 1 account_number (per-customer unique)
-        DB::statement('ALTER TABLE fixed_deposits ADD CONSTRAINT unique_customer_account_number UNIQUE (customer_id, account_number)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fixed_deposits ADD CONSTRAINT unique_customer_account_number UNIQUE (customer_id, account_number)');
+        } else {
+            Schema::table('fixed_deposits', function (Blueprint $table) {
+                $table->unique(['customer_id', 'account_number'], 'unique_customer_account_number');
+            });
+        }
     }
-
     /**
      * Reverse the migrations.
      */
     public function down()
     {
-        DB::statement('ALTER TABLE fixed_deposits DROP CONSTRAINT unique_customer_account_number');
-
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE fixed_deposits DROP CONSTRAINT unique_customer_account_number');
+        } else {
+            Schema::table('fixed_deposits', function (Blueprint $table) {
+                $table->dropUnique('unique_customer_account_number');
+            });
+        }
         Schema::table('fixed_deposits', function (Blueprint $table) {
             // Restore the old (wrong) constraint for rollback
             $table->unique(['account_number']);

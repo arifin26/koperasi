@@ -34,12 +34,16 @@ class HomeController extends Controller
                             ->where('type', 'penarikan')
                             ->sum('amount');
 
-        $totalTabungan = \App\Models\Deposit::whereIn('id', function($query) {
-                                $query->select(\Illuminate\Support\Facades\DB::raw('MAX(id)'))
-                                      ->from('deposits')
-                                      ->whereNull('deleted_at')
-                                      ->groupBy('customer_id');
-                            })->sum('current_balance');
+        $latestDepositQuery = \App\Models\Deposit::select(
+            'id',
+            'customer_id',
+            'current_balance',
+            \Illuminate\Support\Facades\DB::raw('ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC, id DESC) as rn')
+        );
+
+        $totalTabungan = \Illuminate\Support\Facades\DB::table($latestDepositQuery, 'ranked_deposits')
+            ->where('rn', 1)
+            ->sum('current_balance') ?? 0;
 
         // 2. Chart 7 Hari Terakhir (Dioptimasi dari 14 query menjadi 1 query agregasi)
         $startDate = now()->subDays(6)->startOfDay();

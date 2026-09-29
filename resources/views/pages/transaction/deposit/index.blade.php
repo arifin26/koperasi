@@ -89,7 +89,7 @@
                                     <th>Nasabah</th>
                                     <th>Masuk</th>
                                     <th>Keluar</th>
-                                    <th>Saldo</th>
+                                    <th title="Saldo berjalan pada saat transaksi terjadi">Saldo Berjalan</th>
                                     <th style="width: 150px;">Aksi</th>
                                 </tr>
                             </thead>

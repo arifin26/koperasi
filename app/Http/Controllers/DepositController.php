@@ -209,7 +209,7 @@ class DepositController extends Controller
             
             $deposit = Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
-            
+            $deposit->refresh();
             if ($request->filled('interest_rate_id')) {
                 Customer::where('id', $request->customer_id)->update([
                     'interest_rate_id' => $request->interest_rate_id
@@ -342,11 +342,18 @@ class DepositController extends Controller
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
+        $latestDeposit = Deposit::where('customer_id', $simpanan->customer_id)
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+        $latestBalance = $latestDeposit ? $latestDeposit->current_balance : $simpanan->current_balance;
+
         return view('pages.transaction.deposit.receipt', [
-            'title'      => 'Kwitansi Simpanan ' . $code,
-            'deposit'    => $simpanan,
-            'code'       => $code,
-            'terbilang'  => $terbilang,
+            'title'         => 'Kwitansi Simpanan ' . $code,
+            'deposit'       => $simpanan,
+            'code'          => $code,
+            'terbilang'     => $terbilang,
+            'latestBalance' => $latestBalance,
         ]);
     }
 

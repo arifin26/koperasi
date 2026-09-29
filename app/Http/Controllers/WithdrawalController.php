@@ -159,7 +159,7 @@ class WithdrawalController extends Controller
 
             $deposit = Deposit::create($data);
             Deposit::recalculateBalance($request->customer_id);
-            
+            $deposit->refresh();
             DB::commit();
             return redirect()->route('transaction.withdrawal.index')
                 ->with('success', 'Berhasil menarik simpanan nasabah!')
@@ -289,11 +289,18 @@ class WithdrawalController extends Controller
         $code = $this->buildTransactionCode($penarikan->id);
         $terbilang = TerbilangHelper::make($penarikan->amount);
 
+        $latestDeposit = Deposit::where('customer_id', $penarikan->customer_id)
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+        $latestBalance = $latestDeposit ? $latestDeposit->current_balance : $penarikan->current_balance;
+
         return view('pages.transaction.withdrawal.receipt', [
-            'title'      => 'Kwitansi Penarikan ' . $code,
-            'deposit'    => $penarikan,
-            'code'       => $code,
-            'terbilang'  => $terbilang,
+            'title'         => 'Kwitansi Penarikan ' . $code,
+            'deposit'       => $penarikan,
+            'code'          => $code,
+            'terbilang'     => $terbilang,
+            'latestBalance' => $latestBalance,
         ]);
     }
 

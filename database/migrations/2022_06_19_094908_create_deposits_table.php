@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('deposits', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['wajib', 'sukarela', 'pokok', 'penarikan'])->default('sukarela');
+            $table->string('type', 20)->default('sukarela');
             $table->unsignedBigInteger('amount');
             $table->unsignedBigInteger('previous_balance')->default(0);
             $table->unsignedBigInteger('current_balance')->default(0);

@@ -7,11 +7,15 @@ return new class extends Migration
 {
     public function up()
     {
-        DB::statement("ALTER TABLE interest_rates MODIFY type VARCHAR(50)");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE interest_rates MODIFY type VARCHAR(50)");
+        }
     }
 
     public function down()
     {
-        DB::statement("ALTER TABLE interest_rates MODIFY type VARCHAR(50)");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE interest_rates MODIFY type VARCHAR(50)");
+        }
     }
 };
