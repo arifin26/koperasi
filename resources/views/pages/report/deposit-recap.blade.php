@@ -5,18 +5,18 @@
     <div class="col-12">
 
         {{-- Summary Cards --}}
-        <div class="row mb-3">
-            <div class="col-md-3">
+        <div class="row mb-3 summary-cards">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="info-box bg-primary">
                     <span class="info-box-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Total Dana Deposito</span>
-                        <span class="info-box-number" style="font-size:1.1rem;">Rp {{ number_format($totalDeposito, 0, ',', '.') }}</span>
+                        <span class="info-box-number">Rp {{ number_format($totalDeposito, 0, ',', '.') }}</span>
                         <span class="progress-description">seluruh deposito</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="info-box bg-success">
                     <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
                     <div class="info-box-content">
@@ -26,7 +26,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="info-box bg-warning">
                     <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
                     <div class="info-box-content">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="info-box bg-secondary">
                     <span class="info-box-icon"><i class="fas fa-hand-holding-usd"></i></span>
                     <div class="info-box-content">
@@ -93,7 +93,7 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-6 d-flex align-items-end">
+                    <div class="col-12 col-md-6 d-flex align-items-end flex-wrap mt-2 mt-md-0">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
@@ -163,7 +163,77 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap4.min.css">
     <style>
         #deposit-recap-table td { vertical-align: middle; }
-        .info-box-number { font-size: 1.3rem; }
+        /* Summary cards responsive styling */
+        .summary-cards .info-box {
+            min-height: 85px;
+            padding: .65rem .75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+        }
+        .summary-cards .info-box-icon {
+            width: 60px;
+            min-width: 60px;
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            border-radius: .25rem;
+        }
+        .summary-cards .info-box-content {
+            min-width: 0;
+            padding: 0 0 0 10px;
+            justify-content: center;
+        }
+        .summary-cards .info-box-text {
+            white-space: normal;
+            word-break: normal;
+            line-height: 1.25;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .summary-cards .info-box-number {
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-top: 0.2rem;
+            margin-bottom: 0.15rem;
+            word-break: break-word;
+        }
+        .summary-cards .progress-description {
+            white-space: normal;
+            line-height: 1.2;
+            font-size: 0.75rem;
+            margin-top: 0.15rem;
+        }
+
+        /* Breakpoint 1200px - 1399px (laptop/small desktop 4-column) */
+        @media (min-width: 1200px) and (max-width: 1399.98px) {
+            .summary-cards .info-box-icon {
+                width: 50px;
+                min-width: 50px;
+                font-size: 1.35rem;
+            }
+            .summary-cards .info-box-number {
+                font-size: 1.05rem;
+            }
+            .summary-cards .info-box-text {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Breakpoint mobile (< 576px) */
+        @media (max-width: 575.98px) {
+            .summary-cards .info-box {
+                min-height: 75px;
+                padding: .5rem .65rem;
+            }
+            .summary-cards .info-box-icon {
+                width: 50px;
+                min-width: 50px;
+                font-size: 1.25rem;
+            }
+            .summary-cards .info-box-number {
+                font-size: 1.05rem;
+            }
+        }
         /* Warna baris berdasarkan jatuh tempo */
         #deposit-recap-table tbody tr.row-overdue td  { background-color: #ffe5e5 !important; }
         #deposit-recap-table tbody tr.row-soon    td  { background-color: #e6f9ee !important; }
