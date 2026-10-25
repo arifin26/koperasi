@@ -76,4 +76,4 @@ Jika muncul status `LISTENING`, berarti service QZ Tray aktif dan siap menerima 
 
 ---
 
-Setelah Langkah 1 ini terverifikasi (ikon QZ Tray berwarna hijau di System Tray), Anda dapat melanjutkan ke **Langkah 2: Menyiapkan Driver Printer PLQ-20** dan **Langkah 3: Buka Halaman `/test-cetak`**.
+Setelah Langkah 1 ini terverifikasi (ikon QZ Tray berwarna hijau di System Tray), Anda dapat melanjutkan ke **[Langkah 2: Konfigurasi Driver & Spooler Windows untuk Epson PLQ-20](PANDUAN-LANGKAH-2-DRIVER-DAN-SPOOLER-WINDOWS.md)** dan **Langkah 3: Buka Halaman `/test-cetak`**.

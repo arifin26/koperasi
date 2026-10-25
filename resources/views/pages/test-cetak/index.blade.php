@@ -219,6 +219,26 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Accordion / Bantuan Ringkas Troubleshooting Spooler -->
+                <details class="mt-2 pt-2 border-top text-muted small" style="cursor: pointer;">
+                    <summary class="fw-semibold text-primary user-select-none">
+                        <i class="fa-solid fa-circle-question me-1"></i> Kendala umum: Notifikasi sukses tapi antrean kosong / printer tidak bergerak? (Klik untuk solusi)
+                    </summary>
+                    <div class="mt-2 p-2 rounded bg-light border text-dark">
+                        <div class="fw-bold mb-1 text-danger"><i class="fa-solid fa-clipboard-check me-1"></i> Checklist 5 Penyebab Utama Antrean Kosong di Windows:</div>
+                        <ol class="ps-3 mb-1">
+                            <li class="mb-1"><strong>Antrean Selesai Terlalu Cepat (&lt;0.1 dtk) / Uji Jeda Spooler:</strong> Payload RAW PR2 sangat kecil (~300–500 byte). Buka <em>Control Panel &gt; Devices &amp; Printers &gt; See what's printing &gt; Menu Printer &gt; <strong>Pause Printing</strong></em>. Lalu klik tombol cetak. Jika dokumen muncul tertahan berstatus <em>Paused</em>, berarti data 100% masuk ke Windows Spooler.</li>
+                            <li class="mb-1"><strong>Wajib Driver "Generic / Text Only":</strong> Jika menggunakan driver grafis resmi Epson (GDI), Windows memfilter dan membuang byte RAW Olivetti PR2 tanpa mencetak. Tambahkan printer baru dengan driver <code>Generic / Text Only</code> terhubung ke port USB printer.</li>
+                            <li class="mb-1"><strong>Pemetaan Port USB Salah:</strong> Di <em>Printer Properties &gt; tab Ports</em>, pastikan port USB yang dicentang adalah port aktif printer PLQ-20 (misal <code>USB001</code> atau <code>USB002</code>), bukan COM/LPT/FILE.</li>
+                            <li class="mb-1"><strong>Sensor Kertas PLQ-20 (Auto Sheet Alignment):</strong> Masukkan buku tabungan/kertas ke mulut depan printer sampai ditarik motor dan lampu <strong>Ready</strong> menyala stabil sebelum klik tombol cetak. PLQ-20 menolak print job jika kertas belum dimasukkan.</li>
+                            <li class="mb-1"><strong>Emulasi Hardware Printer Harus PR2:</strong> Matikan printer, tahan tombol <strong>F1 + F2</strong>, nyalakan printer, masukkan kertas A4, lalu pastikan setting <em>Emulation</em> adalah <strong>PR2</strong> (bukan ESC/P2 atau IBM).</li>
+                        </ol>
+                        <div class="mt-2 fst-italic text-secondary">
+                            <i class="fa-solid fa-book me-1"></i> Panduan lengkap teknisi dapat dibaca pada file <code>PANDUAN-LANGKAH-2-DRIVER-DAN-SPOOLER-WINDOWS.md</code> di repositori.
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -654,9 +674,8 @@
                         printerSelect.appendChild(opt);
                     });
 
-                    if (!autoSelected && printers.length > 0) {
-                        printerSelect.selectedIndex = 1;
-                    }
+                    // Jangan lakukan fallback otomatis ke printerSelect.selectedIndex = 1
+                    // Jika printer passbook tidak terdeteksi otomatis, wajibkan pengguna memilih secara sadar.
                 } catch (err) {
                     console.error('Gagal mengambil daftar printer:', err);
                     printerSelect.innerHTML = '<option value="">-- Gagal memuat printer dari QZ Tray --</option>';
@@ -1016,10 +1035,11 @@
             async function executePrintJob(mode = 'dummy') {
                 const selectedPrinter = printerSelect.value;
                 if (!selectedPrinter) {
-                    alert('Silakan pilih printer passbook PLQ-20 pada dropdown sebelum mencetak!');
+                    alert('PERHATIAN: Silakan pilih printer fisik PLQ-20 atau Generic/Text Only pada dropdown terlebih dahulu!\n\nJangan mencetak ke printer virtual (Microsoft Print to PDF / OneNote) karena antrean fisik tidak akan berjalan.');
                     if (!isQzConnected) {
                         await connectQzTray(true);
                     }
+                    printerSelect.focus();
                     return;
                 }
 
@@ -1036,6 +1056,17 @@
                     );
                     if (!confirmPrint) return;
                 }
+
+                const byteSize = res.data ? Math.round(res.data.length * 0.75) : 0;
+                const confirmPrintJob = confirm(
+                    `KIRIM PERINTAH CETAK:\n` +
+                    `- Target Printer: ${selectedPrinter}\n` +
+                    `- Mode: ${mode === 'calibration' ? 'Kalibrasi Titik & Grid' : 'Data Dummy Tabungan'}\n` +
+                    `- Ukuran Payload RAW: ~${byteSize} byte\n\n` +
+                    `Pastikan buku tabungan sudah dimasukkan ke slot depan hingga ditarik printer dan lampu Ready menyala.\n\n` +
+                    `Lanjutkan mengirim ke printer?`
+                );
+                if (!confirmPrintJob) return;
 
                 try {
                     // Pastikan QZ Tray terhubung
@@ -1056,7 +1087,17 @@
                     }];
 
                     await qz.print(config, printData);
-                    alert(`Perintah cetak (${mode === 'calibration' ? 'Kalibrasi' : 'Data Dummy'}) berhasil dikirim ke printer: ${selectedPrinter}`);
+                    alert(
+                        `Perintah cetak (${mode === 'calibration' ? 'Kalibrasi' : 'Data Dummy'}) berhasil dikirim ke printer!\n\n` +
+                        `Target Printer: ${selectedPrinter}\n` +
+                        `Ukuran Data: ~${byteSize} byte\n\n` +
+                        `Catatan Penting:\n` +
+                        `Jika antrean Windows langsung kosong dan printer tidak bereaksi, periksa:\n` +
+                        `1. Uji "Pause Printing" di Windows Spooler untuk melihat dokumen tertahan.\n` +
+                        `2. Pastikan menggunakan driver "Generic / Text Only" (bukan driver grafis Epson).\n` +
+                        `3. Pastikan port USB yang dipilih sesuai (misal USB001).\n` +
+                        `4. Pastikan emulasi hardware diset ke PR2 (F1+F2 saat dinyalakan).`
+                    );
                 } catch (err) {
                     console.error('Error saat mencetak via QZ Tray:', err);
                     alert(`Gagal mencetak ke ${selectedPrinter}:\n${err.message || err}`);

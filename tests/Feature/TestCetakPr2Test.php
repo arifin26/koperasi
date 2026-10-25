@@ -47,8 +47,10 @@ class TestCetakPr2Test extends TestCase
         $response->assertSee('Pengujian Cetak Passbook Epson PLQ-20');
         $response->assertSee('Emulasi PR2');
         $response->assertSee('PERHATIAN TELLER');
+        $response->assertSee('Kendala umum: Notifikasi sukses tapi antrean kosong');
+        $response->assertSee('Generic / Text Only');
+        $response->assertSee('Pause Printing');
     }
-
     /**
      * 2. Endpoint POST /test-cetak/payload menghasilkan base64, hex dump, dan saldo berjalan valid.
      */
