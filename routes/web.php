@@ -7,9 +7,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\WithdrawalController;
+use App\Http\Controllers\TestCetakController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -26,6 +26,11 @@ Route::get('/', function () {
 });
 
 Auth::routes(['register' => false]);
+
+// Pengujian Cetak Passbook PLQ-20 Emulasi PR2 via QZ Tray (tanpa login, tanpa database)
+Route::get('/test-cetak', [TestCetakController::class, 'index'])->name('test-cetak.index');
+Route::post('/test-cetak/payload', [TestCetakController::class, 'generatePayload'])->name('test-cetak.payload');
+Route::post('/test-cetak/sign', [TestCetakController::class, 'signCertificate'])->name('test-cetak.sign');
 
 Route::middleware('auth')->group(function() {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
