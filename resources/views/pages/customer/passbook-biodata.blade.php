@@ -30,8 +30,8 @@
         .passbook-page {
             width: 150mm;
             position: relative;
-            padding-top: calc(86mm + {{ request('top_margin', $topMargin ?? '0mm') }});
-            padding-left: {{ request('left_margin', $leftMargin ?? '40.9mm') }};
+            padding-top: calc(96mm + {{ request('top_margin', $topMargin ?? '0mm') }});
+            padding-left: {{ request('left_margin', $leftMargin ?? '50.9mm') }};
             padding-right: {{ request('right_margin', $rightMargin ?? '0mm') }};
         }
         .biodata-table {
