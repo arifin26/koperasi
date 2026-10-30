@@ -25,13 +25,12 @@ class UpdateCustomerRequest extends FormRequest
     public function rules()
     {
         return [
-            'nik' => ['required', 'numeric', 'digits:16', Rule::unique('customers', 'nik')->ignore($this->id)->whereNull('deleted_at')],
+            'nik' => ['required', 'numeric', 'digits:16'],
             'name' => ['required', 'string'],
             'number' => ['required', Rule::unique('customers', 'number')->ignore($this->id)->whereNull('deleted_at')],
             'gender' => ['required', Rule::in(['L', 'P'])],
             'birth' => 'required',
             'address' => 'required',
-            'phone' => ['required', Rule::unique('customers', 'phone')->ignore($this->id)->whereNull('deleted_at')],
             'last_education' => 'required',
             'profession' => 'required',
             'status' => 'required',

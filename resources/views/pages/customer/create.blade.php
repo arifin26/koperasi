@@ -20,8 +20,11 @@
                             </div>
                             <div class="form-group">
                                 <label>NIK</label>
-                                <input type="text" class="form-control @error('nik') is-invalid @enderror" name="nik" value="{{ old('nik') }}" placeholder="NIK">
+                                <input type="text" class="form-control @error('nik') is-invalid @enderror" name="nik" id="nik" value="{{ old('nik') }}" placeholder="NIK (16 Digit)" maxlength="16">
                                 <span class="error invalid-feedback">{{ $errors->first('nik') }}</span>
+                                <div id="nik-info-alert" class="alert alert-info mt-2 py-2 px-3 d-none">
+                                    <i class="fas fa-info-circle mr-1"></i> <span id="nik-info-message"></span>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Tanggal Daftar</label>
@@ -40,11 +43,6 @@
                                 <label>Tanggal Lahir</label>
                                 <input type="date" max="{{ date('Y-m-d') }}" class="form-control @error('birth') is-invalid @enderror" name="birth" value="{{ old('birth') }}" placeholder="Tanggal Lahir">
                                 <span class="error invalid-feedback">{{ $errors->first('birth') }}</span>
-                            </div>
-                            <div class="form-group">
-                                <label>Nomor Telepon</label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone') }}" placeholder="Nomor Telepon">
-                                <span class="error invalid-feedback">{{ $errors->first('phone') }}</span>
                             </div>
                             <div class="form-group">
                                 <label>Alamat</label>
@@ -105,6 +103,52 @@
         $(function () {
             $('#image').on('change', function () {
                 previewImage();
+            });
+
+            let lastCheckedNik = '';
+            $('input[name="nik"]').on('input change', function () {
+                const nikVal = $(this).val().trim();
+                if (nikVal.length === 16 && /^\d{16}$/.test(nikVal)) {
+                    if (nikVal === lastCheckedNik) return;
+                    lastCheckedNik = nikVal;
+
+                    $.ajax({
+                        url: "{{ route('customer.lookup-nik') }}",
+                        type: "GET",
+                        data: { nik: nikVal },
+                        dataType: "json",
+                        success: function (res) {
+                            if (res.exists && res.data) {
+                                const d = res.data;
+                                if (d.name) $('input[name="name"]').val(d.name);
+                                if (d.gender) $('select[name="gender"]').val(d.gender);
+                                if (d.birth) $('input[name="birth"]').val(d.birth);
+                                if (d.address) $('input[name="address"]').val(d.address);
+                                if (d.profession) $('input[name="profession"]').val(d.profession);
+                                if (d.last_education) $('input[name="last_education"]').val(d.last_education);
+                                if (d.interest_rate_id) {
+                                    $('select[name="interest_rate_id"]').val(d.interest_rate_id);
+                                } else {
+                                    $('select[name="interest_rate_id"]').val('');
+                                }
+
+                                $('input[name="number"]').val('');
+
+                                const existingNum = d.existing_number ? ' (Rekening sebelumnya: ' + d.existing_number + ')' : '';
+                                $('#nik-info-message').text('NIK ditemukan atas nama ' + d.name + existingNum + '. Data profil berhasil diisi otomatis. Silakan tentukan Nomor Rekening baru.');
+                                $('#nik-info-alert').removeClass('d-none');
+                            } else {
+                                $('#nik-info-alert').addClass('d-none');
+                            }
+                        },
+                        error: function () {
+                            $('#nik-info-alert').addClass('d-none');
+                        }
+                    });
+                } else {
+                    lastCheckedNik = '';
+                    $('#nik-info-alert').addClass('d-none');
+                }
             });
         });
 

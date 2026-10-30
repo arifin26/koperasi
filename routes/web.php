@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
     Route::resource('/karyawan', UserController::class, ['names' => 'user']);
+    Route::get('/nasabah/lookup-nik', [CustomerController::class, 'lookupByNik'])->name('customer.lookup-nik');
     Route::resource('/nasabah', CustomerController::class, ['names' => 'customer']);
     Route::get('/nasabah/{nasabah}/buku-tabungan', [CustomerController::class, 'passbook'])->name('customer.passbook');
 
@@ -100,8 +101,10 @@ Route::middleware('auth')->group(function() {
     Route::post('/laporan/harian/cetak', [App\Http\Controllers\ReportController::class, 'dailyTransactionPrint'])->name('report.daily.print');
     Route::get('/laporan/rekap-simpanan', [App\Http\Controllers\ReportController::class, 'savingsRecap'])->name('report.savings-recap');
     Route::post('/laporan/rekap-simpanan/cetak', [App\Http\Controllers\ReportController::class, 'savingsRecapPrint'])->name('report.savings-recap.print');
+    Route::post('/laporan/rekap-simpanan/export-excel', [App\Http\Controllers\ReportController::class, 'savingsRecapExport'])->name('report.savings-recap.export');
     Route::get('/laporan/rekap-deposito', [App\Http\Controllers\ReportController::class, 'depositRecap'])->name('report.deposit-recap');
     Route::post('/laporan/rekap-deposito/cetak', [App\Http\Controllers\ReportController::class, 'depositRecapPrint'])->name('report.deposit-recap.print');
+    Route::post('/laporan/rekap-deposito/export-excel', [App\Http\Controllers\ReportController::class, 'depositRecapExport'])->name('report.deposit-recap.export');
 
     // Utility — Trash
     Route::get('/utility/trash', [App\Http\Controllers\TrashController::class, 'index'])->name('trash.index');

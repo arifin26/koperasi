@@ -52,11 +52,6 @@
                                 <span class="error invalid-feedback">{{ $errors->first('birth') }}</span>
                             </div>
                             <div class="form-group">
-                                <label>Nomor Telepon</label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="Nomor Telepon">
-                                <span class="error invalid-feedback">{{ $errors->first('phone') }}</span>
-                            </div>
-                            <div class="form-group">
                                 <label>Alamat</label>
                                 <input type="text" class="form-control @error('address') is-invalid @enderror" name="address" value="{{ old('address', $user->address) }}" placeholder="Alamat">
                                 <span class="error invalid-feedback">{{ $errors->first('address') }}</span>

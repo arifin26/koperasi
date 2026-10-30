@@ -53,7 +53,6 @@ class SaldoDiscrepancyTest extends TestCase
             'number' => 'NAS-001',
             'name' => 'Test Yogi',
             'nik' => '1234567890123456',
-            'phone' => '081234567890',
             'address' => 'Jl. Test No. 1',
             'status' => 'active',
             'interest_rate_id' => $rate->id,

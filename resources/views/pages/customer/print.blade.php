@@ -13,7 +13,6 @@
             <th scope="col">Nama</th>
             <th scope="col">Tgl Lahir</th>
             <th scope="col">Alamat</th>
-            <th scope="col">No Telepon</th>
             <th scope="col">Pendidikan</th>
             <th scope="col">Status</th>
         </tr>
@@ -28,7 +27,6 @@
                 <td>{{ $item->name }}</td>
                 <td>{{ \Carbon\Carbon::parse($item->birth)->isoFormat('DD-MM-Y') }}</td>
                 <td>{{ $item->address }}</td>
-                <td>{{ $item->phone }}</td>
                 <td>{{ $item->last_education }}</td>
                 <td>{{ ucfirst($item->status) }}</td>
             </tr>

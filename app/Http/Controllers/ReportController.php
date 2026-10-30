@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\ReportExcelExporter;
 
 class ReportController extends Controller
 {
@@ -205,7 +206,6 @@ class ReportController extends Controller
                 ->addColumn('nik', fn($row) => $row->nik ?? '-')
                 ->addColumn('nama_nasabah', fn($row) => $row->name)
                 ->addColumn('alamat', fn($row) => $row->address ?? '-')
-                ->addColumn('phone', fn($row) => $row->phone ?? '-')
                 ->addColumn('rate_bunga', fn($row) => ($row->interestRate->rate_percent ?? 0) . '%')
                 ->addColumn('total_transaksi', fn($row) => ($row->total_transaksi ?? 0) . ' kali')
                 ->addColumn('saldo_simpanan', function ($row) {
@@ -482,5 +482,60 @@ class ReportController extends Controller
 
         $filename = date('Y-m-d') . '_laporan_rekap_deposito_' . time() . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export Laporan Rekap Simpanan ke Excel (.xlsx)
+     */
+    public function savingsRecapExport(Request $request)
+    {
+        $statusFilter = $request->input('status', '');
+        $tanggal = $request->input('tanggal', '');
+
+        $reportData = $this->buildSavingsRecapPrintData($statusFilter, $tanggal);
+
+        $meta = [
+            'statusFilter' => $statusFilter,
+            'periodeLabel' => $reportData['periodeLabel'] ?? 'Semua Tanggal',
+            'timestamp' => Carbon::now()->isoFormat('D MMMM Y, HH:mm') . ' WIB',
+            'userName' => auth()->user()->name ?? 'Petugas',
+        ];
+
+        return ReportExcelExporter::exportSavingsRecap($reportData['data'], $meta);
+    }
+
+    /**
+     * Export Laporan Rekap Deposito ke Excel (.xlsx)
+     */
+    public function depositRecapExport(Request $request)
+    {
+        $statusFilter = $request->input('status', '');
+        $bulan = $request->input('bulan', '');
+        $tahun = $request->input('tahun', '');
+
+        $data = FixedDeposit::with('customer')
+            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+            ->when($bulan, fn($q) => $q->whereMonth('start_date', $bulan))
+            ->when($tahun, fn($q) => $q->whereYear('start_date', $tahun))
+            ->orderBy('account_number', 'asc')
+            ->get();
+
+        $periodeLabel = '';
+        if ($bulan && $tahun) {
+            $periodeLabel = Carbon::createFromDate($tahun, $bulan, 1)->isoFormat('MMMM Y');
+        } elseif ($tahun) {
+            $periodeLabel = 'Tahun ' . $tahun;
+        } else {
+            $periodeLabel = 'Semua Periode';
+        }
+
+        $meta = [
+            'statusFilter' => $statusFilter,
+            'periodeLabel' => $periodeLabel,
+            'timestamp' => Carbon::now()->isoFormat('D MMMM Y, HH:mm') . ' WIB',
+            'userName' => auth()->user()->name ?? 'Petugas',
+        ];
+
+        return ReportExcelExporter::exportDepositRecap($data, $meta);
     }
 }

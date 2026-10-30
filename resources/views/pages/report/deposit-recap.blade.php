@@ -107,6 +107,15 @@
                             <input type="hidden" name="tahun" id="print_tahun" value="">
                             <button type="submit" class="btn btn-secondary"><i class="fas fa-print"></i> Cetak PDF</button>
                         </form>
+                        <form action="{{ route('report.deposit-recap.export') }}" method="POST" id="form_export_deposit_recap" class="d-inline ml-1">
+                            @csrf
+                            <input type="hidden" name="status" id="export_deposit_status" value="">
+                            <input type="hidden" name="bulan" id="export_deposit_bulan" value="">
+                            <input type="hidden" name="tahun" id="export_deposit_tahun" value="">
+                            <button type="submit" class="btn btn-success" id="btn_export_deposit_recap">
+                                <i class="fas fa-file-excel mr-1"></i> Export Excel
+                            </button>
+                        </form>
                     </div>
                 </div>
 
@@ -378,6 +387,9 @@
             $('#print_status').val(activeFilter.status);
             $('#print_bulan').val(activeFilter.bulan);
             $('#print_tahun').val(activeFilter.tahun);
+            $('#export_deposit_status').val(activeFilter.status);
+            $('#export_deposit_bulan').val(activeFilter.bulan);
+            $('#export_deposit_tahun').val(activeFilter.tahun);
 
             table.draw();
         });
@@ -394,6 +406,9 @@
             $('#print_status').val('');
             $('#print_bulan').val('');
             $('#print_tahun').val('');
+            $('#export_deposit_status').val('');
+            $('#export_deposit_bulan').val('');
+            $('#export_deposit_tahun').val('');
 
             table.draw();
         });

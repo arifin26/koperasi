@@ -260,20 +260,56 @@ class CustomerController extends Controller
         $customers = Customer::where('status', 'active')
             ->where(function ($query) use ($search) {
                 $query->where('name', 'LIKE', "%$search%")
-                      ->orWhere('number', 'LIKE', "%$search%");
+                      ->orWhere('number', 'LIKE', "%$search%")
+                      ->orWhere('nik', 'LIKE', "%$search%");
             })
             ->limit(20)
-            ->get(['id', 'name', 'number']);
+            ->get(['id', 'name', 'number', 'nik']);
 
         $formatted = $customers->map(function ($item) {
+            $nikInfo = $item->nik ? ' (NIK: ' . $item->nik . ')' : '';
             return [
                 'id' => $item->id,
-                'text' => $item->number . ' - ' . $item->name
+                'text' => $item->number . ' - ' . $item->name . $nikInfo
             ];
         });
 
         return response()->json([
             'results' => $formatted
+        ]);
+    }
+
+    public function lookupByNik(Request $request)
+    {
+        $nik = $request->input('nik');
+
+        if (!$nik || !is_numeric($nik) || strlen((string) $nik) !== 16) {
+            return response()->json([
+                'exists' => false,
+                'message' => 'NIK harus berupa 16 digit angka.'
+            ], 422);
+        }
+
+        $customer = Customer::where('nik', $nik)->latest('id')->first();
+
+        if (!$customer) {
+            return response()->json([
+                'exists' => false
+            ]);
+        }
+
+        return response()->json([
+            'exists' => true,
+            'data' => [
+                'name' => $customer->name,
+                'gender' => $customer->gender,
+                'birth' => $customer->birth ? \Carbon\Carbon::parse($customer->birth)->format('Y-m-d') : '',
+                'address' => $customer->address,
+                'profession' => $customer->profession,
+                'last_education' => $customer->last_education,
+                'interest_rate_id' => $customer->interest_rate_id,
+                'existing_number' => $customer->number,
+            ]
         ]);
     }
 

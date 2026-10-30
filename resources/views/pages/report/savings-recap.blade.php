@@ -81,6 +81,14 @@
                         <button type="button" class="btn btn-secondary" id="btn_print_savings_recap">
                             <i class="fas fa-print"></i> Cetak
                         </button>
+                        <form action="{{ route('report.savings-recap.export') }}" method="POST" id="form_export_savings_recap" class="d-inline ml-1">
+                            @csrf
+                            <input type="hidden" name="status" id="export_savings_status" value="">
+                            <input type="hidden" name="tanggal" id="export_savings_tanggal" value="{{ date('Y-m-d') }}">
+                            <button type="submit" class="btn btn-success" id="btn_export_savings_recap">
+                                <i class="fas fa-file-excel mr-1"></i> Export Excel
+                            </button>
+                        </form>
                     </div>
                 </div>
 
@@ -93,7 +101,6 @@
                                 <th>NIK</th>
                                 <th>Nama Nasabah</th>
                                 <th>Alamat</th>
-                                <th>No. Telepon</th>
                                 <th>Bunga (%)</th>
                                 <th>Status</th>
                                 <th>Jml. Transaksi</th>
@@ -104,7 +111,7 @@
                         </thead>
                         <tfoot>
                             <tr class="bg-light font-weight-bold">
-                                <td colspan="9" class="text-right">Total Dana Simpanan (Hasil Filter):</td>
+                                <td colspan="8" class="text-right">Total Dana Simpanan (Hasil Filter):</td>
                                 <td class="text-success" colspan="3" id="footer_total_saldo">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
@@ -446,7 +453,6 @@
                 { data: 'nik',         name: 'nik' },
                 { data: 'nama_nasabah', name: 'name' },
                 { data: 'alamat',      name: 'address' },
-                { data: 'phone',       name: 'phone' },
                 { data: 'rate_bunga',  name: 'interestRate.rate_percent', orderable: false, searchable: false },
                 { data: 'status_nasabah', name: 'status', orderable: false },
                 { data: 'total_transaksi', name: 'total_transaksi', className: 'text-center', searchable: false, orderable: false },
@@ -520,6 +526,8 @@
             // Sinkronkan ke form Cetak PDF
             $('#print_status').val(activeFilter.status);
             $('#print_tanggal').val(activeFilter.tanggal);
+            $('#export_savings_status').val(activeFilter.status);
+            $('#export_savings_tanggal').val(activeFilter.tanggal);
 
             table.draw();
 
@@ -548,6 +556,8 @@
             $('#print_status').val('');
             $('#print_tanggal').val('');
 
+            $('#export_savings_status').val('');
+            $('#export_savings_tanggal').val('');
             table.draw();
 
             // Hide detail card

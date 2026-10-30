@@ -12,6 +12,19 @@ use Tests\TestCase;
 class FixedDepositTest extends TestCase
 {
     use RefreshDatabase;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\InterestRate::create([
+            'name' => 'Default',
+            'type' => 'simpanan',
+            'rate_percent' => 5,
+            'effective_date' => '2026-01-01',
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+    }
+
 
     public function test_fixed_deposit_detail_page_loads_successfully()
     {
@@ -27,7 +40,6 @@ class FixedDepositTest extends TestCase
             'number' => 'NAS-001',
             'name' => 'Nasabah Test',
             'nik' => '1234567890123456',
-            'phone' => '081234567890',
             'address' => 'Jl. Test No. 1',
             'status' => 'active',
             'joined_at' => Carbon::now(),
@@ -72,7 +84,6 @@ class FixedDepositTest extends TestCase
             'number' => 'NAS-003',
             'name' => 'Nasabah Tiga',
             'nik' => '1234567890123458',
-            'phone' => '081234567892',
             'address' => 'Jl. Test No. 3',
             'status' => 'active',
             'joined_at' => Carbon::now(),
@@ -112,7 +123,6 @@ class FixedDepositTest extends TestCase
             'number' => 'NAS-002',
             'name' => 'Nasabah Dua',
             'nik' => '1234567890123457',
-            'phone' => '081234567891',
             'address' => 'Jl. Test No. 2',
             'status' => 'active',
             'joined_at' => Carbon::now(),
