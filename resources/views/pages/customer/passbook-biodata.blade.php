@@ -24,14 +24,14 @@
             color: #000;
         }
         /*
-         * Top offset: 20.4mm base (same as passbook row=1) + 17 empty rows × 6.8mm = 136mm total.
-         * Left offset: aligns with DEBIT column = col-no(8mm) + col-date(14.9mm) + col-code(8mm) = 30.9mm.
+         * Top offset: 86mm base (136mm − 50mm shift up).
+         * Left offset: 0.9mm (30.9mm − 30mm shift left).
          */
         .passbook-page {
             width: 150mm;
             position: relative;
-            padding-top: calc(136mm + {{ request('top_margin', $topMargin ?? '0mm') }});
-            padding-left: {{ request('left_margin', $leftMargin ?? '30.9mm') }};
+            padding-top: calc(86mm + {{ request('top_margin', $topMargin ?? '0mm') }});
+            padding-left: {{ request('left_margin', $leftMargin ?? '20.9mm') }};
             padding-right: {{ request('right_margin', $rightMargin ?? '0mm') }};
         }
         .biodata-table {
@@ -55,19 +55,7 @@
             letter-spacing: 0.2px;
             color: #000;
         }
-        .col-label {
-            text-align: left;
-            padding-right: 2px;
-        }
-        .col-sep {
-            text-align: center;
-            width: 6px;
-            padding: 0 1px;
-        }
-        .col-value {
-            text-align: left;
-            padding-left: 3px;
-        }
+        /* label/sep/value cells removed — single td per row, styled by .biodata-table td */
         @media print {
             @page {
                 size: auto;
@@ -119,29 +107,19 @@
         <table class="biodata-table">
             <tbody>
                 <tr>
-                    <td class="col-label">No. Rekening</td>
-                    <td class="col-sep">:</td>
-                    <td class="col-value">{{ $customer->number }}</td>
+                    <td>{{ $customer->number }}</td>
                 </tr>
                 <tr>
-                    <td class="col-label">Tanggal Buka</td>
-                    <td class="col-sep">:</td>
-                    <td class="col-value">{{ \Carbon\Carbon::parse($customer->joined_at)->format('d/m/Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($customer->joined_at)->format('d/m/Y') }}</td>
                 </tr>
                 <tr>
-                    <td class="col-label">Nama</td>
-                    <td class="col-sep">:</td>
-                    <td class="col-value">{{ $customer->name }}</td>
+                    <td>{{ $customer->name }}</td>
                 </tr>
                 <tr>
-                    <td class="col-label">No. KTP/SIM</td>
-                    <td class="col-sep">:</td>
-                    <td class="col-value">{{ $customer->nik }}</td>
+                    <td>{{ $customer->nik }}</td>
                 </tr>
                 <tr>
-                    <td class="col-label">Alamat</td>
-                    <td class="col-sep">:</td>
-                    <td class="col-value">{{ $customer->address }}</td>
+                    <td>{{ $customer->address }}</td>
                 </tr>
             </tbody>
         </table>

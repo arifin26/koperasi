@@ -61,7 +61,7 @@
             text-align: center;
         }
         .col-date {
-            width: 14.9mm;
+            width: 16 mm;
             text-align: left;
         }
         .col-code {
