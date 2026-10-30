@@ -29,13 +29,13 @@
         .passbook-page {
             width: 150mm;
             position: relative;
-            padding-top: {{ $topMargin ?? '0mm' }};
-            padding-left: {{ $leftMargin ?? '6mm' }};
-            padding-right: {{ $rightMargin ?? '6mm' }};
+            padding-top: {{ request('top_margin', $topMargin ?? '0mm') }};
+            padding-left: {{ request('left_margin', $leftMargin ?? '0mm') }};
+            padding-right: {{ request('right_margin', $rightMargin ?? '0mm') }};
         }
         /* Tabel Passbook */
         .passbook-table {
-            width: 100%;
+            width: 138mm;
             border-collapse: collapse;
             table-layout: fixed;
         }
