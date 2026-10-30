@@ -34,6 +34,7 @@ class CustomerController extends Controller
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
                     return '<a href="' . route('fixed-deposit.create', ['customer_id' => $row->id]) . '" class="btn btn-info btn-xs px-2"> Deposito </a>
+                            <a href="' . route('customer.passbook-biodata', $row) . '" class="btn btn-secondary btn-xs px-2" target="_blank"> Buku </a>
                             <a href="' . route('customer.show', $row) . '" class="btn btn-success btn-xs px-2"> Detail </a>
                             <a href="' . route('customer.edit', $row) . '" class="btn btn-primary btn-xs px-2 mx-1"> Edit </a>
                             <form class="d-inline" method="POST" action="' . route('customer.destroy', $row) . '">
@@ -372,6 +373,14 @@ class CustomerController extends Controller
             'title' => 'Cetak Buku Tabungan - ' . $nasabah->name,
             'transactions' => $transactions,
             'startRow' => $startRow,
+            'customer' => $nasabah,
+        ]);
+    }
+
+    public function biodataPassbook(Customer $nasabah)
+    {
+        return view('pages.customer.passbook-biodata', [
+            'title'    => 'Cetak Biodata Buku Tabungan - ' . $nasabah->name,
             'customer' => $nasabah,
         ]);
     }

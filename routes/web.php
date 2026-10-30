@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function() {
     Route::get('/nasabah/lookup-nik', [CustomerController::class, 'lookupByNik'])->name('customer.lookup-nik');
     Route::resource('/nasabah', CustomerController::class, ['names' => 'customer']);
     Route::get('/nasabah/{nasabah}/buku-tabungan', [CustomerController::class, 'passbook'])->name('customer.passbook');
+    Route::get('/nasabah/{nasabah}/biodata-buku-tabungan', [CustomerController::class, 'biodataPassbook'])->name('customer.passbook-biodata');
 
     Route::post('/karyawan/cetak', [UserController::class, 'print'])->name('user.print');
     Route::post('/nasabah/cetak', [CustomerController::class, 'print'])->name('customer.print');

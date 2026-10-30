@@ -29,7 +29,7 @@
         .passbook-page {
             width: 150mm;
             position: relative;
-            padding-top: {{ request('top_margin', $topMargin ?? '0mm') }};
+            padding-top: calc(20.4mm + {{ request('top_margin', $topMargin ?? '0mm') }});
             padding-left: {{ request('left_margin', $leftMargin ?? '0mm') }};
             padding-right: {{ request('right_margin', $rightMargin ?? '0mm') }};
         }
@@ -61,7 +61,7 @@
             text-align: center;
         }
         .col-date {
-            width: 16mm;
+            width: 14.9mm;
             text-align: left;
         }
         .col-code {
