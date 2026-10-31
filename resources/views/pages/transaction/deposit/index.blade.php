@@ -57,12 +57,12 @@
                             </div>
                             <div class="col-12 col-md-7 row">
                                 <div class="col-12 col-md-3">
-                                    <select class="form-control" name="customer">
-                                        <option value="">Semua Nasabah</option>
-                                        @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}">{{ $customer->number . ' - ' . $customer->name }}</option>
-                                        @endforeach
-                                    </select>
+                                <select class="form-control select2-customer" name="customer" style="width:100%">
+                                    <option value="">Semua Nasabah</option>
+                                    @foreach ($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->number . ' - ' . $customer->name }}</option>
+                                    @endforeach
+                                </select>
                                 </div>
                                 <div class="col-12 col-md-3">
                                     <select class="form-control" name="type">
@@ -229,6 +229,9 @@
     <!-- Datatable -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.bootstrap4.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 @endpush
 
 @push('script')
@@ -237,6 +240,8 @@
     <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.7/js/responsive.bootstrap4.min.js"></script>
+    <!-- Select2 -->
+    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
 
     <script>
         $(function() {
@@ -286,15 +291,21 @@
                     },
                     {
                         data: 'masuk',
-                        name: 'masuk'
+                        name: 'masuk',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'keluar',
-                        name: 'keluar'
+                        name: 'keluar',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'current_balance',
-                        name: 'current_balance'
+                        name: 'current_balance',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'action',
@@ -310,7 +321,12 @@
                 dtTable.draw();
             });
 
-            $('select[name=customer]').on('change', function() {
+            $('.select2-customer').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Semua Nasabah',
+                allowClear: true,
+                width: '100%'
+            }).on('change', function() {
                 customerId = $(this).val();
                 dtTable.draw();
             });
