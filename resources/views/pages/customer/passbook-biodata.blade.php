@@ -30,8 +30,8 @@
         .passbook-page {
             width: 150mm;
             position: relative;
-            padding-top: calc(96mm + {{ request('top_margin', $topMargin ?? '0mm') }});
-            padding-left: {{ request('left_margin', $leftMargin ?? '50.9mm') }};
+            padding-top: calc(115mm + {{ request('top_margin', $topMargin ?? '0mm') }});
+            padding-left: {{ request('left_margin', $leftMargin ?? '45.9mm') }};
             padding-right: {{ request('right_margin', $rightMargin ?? '0mm') }};
         }
         .biodata-table {
@@ -50,7 +50,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: clip;
-            font-size: 9pt;
+            font-size: 12pt;
             font-weight: 600;
             letter-spacing: 0.2px;
             color: #000;
