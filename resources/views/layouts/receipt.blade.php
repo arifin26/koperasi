@@ -227,7 +227,7 @@
                 <tr>
                     <td style="width: 58%; vertical-align: middle;">
                         <div class="header-logo">{{ config('app.name') }}</div>
-                        <div class="header-sub">Jl. Gadungan-Kepung, RT.04/RW.04 &bull; Telp: 0354-393062 &bull; Kec. Puncu &bull; Kab. Kediri</div>
+                        <div class="header-sub">Jl. Gadungan-Kepung, RT.04/RW.04 &bull; Kec. Puncu &bull; Kab. Kediri</div>
                     </td>
                     <td style="width: 42%; vertical-align: middle;" class="receipt-title-box">
                         <div class="receipt-title">@yield('receipt-title', 'KWITANSI TRANSAKSI')</div>
