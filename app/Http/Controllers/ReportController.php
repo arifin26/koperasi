@@ -281,8 +281,10 @@ class ReportController extends Controller
     /**
      * Build print report data with filters
      */
-    private function buildSavingsRecapPrintData(string $statusFilter, string $tanggal): array
+    private function buildSavingsRecapPrintData(?string $statusFilter, ?string $tanggal): array
     {
+        $statusFilter = $statusFilter ?? '';
+        $tanggal      = $tanggal ?? '';
         $cutoffDate = $this->resolveSavingsRecapCutoffDate($tanggal);
         $periodeLabel = $this->resolveSavingsRecapPeriodLabel($tanggal);
 
