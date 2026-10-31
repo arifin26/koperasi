@@ -58,7 +58,7 @@
                 <th style="width: 16%;">Nama Nasabah</th>
                 <th style="width: 28%;">Alamat</th>
                 <th style="width: 9%;">Jml Transaksi</th>
-                <th style="width: 22%;">Saldo Simpanan (Rp)</th>
+                <th style="width: 22%;">Saldo per {{ $periodeLabel ?? 'Semua Periode' }}@if(($periodeLabel ?? 'Semua Periode') === 'Semua Periode') (Rp)@endif</th>
                 <th style="width: 11%;">Bunga/Bulan</th>
             </tr>
         </thead>

@@ -14,8 +14,8 @@
                     <span class="info-box-icon"><i class="fas fa-piggy-bank"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Total Dana Simpanan</span>
-                        <span class="info-box-number">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span>
-                        <span class="progress-description">dari seluruh nasabah</span>
+                        <span class="info-box-number" id="card_total_dana_simpanan">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span>
+                        <span class="progress-description" id="card_total_dana_desc">dari seluruh nasabah</span>
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title"><i class="fas fa-piggy-bank mr-2"></i>Rekap Saldo Simpanan Nasabah</h3>
-                <small class="text-muted">Data per: {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }}</small>
+                <small class="text-muted" id="data-per-label">Data per: {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y HH:mm') }}</small>
             </div>
             <div class="card-body">
                 {{-- Filter & Action --}}
@@ -104,7 +104,7 @@
                                 <th>Bunga (%)</th>
                                 <th>Status</th>
                                 <th>Jml. Transaksi</th>
-                                <th>Saldo Simpanan</th>
+                                <th id="th-saldo-simpanan">Saldo Simpanan</th>
                                 <th>Bunga/Bulan</th>
                                 <th width="140">Aksi</th>
                             </tr>
@@ -432,6 +432,12 @@
             tanggal: today
         };
 
+
+        function formatTanggal(ymd) {
+            var bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            var parts = ymd.split('-');
+            return parts[2] + ' ' + bulan[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+        }
         var table = $('#savings-recap-table').DataTable({
             processing: true,
             serverSide: true,
@@ -475,6 +481,7 @@
             if (json && json.filtered_total_saldo_formatted !== undefined) {
                 $('#card_dana_simpanan').text('Rp ' + json.filtered_total_saldo_formatted);
                 $('#footer_total_saldo').text('Rp ' + json.filtered_total_saldo_formatted);
+                $('#card_total_dana_simpanan').text('Rp ' + json.filtered_total_saldo_formatted);
             }
         });
 
@@ -531,6 +538,17 @@
 
             table.draw();
 
+            // Update header kolom saldo dan label UI
+            if (activeFilter.tanggal) {
+                $('#th-saldo-simpanan').text('Saldo per ' + formatTanggal(activeFilter.tanggal));
+                $('#card_total_dana_desc').text('per ' + formatTanggal(activeFilter.tanggal));
+                $('#data-per-label').text('Data per: ' + formatTanggal(activeFilter.tanggal));
+            } else {
+                $('#th-saldo-simpanan').text('Saldo Simpanan');
+                $('#card_total_dana_desc').text('dari seluruh nasabah');
+                $('#data-per-label').text('Data per: semua periode');
+            }
+
             // Show/hide detail card based on date filter
             if (activeFilter.tanggal) {
                 $('#detail-card-subtitle').text('Per tanggal: ' + activeFilter.tanggal);
@@ -566,6 +584,11 @@
                 detailTable.destroy();
                 detailTable = null;
             }
+
+            // Reset header kolom saldo dan label UI
+            $('#th-saldo-simpanan').text('Saldo Simpanan');
+            $('#card_total_dana_desc').text('dari seluruh nasabah');
+            $('#data-per-label').text('Data per: semua periode');
         });
 
         // Native Print Button Handler
