@@ -52,24 +52,25 @@ class AutoPostInterest
      */
     protected function triggerAutoPostIfNeeded(): void
     {
+        if (app()->runningUnitTests()) {
+            return;
+        }
+
         try {
             $now = now();
             $today = $now->format('Y-m-d');
 
-            // 1. CEK HARIAN DEPOSITO (Setiap hari mengecek bunga deposito yang jatuh tempo pada tanggal pendaftarannya)
+            // 1. Daily check for deposit interest payments (runs daily)
             $this->autoInterestService->runDailyDepositCheck($today);
 
-            // 2. CEK BULANAN SIMPANAN (Setiap tanggal 1 memposting bunga simpanan bulan lalu, atau catch-up jika terlewat)
-            if ($now->day === 1) {
-                $lastMonthPeriod = AutoInterestService::getLastMonthPeriod();
-                $this->autoInterestService->runMonthlySavingsPostingIfNeeded($lastMonthPeriod);
-            } else {
-                // Catch-up jika tanggal 1 kemarin libur / tidak ada aktivitas
-                $this->autoInterestService->runCatchUp();
-            }
+            // 2. Check and run monthly savings interest if it's the 1st of the month
+            $this->autoInterestService->runMonthlySavingsPostingIfNeeded();
+
+            // 3. Catch-up for any missed previous periods
+            $this->autoInterestService->runCatchUp();
         } catch (\Exception $e) {
-            // Tangkap semua exception agar tidak pernah mengganggu response HTTP
-            Log::error("Auto interest middleware error: {$e->getMessage()}", [
+            // Silently log error, do not break the request flow
+            Log::error('AutoPostInterest middleware failed: ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
         }

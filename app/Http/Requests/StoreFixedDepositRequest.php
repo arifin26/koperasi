@@ -85,20 +85,6 @@ class StoreFixedDepositRequest extends FormRequest
                 );
             }
 
-            // Validation 2: Check if customer already has active/extended deposit
-            // If so, block creation and ask to extend or liquidate existing one
-            $existingActive = \App\Models\FixedDeposit::where('customer_id', $customer->id)
-                ->whereIn('status', ['active', 'extended'])
-                ->whereNull('deleted_at')
-                ->first();
-
-            if ($existingActive) {
-                $validator->errors()->add(
-                    'customer_id',
-                    'Nasabah ini sudah memiliki deposito aktif (' . $existingActive->number . '). ' .
-                    'Silakan cairkan atau perpanjang deposito yang ada terlebih dahulu sebelum membuka deposito baru.'
-                );
-            }
         });
     }
 }

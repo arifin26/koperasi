@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Deposit;
 use App\Models\FixedDeposit;
 use App\Models\User;
 use Carbon\Carbon;
@@ -147,6 +148,116 @@ class FixedDepositTest extends TestCase
 
         $response->assertStatus(200);
         $expectedUrl = route('fixed-deposit.show', $fixedDeposit);
-        $response->assertSee($expectedUrl, false);
+        $this->assertStringContainsString($expectedUrl, stripslashes($response->getContent()));
+    }
+
+    public function test_customer_can_create_multiple_active_fixed_deposits()
+    {
+        $user = User::create([
+            'name' => 'Teller Test Multiple',
+            'username' => 'tellermultiple',
+            'password' => bcrypt('password'),
+            'role' => 'teller',
+            'phone' => '08123456781',
+        ]);
+
+        $customer = Customer::create([
+            'number' => 'NAS-004',
+            'name' => 'Nasabah Multiple Deposito',
+            'nik' => '1234567890123459',
+            'address' => 'Jl. Test No. 4',
+            'status' => 'active',
+            'joined_at' => Carbon::now(),
+        ]);
+
+        Deposit::create([
+            'customer_id' => $customer->id,
+            'type' => 'pokok',
+            'amount' => 500000,
+            'created_by' => $user->id,
+        ]);
+
+        FixedDeposit::create([
+            'number' => 'DEP-202610-001',
+            'account_number' => 'DEP-001',
+            'customer_id' => $customer->id,
+            'amount' => 10000000,
+            'tenor_months' => 6,
+            'rate_percent' => 6.0,
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(6),
+            'status' => 'active',
+            'notes' => 'Deposito pertama',
+            'created_by' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('fixed-deposit.store'), [
+            'customer_id' => $customer->id,
+            'account_number' => 'DEP-002',
+            'amount' => 5000000,
+            'tenor_months' => 12,
+            'rate_percent' => 6.5,
+            'start_date' => Carbon::today()->format('Y-m-d'),
+            'notes' => 'Deposito kedua',
+        ]);
+
+        $response->assertRedirect(route('fixed-deposit.index'));
+        $response->assertSessionHasNoErrors();
+
+        $this->assertEquals(
+            2,
+            FixedDeposit::where('customer_id', $customer->id)->where('status', 'active')->count()
+        );
+    }
+
+    public function test_duplicate_deposit_account_number_is_rejected()
+    {
+        $user = User::create([
+            'name' => 'Teller Test Duplicate',
+            'username' => 'tellerduplicate',
+            'password' => bcrypt('password'),
+            'role' => 'teller',
+            'phone' => '08123456782',
+        ]);
+
+        $customer = Customer::create([
+            'number' => 'NAS-005',
+            'name' => 'Nasabah Test Duplicate',
+            'nik' => '1234567890123460',
+            'address' => 'Jl. Test No. 5',
+            'status' => 'active',
+            'joined_at' => Carbon::now(),
+        ]);
+
+        Deposit::create([
+            'customer_id' => $customer->id,
+            'type' => 'pokok',
+            'amount' => 500000,
+            'created_by' => $user->id,
+        ]);
+
+        FixedDeposit::create([
+            'number' => 'DEP-202610-002',
+            'account_number' => 'DEP-EXISTING',
+            'customer_id' => $customer->id,
+            'amount' => 10000000,
+            'tenor_months' => 6,
+            'rate_percent' => 6.0,
+            'start_date' => Carbon::today(),
+            'maturity_date' => Carbon::today()->addMonths(6),
+            'status' => 'active',
+            'created_by' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('fixed-deposit.store'), [
+            'customer_id' => $customer->id,
+            'account_number' => 'DEP-EXISTING',
+            'amount' => 5000000,
+            'tenor_months' => 12,
+            'rate_percent' => 6.5,
+            'start_date' => Carbon::today()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('account_number');
     }
 }
