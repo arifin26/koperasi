@@ -23,29 +23,58 @@
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th scope="col">No</th>
-            <th scope="col">Tgl Simpan</th>
-            <th scope="col">Setoran Simpanan</th>
-            <th scope="col">Bunga</th>
-            <th scope="col">Nominal Total</th>
+            <th scope="col" style="width: 5%;">No</th>
+            <th scope="col" style="width: 13%;">Tanggal</th>
+            <th scope="col" style="width: 8%;">Sandi</th>
+            <th scope="col" style="width: 19%;">Debet</th>
+            <th scope="col" style="width: 19%;">Kredit</th>
+            <th scope="col" style="width: 24%;">Saldo</th>
+            <th scope="col" style="width: 12%;">Petugas</th>
         </tr>
     </thead>
     <tbody>
-        @php($total = 0)
-        @foreach ($data as $item)
-            @php($total += $item->saldo)
+        @forelse ($data as $item)
+            @php
+                $isDebit = ($item->type === 'penarikan');
+                $notesLower = strtolower($item->notes ?? '');
+
+                // Kode sandi transaksi buku tabungan:
+                // 1: Setor (simpanan reguler/pokok/wajib/sukarela)
+                // 2: Penarikan
+                // 3: Bunga Deposito
+                // 4: Bunga Simpanan
+                if ($isDebit) {
+                    $code = '2';
+                } elseif ($item->type === 'bunga') {
+                    $code = str_contains($notesLower, 'deposito') ? '3' : '4';
+                } else {
+                    $code = '1';
+                }
+
+                $teller = $item->creator->name ?? 'ADM';
+                $tellerInitial = strtoupper(substr(trim($teller), 0, 3));
+            @endphp
             <tr>
-                <th scope="row">{{ $loop->iteration }}</th>
-                <td>{{ \Carbon\Carbon::parse($item->tanggal)->isoFormat('DD-MM-Y') }}</td>
-                <td class="text-right">Rp{{ number_format($item->simpanan, 2, ',', '.') }}</td>
-                <td class="text-right">Rp{{ number_format($item->bunga, 2, ',', '.') }}</td>
-                <td class="text-right">Rp{{ number_format($item->saldo, 2, ',', '.') }}</td>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/y') }}</td>
+                <td class="text-center">{{ $code }}</td>
+                <td class="text-right">{{ $isDebit ? number_format($item->amount, 0, ',', '.') : '-' }}</td>
+                <td class="text-right">{{ !$isDebit ? number_format($item->amount, 0, ',', '.') : '-' }}</td>
+                <td class="text-right">{{ number_format($item->current_balance, 0, ',', '.') }}</td>
+                <td class="text-center">{{ $tellerInitial }}</td>
             </tr>
-        @endforeach
-        <tr>
-            <th colspan="4">Total Nominal</th>
-            <td class="text-right">Rp{{ number_format($total, 2, ',', '.') }}</td>
-        </tr>
+        @empty
+            <tr>
+                <td colspan="7" class="text-center">Tidak ada transaksi</td>
+            </tr>
+        @endforelse
     </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="5" class="text-right">Saldo Akhir</th>
+            <th class="text-right">{{ number_format($lastBalance ?? ($data->last()->current_balance ?? 0), 0, ',', '.') }}</th>
+            <th></th>
+        </tr>
+    </tfoot>
 </table>
 @endsection

@@ -311,13 +311,12 @@ class DepositController extends Controller
 
     public function print(Request $request)
     {
-        $customer = Customer::find($request->customer_id);
+        $customer = Customer::findOrFail($request->customer_id);
 
-        $data = Deposit::selectRaw("customer_id, DATE(created_at) as tanggal, SUM(CASE WHEN type='simpanan' THEN amount ELSE 0 END) as simpanan, SUM(CASE WHEN type='bunga' THEN amount ELSE 0 END) as bunga, SUM(CASE WHEN type IN ('simpanan', 'bunga') THEN amount ELSE 0 END) AS saldo")
-            ->where('customer_id', $request->customer_id)
-            ->whereNot('type', 'penarikan')
-            ->groupByRaw('customer_id, DATE(created_at)')
-            ->orderByRaw('DATE(created_at) ASC')
+        $data = Deposit::where('customer_id', $customer->id)
+            ->with(['creator'])
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
         $manager = User::where('role', 'manager')->first();
         $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_-_laporan_simpanan_nasabah_no_rekening_' . $customer->number  . '_' . time() . '.pdf';
@@ -329,7 +328,7 @@ class DepositController extends Controller
             'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
             'manager' => $manager,
             'data' => $data,
-            'total' => 0
+            'lastBalance' => $data->last()->current_balance ?? 0,
         ]);
         $pdf->setPaper('A4', 'portrait');
 
