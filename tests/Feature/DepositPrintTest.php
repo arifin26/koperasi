@@ -176,6 +176,9 @@ class DepositPrintTest extends TestCase
         // 7. Footer saldo akhir
         $this->assertStringContainsString('Saldo Akhir', $viewHtml);
         $this->assertStringContainsString('<th class="text-right">420.000</th>', $viewHtml);
+
+        // 8. Keterangan sandi
+        $this->assertStringContainsString('Keterangan Sandi: 1 = Setoran Simpanan | 2 = Penarikan | 3 = Bunga Deposito | 4 = Bunga Simpanan', $viewHtml);
     }
 
     public function test_deposit_print_renders_correctly_when_no_transactions(): void
@@ -199,5 +202,15 @@ class DepositPrintTest extends TestCase
 
         $this->assertStringContainsString('Tidak ada transaksi', $viewHtml);
         $this->assertStringContainsString('<th class="text-right">0</th>', $viewHtml);
+        $this->assertStringContainsString('Keterangan Sandi: 1 = Setoran Simpanan | 2 = Penarikan | 3 = Bunga Deposito | 4 = Bunga Simpanan', $viewHtml);
+    }
+
+    public function test_deposit_print_validates_customer_id(): void
+    {
+        $response = $this->actingAs($this->teller)->post(route('transaction.deposit.print'), [
+            'customer_id' => 999999,
+        ]);
+
+        $response->assertSessionHasErrors('customer_id');
     }
 }

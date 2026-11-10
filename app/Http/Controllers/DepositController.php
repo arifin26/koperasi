@@ -311,8 +311,11 @@ class DepositController extends Controller
 
     public function print(Request $request)
     {
-        $customer = Customer::findOrFail($request->customer_id);
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+        ]);
 
+        $customer = Customer::findOrFail($request->customer_id);
         $data = Deposit::where('customer_id', $customer->id)
             ->with(['creator'])
             ->orderBy('created_at', 'asc')

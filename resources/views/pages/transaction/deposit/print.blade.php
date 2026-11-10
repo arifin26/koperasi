@@ -77,4 +77,7 @@
         </tr>
     </tfoot>
 </table>
+<div style="font-size: 7.5pt; margin-top: 6px; font-style: italic;">
+    * Keterangan Sandi: 1 = Setoran Simpanan | 2 = Penarikan | 3 = Bunga Deposito | 4 = Bunga Simpanan
+</div>
 @endsection
