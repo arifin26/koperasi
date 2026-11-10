@@ -16,19 +16,19 @@
         <td class="label">Nasabah</td>
         <td class="colon">:</td>
         <td class="value">
-            <strong>{{ $deposit->customer->name ?? '-' }}</strong>
+            {{ $deposit->customer->name ?? '-' }}
             <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $deposit->customer->number ?? '-' }} | NIK: {{ $deposit->customer->nik ?? '-' }})</span>
         </td>
     </tr>
     <tr>
         <td class="label">Jenis Transaksi</td>
         <td class="colon">:</td>
-        <td class="value"><strong>Penarikan Simpanan Harian (Sukarela)</strong></td>
+        <td class="value">Penarikan Simpanan Harian (Sukarela)</td>
     </tr>
     <tr>
         <td class="label">Tgl. Transaksi / Hapus</td>
         <td class="colon">:</td>
-        <td class="value">{{ $deposit->created_at->isoFormat('D MMM Y HH:mm') }} / <span style="color: #000; font-weight: bold;">{{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</span></td>
+        <td class="value">{{ $deposit->created_at->isoFormat('D MMM Y HH:mm') }} / {{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</td>
     </tr>
     @if($deposit->notes)
     <tr>
@@ -49,7 +49,7 @@
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
             <td style="width: 40%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
-                <div style="background-color: #000; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 7.5pt; letter-spacing: 0.5px;">
+                <div style="background-color: #000; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: normal; font-size: 7.5pt; letter-spacing: 0.5px;">
                     TRANSAKSI DIHAPUS
                 </div>
                 <div style="font-size: 6.2pt; color: #000; margin-top: 2px; text-align: center;">

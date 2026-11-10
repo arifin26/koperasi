@@ -15,12 +15,12 @@
 <div class="validation-strip">
     <table class="validation-table">
         <tr>
-            <td style="text-align: left; font-weight: bold; width: 60%;">PEMBUKAAN DEPOSITO</td>
-            <td style="text-align: right; width: 40%; font-weight: bold;">Usr. {{ strtoupper($fixed_deposit->validator->name ?? auth()->user()->name) }}</td>
+            <td style="text-align: left; width: 60%;">PEMBUKAAN DEPOSITO</td>
+            <td style="text-align: right; width: 40%;">Usr. {{ strtoupper($fixed_deposit->validator->name ?? auth()->user()->name) }}</td>
         </tr>
         <tr>
             <td style="text-align: left;">Rek.{{ $fixed_deposit->customer->number ?? '-' }} &nbsp; {{ $fixed_deposit->validated_at->format('d/m/Y H:i:s') }}</td>
-            <td style="text-align: right; font-weight: bold;">Rp. {{ number_format($fixed_deposit->amount, 0, ',', '.') }}</td>
+            <td style="text-align: right;">Rp. {{ number_format($fixed_deposit->amount, 0, ',', '.') }}</td>
         </tr>
     </table>
 </div>
@@ -33,7 +33,7 @@
         <td class="label">Nama Nasabah</td>
         <td class="colon">:</td>
         <td class="value">
-            <strong>{{ $fixed_deposit->customer->name ?? '-' }}</strong>
+            {{ $fixed_deposit->customer->name ?? '-' }}
             <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }})</span>
         </td>
     </tr>
@@ -41,11 +41,10 @@
         <td class="label">Tenor & Suku Bunga</td>
         <td class="colon">:</td>
         <td class="value">
-            <strong>{{ $fixed_deposit->tenor_months }} Bulan ({{ $fixed_deposit->rate_percent }}% p.a.)</strong> 
-            <span style="color: #000; font-weight: bold; font-size: 6.5pt;">&bull; Est. Bunga: Rp {{ number_format($fixed_deposit->monthly_interest, 0, ',', '.') }}/bln</span>
+            {{ $fixed_deposit->tenor_months }} Bulan ({{ $fixed_deposit->rate_percent }}% p.a.) 
+            <span style="color: #000; font-size: 6.5pt;">&bull; Est. Bunga: Rp {{ number_format($fixed_deposit->monthly_interest, 0, ',', '.') }}/bln</span>
         </td>
     </tr>
-    <tr>
         <td class="label">Periode Deposito</td>
         <td class="colon">:</td>
         <td class="value">{{ $fixed_deposit->start_date->isoFormat('D MMM Y') }} s/d {{ $fixed_deposit->maturity_date->isoFormat('D MMM Y') }}</td>
@@ -74,7 +73,7 @@
                         <td style="color: #000;">Tanggal Buka</td>
                         <td style="text-align: right;">{{ $fixed_deposit->start_date->isoFormat('DD-MM-Y') }}</td>
                     </tr>
-                    <tr style="font-weight: bold; color: #000;">
+                    <tr style="color: #000;">
                         <td>Jatuh Tempo</td>
                         <td style="text-align: right;">{{ $fixed_deposit->maturity_date->isoFormat('DD-MM-Y') }}</td>
                     </tr>

@@ -16,19 +16,19 @@
         <td class="label">Nasabah</td>
         <td class="colon">:</td>
         <td class="value">
-            <strong>{{ $fixed_deposit->customer->name ?? '-' }}</strong>
+            {{ $fixed_deposit->customer->name ?? '-' }}
             <span style="color: #000; font-size: 6.5pt;">(No. Rek: {{ $fixed_deposit->customer->number ?? '-' }} | NIK: {{ $fixed_deposit->customer->nik ?? '-' }})</span>
         </td>
     </tr>
     <tr>
         <td class="label">No. Deposito / Tenor</td>
         <td class="colon">:</td>
-        <td class="value"><strong>{{ $fixed_deposit->number }}</strong> ({{ $fixed_deposit->tenor_months }} Bulan &bull; {{ $fixed_deposit->rate_percent }}% p.a.)</td>
+        <td class="value">{{ $fixed_deposit->number }} ({{ $fixed_deposit->tenor_months }} Bulan &bull; {{ $fixed_deposit->rate_percent }}% p.a.)</td>
     </tr>
     <tr>
         <td class="label">Tgl. Buka / Hapus</td>
         <td class="colon">:</td>
-        <td class="value">{{ $fixed_deposit->start_date->isoFormat('D MMM Y') }} / <span style="color: #000; font-weight: bold;">{{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</span></td>
+        <td class="value">{{ $fixed_deposit->start_date->isoFormat('D MMM Y') }} / {{ \Carbon\Carbon::now()->isoFormat('D MMM Y HH:mm') }}</td>
     </tr>
     @if($fixed_deposit->notes)
     <tr>
@@ -49,7 +49,7 @@
                 <div class="terbilang-text"># {{ $terbilang }} #</div>
             </td>
             <td style="width: 40%; vertical-align: middle; border-left: 1px dashed #000; padding-left: 8px;">
-                <div style="background-color: #000; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 7.5pt; letter-spacing: 0.5px;">
+                <div style="background-color: #000; color: #fff; text-align: center; padding: 2px 5px; border-radius: 3px; font-weight: normal; font-size: 7.5pt; letter-spacing: 0.5px;">
                     DEPOSITO DIHAPUS
                 </div>
                 <div style="font-size: 6.2pt; color: #000; margin-top: 2px; text-align: center;">

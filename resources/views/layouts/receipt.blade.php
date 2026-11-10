@@ -41,6 +41,9 @@
             border: 0.5px solid #000;
             padding: 2px 4px;
         }
+        .receipt-container strong, .receipt-container b {
+            font-weight: normal;
+        }
         .header-table {
             width: 100%;
             border-bottom: 1.5px solid #000;
@@ -50,7 +53,7 @@
         }
         .header-logo {
             font-size: 13px;
-            font-weight: bold;
+            font-weight: normal;
             color: #000;
             letter-spacing: 0.3px;
             text-transform: uppercase;
@@ -67,7 +70,7 @@
         }
         .receipt-title {
             font-size: 13px;
-            font-weight: bold;
+            font-weight: normal;
             color: #000;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -75,7 +78,7 @@
         }
         .receipt-no {
             font-size: 11px;
-            font-weight: bold;
+            font-weight: normal;
             color: #000;
             margin-top: 1px;
         }
@@ -94,7 +97,7 @@
         .label {
             width: 22%;
             color: #000;
-            font-weight: bold;
+            font-weight: normal;
         }
         .colon {
             width: 2%;
@@ -111,7 +114,7 @@
         }
         .amount-val {
             font-size: 13px;
-            font-weight: bold;
+            font-weight: normal;
             color: #000;
             line-height: 1.1;
         }
@@ -139,7 +142,7 @@
             height: 14px;
         }
         .sign-name {
-            font-weight: bold;
+            font-weight: normal;
             text-decoration: underline;
             font-size: 12px;
             line-height: 1.1;
@@ -195,7 +198,7 @@
             padding: 5px 12px;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: normal;
         }
         .print-toolbar .btn-print {
             background: #28a745;

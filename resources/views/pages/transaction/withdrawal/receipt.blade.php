@@ -15,12 +15,12 @@
 <div class="validation-strip">
     <table class="validation-table">
         <tr>
-            <td style="text-align: left; font-weight: bold; width: 60%;">PENARIKAN TUNAI</td>
-            <td style="text-align: right; width: 40%; font-weight: bold;">Usr. {{ strtoupper($deposit->validator->name ?? auth()->user()->name) }}</td>
+            <td style="text-align: left; width: 60%;">PENARIKAN TUNAI</td>
+            <td style="text-align: right; width: 40%;">Usr. {{ strtoupper($deposit->validator->name ?? auth()->user()->name) }}</td>
         </tr>
         <tr>
             <td style="text-align: left;">Rek.{{ $deposit->customer->number ?? '-' }} &nbsp; {{ $deposit->validated_at->format('d/m/Y H:i:s') }}</td>
-            <td style="text-align: right; font-weight: bold;">Rp. {{ number_format($deposit->amount, 0, ',', '.') }}</td>
+            <td style="text-align: right;">Rp. {{ number_format($deposit->amount, 0, ',', '.') }}</td>
         </tr>
     </table>
 </div>
@@ -33,14 +33,14 @@
         <td class="label">Diserahkan Kepada</td>
         <td class="colon">:</td>
         <td class="value">
-            <strong>{{ $deposit->customer->name ?? '-' }}</strong>
+            {{ $deposit->customer->name ?? '-' }}
             <span style="color: #000; font-size: 11px;">(No. Rek: {{ $deposit->customer->number ?? '-' }})</span>
         </td>
     </tr>
     <tr>
         <td class="label">Untuk Transaksi</td>
         <td class="colon">:</td>
-        <td class="value"><strong>Penarikan Simpanan Harian (Sukarela)</strong></td>
+        <td class="value">Penarikan Simpanan Harian (Sukarela)</td>
     </tr>
     <tr>
         <td class="label">Tanggal & Waktu</td>
@@ -71,14 +71,14 @@
                         <td style="color: #000;">Saldo Sebelumnya</td>
                         <td style="text-align: right;">Rp {{ number_format($deposit->previous_balance, 2, ',', '.') }}</td>
                     </tr>
-                    <tr style="font-weight: bold; color: #000;">
+                    <tr style="color: #000;">
                         <td>Sisa Saldo Setelah Penarikan</td>
                         <td style="text-align: right; color: #000;">Rp {{ number_format($deposit->current_balance, 2, ',', '.') }}</td>
                     </tr>
                     @if(isset($latestBalance) && $latestBalance != $deposit->current_balance)
                     <tr style="color: #000; border-top: 1px dotted #999;">
                         <td style="padding-top: 2px;">Saldo Terkini Rekening</td>
-                        <td style="text-align: right; padding-top: 2px; font-weight: bold;">Rp {{ number_format($latestBalance, 2, ',', '.') }}</td>
+                        <td style="text-align: right; padding-top: 2px;">Rp {{ number_format($latestBalance, 2, ',', '.') }}</td>
                     </tr>
                     @endif
                 </table>
