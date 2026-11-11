@@ -313,24 +313,35 @@ class DepositController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'as_of_date'  => 'nullable|date',
         ]);
 
         $customer = Customer::findOrFail($request->customer_id);
-        $data = Deposit::where('customer_id', $customer->id)
+        $query = Deposit::where('customer_id', $customer->id)
             ->with(['creator'])
             ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
+            ->orderBy('id', 'asc');
+
+        if ($request->as_of_date) {
+            $query->whereDate('created_at', '<=', $request->as_of_date);
+        }
+
+        $data = $query->get();
         $manager = User::where('role', 'manager')->first();
+
+        $filterLabel = $request->as_of_date
+            ? 'Per tanggal ' . Carbon::parse($request->as_of_date)->isoFormat('D MMMM Y')
+            : 'Semua Transaksi';
         $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_-_laporan_simpanan_nasabah_no_rekening_' . $customer->number  . '_' . time() . '.pdf';
 
         $pdf = PDF::loadView('pages.transaction.deposit.print', [
-            'title' => 'Laporan Simpanan Nasabah',
-            'user' => auth()->user(),
-            'customer' => $customer,
-            'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
-            'manager' => $manager,
-            'data' => $data,
+            'title'       => 'Laporan Simpanan Nasabah',
+            'user'        => auth()->user(),
+            'customer'    => $customer,
+            'filter'      => $filterLabel,
+            'date'        => Carbon::now()->isoFormat('dddd, D MMMM Y'),
+            'manager'     => $manager,
+            'data'        => $data,
             'lastBalance' => $data->last()->current_balance ?? 0,
         ]);
         $pdf->setPaper('A4', 'portrait');

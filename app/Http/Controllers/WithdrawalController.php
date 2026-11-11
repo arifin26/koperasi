@@ -260,20 +260,30 @@ class WithdrawalController extends Controller
     public function print(Request $request)
     {
         $filter = $request->validate([
-            'time_from' => 'required',
-            'time_to' => 'required',
+            'time_from'  => 'required_without:as_of_date',
+            'time_to'    => 'required_without:as_of_date',
+            'as_of_date' => 'nullable|date',
         ]);
 
-        $time_from = date('d-m-Y', strtotime($filter['time_from']));
-        $time_to = date('d-m-Y', strtotime($filter['time_to']));
+        $query = Deposit::with('customer')->where('type', 'penarikan');
 
-        $data = Deposit::with('customer')->where('type', 'penarikan')->whereBetween('created_at', $filter)->get();
+        if ($request->as_of_date) {
+            $query->whereDate('created_at', '<=', $request->as_of_date);
+            $filterLabel = 'Per tanggal ' . Carbon::parse($request->as_of_date)->isoFormat('D MMMM Y');
+        } else {
+            $query->whereBetween('created_at', [$filter['time_from'], $filter['time_to']]);
+            $time_from = date('d-m-Y', strtotime($filter['time_from']));
+            $time_to = date('d-m-Y', strtotime($filter['time_to']));
+            $filterLabel = "$time_from sampai $time_to";
+        }
+
+        $data = $query->get();
         $manager = User::where('role', 'manager')->first();
-        $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_-_laporan_penarikan_nasabah_periode_' . $time_from . '_-_' . $time_to  . '_' . time() . '.pdf';
+        $filename = Carbon::now()->isoFormat('DD-MM-Y') . '_-_laporan_penarikan_nasabah_' . time() . '.pdf';
         $pdf = PDF::loadView('pages.transaction.withdrawal.print', [
             'title' => 'Laporan Penarikan Nasabah',
             'user' => auth()->user(),
-            'filter' => "$time_from sampai $time_to",
+            'filter' => $filterLabel,
             'date' => Carbon::now()->isoFormat('dddd, D MMMM Y'),
             'manager' => $manager,
             'data' => $data

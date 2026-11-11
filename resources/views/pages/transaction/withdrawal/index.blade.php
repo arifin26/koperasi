@@ -70,13 +70,19 @@
                             <div class="col-12 col-md-6">
                                 <div class="form-group">
                                     <label>Sejak</label>
-                                    <input required type="date" class="form-control" name="time_from" value="{{ date('Y-m-d') }}" placeholder="Sejak">
+                                    <input type="date" class="form-control" name="time_from" value="{{ date('Y-m-d') }}" placeholder="Sejak">
                                 </div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <div class="form-group">
                                     <label>Hingga</label>
-                                    <input required type="date" class="form-control" name="time_to" value="{{ date('Y-m-d') }}" placeholder="Sejak">
+                                    <input type="date" class="form-control" name="time_to" value="{{ date('Y-m-d') }}" placeholder="Sejak">
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="form-group">
+                                    <label>Tanggal Per <small class="text-muted">(opsional, abaikan periode di atas)</small></label>
+                                    <input type="date" class="form-control" name="as_of_date">
                                 </div>
                             </div>
                         </div>

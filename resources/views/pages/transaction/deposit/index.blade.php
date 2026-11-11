@@ -129,6 +129,12 @@
                                     </select>
                                 </div>
                             </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label>Tanggal Per <small class="text-muted">(opsional, kosongkan untuk semua)</small></label>
+                                <input type="date" class="form-control" name="as_of_date" value="{{ date('Y-m-d') }}">
+                            </div>
+                        </div>
                         </div>
                         Tekan tombol Cetak untuk mengunduh laporan dalam bentuk PDF.
                     </div>
