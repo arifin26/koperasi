@@ -124,22 +124,22 @@ class ReportController extends Controller
     {
         if ($request->ajax()) {
             $statusFilter = $request->status ?? '';
-            $tanggal = $request->tanggal ?? '';
 
-            // Tentukan batas akhir periode tanggal jika ada filter tanggal
-            $cutoffDate = null;
-            if ($tanggal && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
-                $cutoffDate = Carbon::parse($tanggal)->endOfDay();
-            }
+            // Rentang tanggal: saldo per akhir rentang, transaksi di dalam rentang.
+            [$startDate, $cutoffDate] = $this->resolveSavingsRecapRange(
+                $request->tanggal_dari,
+                $request->tanggal_sampai
+            );
 
             // Handle detail mode - transaction breakdown
             if ($request->mode === 'detail') {
-                if (!$tanggal) {
+                if (!$startDate && !$cutoffDate) {
                     return DataTables::of(collect([]))->make(true);
                 }
 
                 $query = Deposit::with('customer')
-                    ->where('created_at', '<=', $cutoffDate)
+                    ->when($startDate, fn($q) => $q->where('created_at', '>=', $startDate))
+                    ->when($cutoffDate, fn($q) => $q->where('created_at', '<=', $cutoffDate))
                     ->when($statusFilter, function($q) use ($statusFilter) {
                         $q->whereHas('customer', function($sq) use ($statusFilter) {
                             $sq->where('status', $statusFilter);
@@ -192,7 +192,10 @@ class ReportController extends Controller
                 ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
                 ->with('interestRate')
                 ->leftJoinSub($latestDepositSub, 'latest_deposit', fn($join) => $join->on('customers.id', '=', 'latest_deposit.customer_id'))
-                ->withCount(['deposits as total_transaksi' => function ($q) use ($cutoffDate) {
+                ->withCount(['deposits as total_transaksi' => function ($q) use ($startDate, $cutoffDate) {
+                    if ($startDate) {
+                        $q->where('created_at', '>=', $startDate);
+                    }
                     if ($cutoffDate) {
                         $q->where('created_at', '<=', $cutoffDate);
                     }
@@ -262,10 +265,13 @@ class ReportController extends Controller
     {
         $validated = $request->validated();
         $statusFilter = $validated['status'] ?? '';
-        $tanggal = $validated['tanggal'] ?? '';
 
         // Build report data
-        $reportData = $this->buildSavingsRecapPrintData($statusFilter, $tanggal);
+        $reportData = $this->buildSavingsRecapPrintData(
+            $statusFilter,
+            $validated['tanggal_dari'] ?? '',
+            $validated['tanggal_sampai'] ?? ''
+        );
 
         // Render the partial as HTML
         $html = view('pages.report.partials.savings-recap-print-content', $reportData)->render();
@@ -281,12 +287,11 @@ class ReportController extends Controller
     /**
      * Build print report data with filters
      */
-    private function buildSavingsRecapPrintData(?string $statusFilter, ?string $tanggal): array
+    private function buildSavingsRecapPrintData(?string $statusFilter, ?string $tanggalDari, ?string $tanggalSampai): array
     {
         $statusFilter = $statusFilter ?? '';
-        $tanggal      = $tanggal ?? '';
-        $cutoffDate = $this->resolveSavingsRecapCutoffDate($tanggal);
-        $periodeLabel = $this->resolveSavingsRecapPeriodLabel($tanggal);
+        [$startDate, $cutoffDate] = $this->resolveSavingsRecapRange($tanggalDari, $tanggalSampai);
+        $periodeLabel = $this->resolveSavingsRecapPeriodLabel($startDate, $cutoffDate);
 
         $latestDepositQuery = Deposit::select(
             'id',
@@ -299,11 +304,16 @@ class ReportController extends Controller
             ->select('id', 'customer_id', 'current_balance')
             ->where('rn', 1);
 
+        // Saldo dihitung per AKHIR rentang (saldo selalu posisi satu titik waktu),
+        // sedangkan Jml Transaksi dibatasi DI DALAM rentang.
         $query = Customer::select('customers.*', 'latest_deposit.current_balance as saldo_terakhir')
             ->when($statusFilter, fn($q) => $q->where('customers.status', $statusFilter))
             ->with('interestRate')
             ->leftJoinSub($latestDepositSub, 'latest_deposit', fn($join) => $join->on('customers.id', '=', 'latest_deposit.customer_id'))
-            ->withCount(['deposits as deposits_count' => function ($q) use ($cutoffDate) {
+            ->withCount(['deposits as deposits_count' => function ($q) use ($startDate, $cutoffDate) {
+                if ($startDate) {
+                    $q->where('created_at', '>=', $startDate);
+                }
                 if ($cutoffDate) {
                     $q->where('created_at', '<=', $cutoffDate);
                 }
@@ -344,13 +354,41 @@ class ReportController extends Controller
     }
 
     /**
+     * Rentang tanggal rekap simpanan -> [awal, akhir].
+     *
+     * Keduanya opsional: hanya tanggal akhir berarti "s.d. tanggal itu", hanya
+     * tanggal awal berarti "sejak tanggal itu", kosong dua-duanya berarti semua
+     * periode. Kalau terbalik, ditukar supaya laporan tidak kosong tanpa sebab.
+     */
+    private function resolveSavingsRecapRange(?string $dari, ?string $sampai): array
+    {
+        $start = $this->resolveSavingsRecapCutoffDate($dari)?->startOfDay();
+        $end = $this->resolveSavingsRecapCutoffDate($sampai);
+
+        if ($start && $end && $start->gt($end)) {
+            [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+        }
+
+        return [$start, $end];
+    }
+
+    /**
      * Resolve period label for display
      */
-    private function resolveSavingsRecapPeriodLabel(?string $tanggal): string
+    private function resolveSavingsRecapPeriodLabel(?Carbon $start, ?Carbon $end): string
     {
-        if ($tanggal) {
-            return Carbon::parse($tanggal)->isoFormat('D MMMM Y');
+        if ($start && $end) {
+            return $start->isoFormat('D MMMM Y') . ' s.d. ' . $end->isoFormat('D MMMM Y');
         }
+
+        if ($end) {
+            return 's.d. ' . $end->isoFormat('D MMMM Y');
+        }
+
+        if ($start) {
+            return 'Sejak ' . $start->isoFormat('D MMMM Y');
+        }
+
         return 'Semua Periode';
     }
 
@@ -492,9 +530,12 @@ class ReportController extends Controller
     public function savingsRecapExport(Request $request)
     {
         $statusFilter = $request->input('status', '');
-        $tanggal = $request->input('tanggal', '');
 
-        $reportData = $this->buildSavingsRecapPrintData($statusFilter, $tanggal);
+        $reportData = $this->buildSavingsRecapPrintData(
+            $statusFilter,
+            $request->input('tanggal_dari', ''),
+            $request->input('tanggal_sampai', '')
+        );
 
         $meta = [
             'statusFilter' => $statusFilter,

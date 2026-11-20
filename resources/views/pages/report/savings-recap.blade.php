@@ -67,11 +67,15 @@
                             <option value="blacklist">Blacklist</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label>Tanggal Per:</label>
-                        <input type="date" class="form-control" id="filter_tanggal" max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
+                    <div class="col-md-2">
+                        <label>Tanggal Dari:</label>
+                        <input type="date" class="form-control" id="filter_tanggal_dari" max="{{ date('Y-m-d') }}" value="{{ date('Y-m-01') }}">
                     </div>
-                    <div class="col-12 col-md-7 d-flex align-items-end flex-wrap mt-2 mt-md-0">
+                    <div class="col-md-2">
+                        <label>Tanggal Sampai:</label>
+                        <input type="date" class="form-control" id="filter_tanggal_sampai" max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end flex-wrap mt-2 mt-md-0">
                         <button type="button" class="btn btn-primary mr-1" id="btn_filter">
                             <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
@@ -84,7 +88,8 @@
                         <form action="{{ route('report.savings-recap.export') }}" method="POST" id="form_export_savings_recap" class="d-inline ml-1">
                             @csrf
                             <input type="hidden" name="status" id="export_savings_status" value="">
-                            <input type="hidden" name="tanggal" id="export_savings_tanggal" value="{{ date('Y-m-d') }}">
+                            <input type="hidden" name="tanggal_dari" id="export_savings_tanggal_dari" value="{{ date('Y-m-01') }}">
+                            <input type="hidden" name="tanggal_sampai" id="export_savings_tanggal_sampai" value="{{ date('Y-m-d') }}">
                             <button type="submit" class="btn btn-success" id="btn_export_savings_recap">
                                 <i class="fas fa-file-excel mr-1"></i> Export Excel
                             </button>
@@ -427,9 +432,11 @@
     $(document).ready(function () {
         // State filter aktif yang diterapkan
         var today = '{{ date('Y-m-d') }}';
+        var firstOfMonth = '{{ date('Y-m-01') }}';
         var activeFilter = {
             status: '',
-            tanggal: today
+            tanggal_dari: firstOfMonth,
+            tanggal_sampai: today
         };
 
         var table = $('#savings-recap-table').DataTable({
@@ -441,7 +448,8 @@
                 url: "{{ route('report.savings-recap') }}",
                 data: function (d) {
                     d.status = activeFilter.status;
-                    d.tanggal = activeFilter.tanggal;
+                    d.tanggal_dari = activeFilter.tanggal_dari;
+                    d.tanggal_sampai = activeFilter.tanggal_sampai;
                 }
             },
             language: {
@@ -495,7 +503,8 @@
                     data: function (d) {
                         d.mode = 'detail';
                         d.status = activeFilter.status;
-                        d.tanggal = activeFilter.tanggal;
+                        d.tanggal_dari = activeFilter.tanggal_dari;
+                        d.tanggal_sampai = activeFilter.tanggal_sampai;
                     }
                 },
                 language: {
@@ -521,19 +530,32 @@
         // Eksekusi filter HANYA saat tombol "Terapkan Filter" diklik
         $('#btn_filter').click(function () {
             activeFilter.status = $('#filter_status').val();
-            activeFilter.tanggal = $('#filter_tanggal').val();
+            activeFilter.tanggal_dari = $('#filter_tanggal_dari').val();
+            activeFilter.tanggal_sampai = $('#filter_tanggal_sampai').val();
 
-            // Sinkronkan ke form Cetak PDF
-            $('#print_status').val(activeFilter.status);
-            $('#print_tanggal').val(activeFilter.tanggal);
+            // Tukar kalau terbalik supaya hasilnya tidak kosong tanpa sebab
+            // (backend juga menukar, ini hanya supaya kotak filternya ikut benar).
+            if (activeFilter.tanggal_dari && activeFilter.tanggal_sampai
+                && activeFilter.tanggal_dari > activeFilter.tanggal_sampai) {
+                var tukar = activeFilter.tanggal_dari;
+                activeFilter.tanggal_dari = activeFilter.tanggal_sampai;
+                activeFilter.tanggal_sampai = tukar;
+                $('#filter_tanggal_dari').val(activeFilter.tanggal_dari);
+                $('#filter_tanggal_sampai').val(activeFilter.tanggal_sampai);
+            }
+
+            // Sinkronkan ke form Export Excel
             $('#export_savings_status').val(activeFilter.status);
-            $('#export_savings_tanggal').val(activeFilter.tanggal);
+            $('#export_savings_tanggal_dari').val(activeFilter.tanggal_dari);
+            $('#export_savings_tanggal_sampai').val(activeFilter.tanggal_sampai);
 
             table.draw();
 
             // Show/hide detail card based on date filter
-            if (activeFilter.tanggal) {
-                $('#detail-card-subtitle').text('Per tanggal: ' + activeFilter.tanggal);
+            if (activeFilter.tanggal_dari || activeFilter.tanggal_sampai) {
+                $('#detail-card-subtitle').text('Periode: '
+                    + (activeFilter.tanggal_dari || 'awal')
+                    + ' s.d. ' + (activeFilter.tanggal_sampai || 'sekarang'));
                 $('#detail-card').show();
                 initDetailTable();
             } else {
@@ -548,16 +570,16 @@
         // Reset filter
         $('#btn_reset').click(function () {
             $('#filter_status').val('');
-            $('#filter_tanggal').val('');
+            $('#filter_tanggal_dari').val('');
+            $('#filter_tanggal_sampai').val('');
 
             activeFilter.status = '';
-            activeFilter.tanggal = '';
-
-            $('#print_status').val('');
-            $('#print_tanggal').val('');
+            activeFilter.tanggal_dari = '';
+            activeFilter.tanggal_sampai = '';
 
             $('#export_savings_status').val('');
-            $('#export_savings_tanggal').val('');
+            $('#export_savings_tanggal_dari').val('');
+            $('#export_savings_tanggal_sampai').val('');
             table.draw();
 
             // Hide detail card
@@ -584,7 +606,8 @@
                 data: {
                     _token: "{{ csrf_token() }}",
                     status: activeFilter.status,
-                    tanggal: activeFilter.tanggal
+                    tanggal_dari: activeFilter.tanggal_dari,
+                    tanggal_sampai: activeFilter.tanggal_sampai
                 },
                 dataType: 'json',
                 success: function(response) {

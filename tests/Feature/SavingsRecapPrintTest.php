@@ -76,11 +76,11 @@ class SavingsRecapPrintTest extends TestCase
     {
         $response = $this->actingAs($this->user)
             ->postJson(route('report.savings-recap.print'), [
-                'tanggal' => '05/09/2024'  // wrong format
+                'tanggal_sampai' => '05/09/2024'  // wrong format
             ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['tanggal']);
+            ->assertJsonValidationErrors(['tanggal_sampai']);
     }
 
     /** @test */
@@ -226,7 +226,7 @@ class SavingsRecapPrintTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->postJson(route('report.savings-recap.print'), [
-                'tanggal' => '2024-08-15'
+                'tanggal_sampai' => '2024-08-15'
             ]);
 
         $response->assertStatus(200);

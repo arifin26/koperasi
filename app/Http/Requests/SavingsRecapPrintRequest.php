@@ -25,7 +25,8 @@ class SavingsRecapPrintRequest extends FormRequest
     {
         return [
             'status' => 'nullable|in:active,blacklist',
-            'tanggal' => 'nullable|date_format:Y-m-d',
+            'tanggal_dari' => 'nullable|date_format:Y-m-d',
+            'tanggal_sampai' => 'nullable|date_format:Y-m-d|after_or_equal:tanggal_dari',
         ];
     }
 
@@ -38,7 +39,9 @@ class SavingsRecapPrintRequest extends FormRequest
     {
         return [
             'status.in' => 'Status nasabah tidak valid.',
-            'tanggal.date_format' => 'Format tanggal tidak valid. Gunakan format YYYY-MM-DD.',
+            'tanggal_dari.date_format' => 'Format tanggal awal tidak valid. Gunakan format YYYY-MM-DD.',
+            'tanggal_sampai.date_format' => 'Format tanggal akhir tidak valid. Gunakan format YYYY-MM-DD.',
+            'tanggal_sampai.after_or_equal' => 'Tanggal akhir tidak boleh lebih awal dari tanggal awal.',
         ];
     }
 }

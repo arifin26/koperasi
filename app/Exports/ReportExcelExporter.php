@@ -49,7 +49,7 @@ class ReportExcelExporter
         $sheet->setCellValue('A2', 'LAPORAN REKAP SIMPANAN NASABAH');
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
 
-        $sheet->setCellValue('A3', "Filter Status: {$statusLabel} | Per Tanggal: {$periodeLabel}");
+        $sheet->setCellValue('A3', "Filter Status: {$statusLabel} | Periode: {$periodeLabel}");
         $sheet->getStyle('A3')->getFont()->setItalic(true)->setSize(10);
 
         $sheet->setCellValue('A4', "Dicetak: {$timestamp} oleh {$userName}");
