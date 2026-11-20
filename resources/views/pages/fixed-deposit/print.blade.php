@@ -76,8 +76,8 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th>No. Deposito</th>
-                <th>No. Rekening</th>
+                <th>No. Rek. Deposito</th>
+                <th>No. Rek. Nasabah</th>
                 <th>Nama</th>
                 <th>Alamat</th>
                 <th>Bunga (%)</th>
@@ -98,7 +98,7 @@
             @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
-                <td>{{ $row->number }}</td>
+                <td>{{ $row->print_number }}</td>
                 <td>{{ $row->customer->number ?? '-' }}</td>
                 <td>{{ $row->customer->name ?? '-' }}</td>
                 <td>{{ $row->customer->address ?? '-' }}</td>

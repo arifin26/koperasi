@@ -1,7 +1,7 @@
 @extends('layouts.receipt')
 
 @section('receipt-title', 'BUKTI PENGHAPUSAN DEPOSITO')
-@section('receipt-no', $fixed_deposit->number)
+@section('receipt-no', $fixed_deposit->print_number)
 
 @section('sign-left-label', 'Nasabah Deposan,')
 @section('sign-left-name', $fixed_deposit->customer->name ?? '....................................')
@@ -21,9 +21,9 @@
         </td>
     </tr>
     <tr>
-        <td class="label">No. Deposito / Tenor</td>
+        <td class="label">No. Rek. Deposito / Tenor</td>
         <td class="colon">:</td>
-        <td class="value">{{ $fixed_deposit->number }} ({{ $fixed_deposit->tenor_months }} Bulan &bull; {{ $fixed_deposit->rate_percent }}% p.a.)</td>
+        <td class="value">{{ $fixed_deposit->print_number }} ({{ $fixed_deposit->tenor_months }} Bulan &bull; {{ $fixed_deposit->rate_percent }}% p.a.)</td>
     </tr>
     <tr>
         <td class="label">Tgl. Buka / Hapus</td>

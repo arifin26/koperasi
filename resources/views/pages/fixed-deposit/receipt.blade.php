@@ -1,7 +1,7 @@
 @extends('layouts.receipt')
 
 @section('receipt-title', 'TANDA TERIMA PEMBUKAAN DEPOSITO')
-@section('receipt-no', $fixed_deposit->number)
+@section('receipt-no', $fixed_deposit->print_number)
 
 @section('sign-left-label', 'Nasabah Deposan,')
 @section('sign-left-name', $fixed_deposit->customer->name ?? '....................................')

@@ -107,6 +107,18 @@ class FixedDeposit extends Model
     }
 
     /**
+     * Nomor yang dicetak di kwitansi/laporan: NO REKENING deposito
+     * (mis. 211000261), bukan nomor internal DEP-YYYYMM-NNNNN.
+     *
+     * account_number nullable, jadi jatuh balik ke nomor internal supaya
+     * cetakan tidak pernah kosong untuk data lama yang rekeningnya belum diisi.
+     */
+    public function getPrintNumberAttribute(): string
+    {
+        return $this->account_number ?: $this->number;
+    }
+
+    /**
      * Cek apakah sudah jatuh tempo
      */
     public function getIsMaturedAttribute()
