@@ -32,8 +32,8 @@ class InterestPostMonthly extends Command
         }
 
         // Find all unposted accumulations for this period
-        $startDate = Carbon::createFromFormat('Y-m', $periodStr)->startOfMonth()->format('Y-m-d');
-        $endDate = Carbon::createFromFormat('Y-m', $periodStr)->endOfMonth()->format('Y-m-d');
+        $startDate = Carbon::createFromFormat('Y-m-d', $periodStr . '-01')->startOfMonth()->format('Y-m-d');
+        $endDate = Carbon::createFromFormat('Y-m-d', $periodStr . '-01')->endOfMonth()->format('Y-m-d');
 
         $accumulations = DailyInterestAccumulation::whereBetween('calculation_date', [$startDate, $endDate])
             ->where('is_posted', 0)
@@ -67,7 +67,11 @@ class InterestPostMonthly extends Command
                     'previous_balance' => 0, // Ignored, will be recalculated
                     'current_balance' => 0,  // Ignored, will be recalculated
                     'notes' => 'Bunga bulan ' . $periodStr,
-                    'created_at' => Carbon::createFromFormat('Y-m', $periodStr)->endOfMonth()->setTime(23,59,59),
+                    // Aturan tanggal posting dipakai bersama dengan engine otomatis
+                    // supaya dua jalur ini tidak pernah menulis tanggal berbeda.
+                    'created_at' => \App\Services\SavingsInterestService::postingDateFor(
+                        Carbon::createFromFormat('Y-m-d', $periodStr . '-01')
+                    )->setTime(23, 59, 59),
                     'updated_at' => now(),
                 ]);
 

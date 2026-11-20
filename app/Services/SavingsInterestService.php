@@ -17,20 +17,52 @@ use Illuminate\Support\Facades\Log;
 class SavingsInterestService
 {
     /**
+     * Tanggal bunga simpanan satu periode dibukukan ke buku nasabah.
+     * Ubah di sini saja kalau koperasi memindahkan jadwal postingnya.
+     */
+    public const POSTING_DAY = 5;
+
+    /**
+     * Tanggal posting untuk periode yang dimulai $periodStart: tanggal 5 bulan
+     * berikutnya, atau hari kerja pertama sesudahnya kalau tanggal 5 jatuh di
+     * hari Minggu / hari merah di Manajemen Hari Libur.
+     *
+     * Contoh: bunga periode Oktober 2026 dibukukan 5 November 2026.
+     */
+    public static function postingDateFor(Carbon $periodStart): Carbon
+    {
+        $nextMonth = $periodStart->copy()->startOfMonth()->addMonthNoOverflow();
+
+        // min() supaya POSTING_DAY > 28 tidak luber ke bulan berikutnya.
+        return Holiday::firstWorkdayOnOrAfter(
+            $nextMonth->day(min(self::POSTING_DAY, $nextMonth->daysInMonth))
+        );
+    }
+
+    /**
      * Jalankan proses hitung & posting bunga simpanan manual s.d. tanggal proses.
      *
      * @param string|null $processDateStr Format YYYY-MM-DD
      * @param int|null $userId User ID operator
      * @return array Summary hasil proses
      */
-    public function processSavingsInterest(?string $processDateStr = null, ?int $userId = null): array
+    public function processSavingsInterest(?string $processDateStr = null, ?int $userId = null, bool $force = false): array
     {
         $targetDate = $processDateStr ? Carbon::parse($processDateStr) : Carbon::today();
+
+        // Bunga tidak boleh diakrual untuk hari yang belum terjadi. Tutup bulan
+        // dipanggil dengan tanggal akhir bulan, yang bisa masih di masa depan.
+        if ($targetDate->gt(Carbon::today())) {
+            $targetDate = Carbon::today();
+        }
+
         $dateStr = $targetDate->format('Y-m-d');
 
         // Validasi Rate Bunga Aktif
-        $simpananRate = InterestRate::savings()->active()->where('is_default', true)->first()
-            ?? InterestRate::savings()->active()->orderBy('effective_date', 'desc')->first();
+        $simpananRate = InterestRate::savings()->active()->where('is_default', true)
+                ->where('effective_date', '<=', $dateStr)->orderBy('effective_date', 'desc')->first()
+            ?? InterestRate::savings()->active()
+                ->where('effective_date', '<=', $dateStr)->orderBy('effective_date', 'desc')->first();
 
         if (!$simpananRate) {
             throw new \RuntimeException('Tidak ditemukan konfigurasi suku bunga simpanan yang aktif pada Manajemen Bunga.');
@@ -77,15 +109,18 @@ class SavingsInterestService
 
                 // Cek Libur
                 if ($this->isHoliday($currentDate)) {
-                    InterestEngineLog::updateOrCreate(
-                        ['run_date' => $cDateStr],
-                        [
-                            'status' => 'skipped',
-                            'reason' => 'Hari Libur / Weekend',
-                            'total_customers' => 0,
-                            'total_interest' => 0,
-                        ]
-                    );
+                    // upsert, bukan updateOrCreate: run_date unique, dan dua proses
+                    // bersamaan pernah membuat seluruh transaksi rollback karena
+                    // duplicate key (lihat auto_interest_run_logs periode 2026-10).
+                    InterestEngineLog::upsert([[
+                        'run_date' => $cDateStr,
+                        'status' => 'skipped',
+                        'reason' => 'Hari Libur / Minggu',
+                        'total_customers' => 0,
+                        'total_interest' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]], ['run_date'], ['status', 'reason', 'total_customers', 'total_interest', 'updated_at']);
                     $skippedDays++;
                     $currentDate->addDay();
                     continue;
@@ -117,7 +152,15 @@ class SavingsInterestService
                         ->first();
 
                     $saldo = ($balances->sum_masuk ?? 0) - ($balances->sum_keluar ?? 0);
-                    $rate = $customer->interestRate ?? $simpananRate;
+
+                    // Rate khusus nasabah hanya dipakai bila aktif dan sudah berlaku di
+                    // tanggal hitung; aturan sama dengan InterestCalculateDaily.
+                    $rate = $simpananRate;
+                    if ($customer->interestRate
+                        && $customer->interestRate->is_active
+                        && $customer->interestRate->effective_date->format('Y-m-d') <= $cDateStr) {
+                        $rate = $customer->interestRate;
+                    }
 
                     if ($saldo > 0 && $rate && $rate->rate_percent > 0) {
                         // Formula Bunga Harian berdasarkan Bunga Tahunan / 12 / Hari Kerja:
@@ -148,16 +191,16 @@ class SavingsInterestService
                     );
                 }
 
-                InterestEngineLog::updateOrCreate(
-                    ['run_date' => $cDateStr],
-                    [
-                        'status' => 'success',
-                        'reason' => 'Diproses manual',
-                        'total_customers' => $dailyCustomersCount,
-                        'total_interest' => $dailyInterestSum,
-                        'duration_seconds' => 1
-                    ]
-                );
+                InterestEngineLog::upsert([[
+                    'run_date' => $cDateStr,
+                    'status' => 'success',
+                    'reason' => 'Diproses otomatis',
+                    'total_customers' => $dailyCustomersCount,
+                    'total_interest' => $dailyInterestSum,
+                    'duration_seconds' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]], ['run_date'], ['status', 'reason', 'total_customers', 'total_interest', 'duration_seconds', 'updated_at']);
 
                 $totalCustomersProcessed += $dailyCustomersCount;
                 $totalInterestCalculated += $dailyInterestSum;
@@ -168,20 +211,43 @@ class SavingsInterestService
 
             // 3. Posting Bunga per Bulan (Aggregasi unposted accumulations ke transaksi simpanan per periode bulan)
             // Mengelompokkan per customer dan per bulan (YYYY-MM) agar 1 bulan tepat menjadi 1 baris transaksi bunga
+            // Satu bulan dibukukan tepat sekali, pada TANGGAL 5 bulan berikutnya,
+            // atau hari kerja sesudahnya kalau tanggal 5 jatuh di hari Minggu /
+            // hari merah. Lihat self::postingDateFor().
+            // Akrual bulan berjalan menumpuk di daily_interest_accumulations
+            // sampai waktunya tiba. $force dipakai tombol tutup bulan manual manajer.
+            $today = Carbon::today();
+
             $unpostedMonthlyAccumulations = DailyInterestAccumulation::where('is_posted', 0)
-                ->where('calculation_date', '<=', $dateStr)
-                ->selectRaw("customer_id, DATE_FORMAT(calculation_date, '%Y-%m') as period, SUM(interest_amount) as total_interest, MAX(calculation_date) as last_calc_date")
-                ->groupBy('customer_id', DB::raw("DATE_FORMAT(calculation_date, '%Y-%m')"))
+                ->selectRaw("customer_id, SUBSTR(calculation_date, 1, 7) as period, SUM(interest_amount) as total_interest, MAX(calculation_date) as last_calc_date")
+                ->groupBy('customer_id', DB::raw("SUBSTR(calculation_date, 1, 7)"))
                 ->get();
 
             if ($unpostedMonthlyAccumulations->isNotEmpty()) {
+                $perPeriod = [];
+                $postedPeriods = [];
+                $postingDates = [];
+
                 foreach ($unpostedMonthlyAccumulations as $acc) {
+                    // Hari wajib ikut disebut: createFromFormat('Y-m', ...) memakai
+                    // tanggal hari ini, jadi luber ke bulan berikutnya tiap tanggal 31.
+                    $periodCarbon = Carbon::createFromFormat('Y-m-d', $acc->period . '-01')->startOfMonth();
+                    // Sama untuk semua nasabah di periode yang sama; dihitung sekali
+                    // supaya tidak memukul tabel holidays 70x per bulan.
+                    $postingDate = $postingDates[$acc->period] ??= self::postingDateFor($periodCarbon);
+
+                    // Belum ganti bulan / belum sampai tanggal postingnya: tunggu.
+                    if (!$force && $today->lt($postingDate)) {
+                        continue;
+                    }
+
+                    $postedPeriods[$acc->period] = $periodCarbon;
+
                     if ($acc->total_interest > 0) {
-                        $periodCarbon = Carbon::createFromFormat('Y-m', $acc->period);
-                        // Tanggal transaksi bunga dicatat pada akhir bulan periode tersebut (atau targetDate jika periode saat ini)
-                        $txnDate = $periodCarbon->copy()->endOfMonth()->lte($targetDate)
-                            ? $periodCarbon->copy()->endOfMonth()->setTime(23, 59, 59)
-                            : $targetDate->copy()->setTime(23, 59, 59);
+                        // Tanggal transaksi = hari bunga benar-benar masuk buku nasabah.
+                        // Saat tutup bulan dipaksa manual, pakai hari ini.
+                        $txnDate = ($force && $today->lt($postingDate) ? $today->copy() : $postingDate->copy())
+                            ->setTime(23, 59, 59);
 
                         $periodLabel = $periodCarbon->isoFormat('MMMM Y');
 
@@ -201,28 +267,40 @@ class SavingsInterestService
 
                         $postedCount++;
                         $totalPostedAmount += $acc->total_interest;
+
+                        $perPeriod[$acc->period]['customers'] = ($perPeriod[$acc->period]['customers'] ?? 0) + 1;
+                        $perPeriod[$acc->period]['interest'] = ($perPeriod[$acc->period]['interest'] ?? 0) + $acc->total_interest;
                     }
                 }
 
-                // Tandai seluruh akumulasi s.d tanggal ini sebagai sudah diposting
-                DailyInterestAccumulation::where('is_posted', 0)
-                    ->where('calculation_date', '<=', $dateStr)
-                    ->update([
-                        'is_posted' => 1,
-                        'posted_at' => now(),
-                    ]);
+                // Tandai hanya periode yang benar-benar dibukukan sebagai diposting;
+                // bulan yang belum jatuh waktu posting harus tetap is_posted = 0.
+                foreach ($postedPeriods as $periodStart) {
+                    DailyInterestAccumulation::where('is_posted', 0)
+                        ->whereBetween('calculation_date', [
+                            $periodStart->copy()->startOfMonth()->format('Y-m-d'),
+                            $periodStart->copy()->endOfMonth()->format('Y-m-d'),
+                        ])
+                        ->update([
+                            'is_posted' => 1,
+                            'posted_at' => now(),
+                        ]);
+                }
 
-                // Record log posting
-                InterestPostingLog::updateOrCreate(
-                    ['period' => $targetDate->format('Y-m')],
-                    [
-                        'status' => 'success',
-                        'total_customers' => $postedCount,
-                        'total_interest' => $totalPostedAmount,
-                        'posted_by' => $userId,
-                        'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
-                    ]
-                );
+                // Log posting dicatat per periode bunga yang dibukukan, bukan per bulan
+                // tanggal proses — guard bulanan di AutoInterestService bergantung pada ini.
+                foreach ($perPeriod as $period => $totals) {
+                    InterestPostingLog::updateOrCreate(
+                        ['period' => $period],
+                        [
+                            'status' => 'success',
+                            'total_customers' => $totals['customers'],
+                            'total_interest' => $totals['interest'],
+                            'posted_by' => $userId,
+                            'notes' => 'Update bunga simpanan bulanan pada ' . now()->toDateTimeString(),
+                        ]
+                    );
+                }
             }
 
             DB::commit();
@@ -252,10 +330,6 @@ class SavingsInterestService
      */
     public function isHoliday(Carbon $date): bool
     {
-        $holiday = Holiday::where('date', $date->format('Y-m-d'))->first();
-        if ($holiday) {
-            return $holiday->type === 'holiday';
-        }
-        return $date->isWeekend();
+        return !Holiday::isWorkday($date);
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\InterestEngineLog;
 use App\Services\AutoInterestService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AutoPostInterest
@@ -56,23 +58,49 @@ class AutoPostInterest
             return;
         }
 
+        // Keluar sebelum menyentuh engine kalau hari ini sudah selesai. Middleware
+        // ini jalan di SETIAP request user login, jadi jalur cepatnya harus murah.
+        if (Cache::get('auto-interest:done') === now()->format('Y-m-d')) {
+            return;
+        }
+
+        // Dua request bersamaan pernah membuat satu run rollback total karena
+        // duplicate key, dan berisiko menulis baris bunga dobel. Satu run saja.
+        $lock = Cache::lock('auto-interest:run', 120);
+
+        if (!$lock->get()) {
+            return;
+        }
+
         try {
-            $now = now();
-            $today = $now->format('Y-m-d');
+            $today = now()->format('Y-m-d');
 
-            // 1. Daily check for deposit interest payments (runs daily)
-            $this->autoInterestService->runDailyDepositCheck($today);
+            // 1. Pembayaran bunga deposito yang mencapai milestone bulanannya.
+            $deposit = $this->autoInterestService->runDailyDepositCheck($today);
 
-            // 2. Check and run monthly savings interest if it's the 1st of the month
-            $this->autoInterestService->runMonthlySavingsPostingIfNeeded();
+            // 2. Akrual bunga simpanan harian. Posting ke buku nasabah ditahan
+            //    SavingsInterestService sampai bulannya tutup.
+            $accrual = $this->autoInterestService->runDailyAccrual($today);
 
-            // 3. Catch-up for any missed previous periods
-            $this->autoInterestService->runCatchUp();
+            // 3. Posting bunga simpanan bulan lalu bila belum dibukukan.
+            $monthly = $this->autoInterestService->runMonthlySavingsPostingIfNeeded();
+
+            // Jalur cepat hanya dipasang kalau semuanya memang beres, supaya
+            // kegagalan tetap dicoba lagi di request berikutnya.
+            $settled = ($deposit['success'] ?? false)
+                && ($accrual['success'] ?? false)
+                && (($monthly['already_done'] ?? false) || ($monthly['success'] ?? false));
+
+            if ($settled && InterestEngineLog::where('run_date', $today)->exists()) {
+                Cache::put('auto-interest:done', $today, now()->endOfDay());
+            }
         } catch (\Exception $e) {
             // Silently log error, do not break the request flow
             Log::error('AutoPostInterest middleware failed: ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
+        } finally {
+            $lock->release();
         }
     }
 }

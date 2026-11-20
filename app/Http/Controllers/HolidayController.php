@@ -153,15 +153,16 @@ class HolidayController extends Controller
             }
         }
 
-        // Cek priority 3 & 4: Weekend atau Weekday biasa?
-        if ($date->isWeekend()) {
+        // Cek priority 3 & 4: Libur mingguan atau hari kerja biasa?
+        // Sabtu termasuk hari kerja, hanya Minggu yang libur.
+        if (\App\Models\Holiday::isWeeklyOff($date)) {
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'date' => $dateStr,
                     'day_name' => $dayName,
                     'is_workday' => false,
-                    'reason' => 'Akhir Pekan (Sabtu/Minggu)'
+                    'reason' => 'Libur Mingguan (Minggu)'
                 ]
             ]);
         }

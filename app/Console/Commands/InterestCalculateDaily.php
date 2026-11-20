@@ -29,7 +29,7 @@ class InterestCalculateDaily extends Command
 
         // 1. Cek apakah ini hari libur
         if ($this->isHoliday($date)) {
-            $reason = 'Hari Libur / Weekend';
+            $reason = 'Hari Libur / Minggu';
             $this->info("Skipping: $reason");
             if (!$dryRun) {
                 InterestEngineLog::updateOrCreate(
@@ -73,6 +73,9 @@ class InterestCalculateDaily extends Command
         // 3. Ambil jumlah hari kerja tahun ini
         $year = $date->year;
         $workdayCount = WorkdayYearCount::where('year', $year)->value('workday_count') ?? WorkdayYearCount::recalculate($year);
+        if ($workdayCount <= 0) {
+            $workdayCount = 260; // Fallback jika 0, menghindari division by zero
+        }
 
         $totalCustomersProcessed = 0;
         $totalInterestCalculated = 0;
@@ -155,10 +158,6 @@ class InterestCalculateDaily extends Command
 
     private function isHoliday(Carbon $date)
     {
-        $holiday = Holiday::where('date', $date->format('Y-m-d'))->first();
-        if ($holiday) {
-            return $holiday->type == 'holiday';
-        }
-        return $date->isWeekend();
+        return !Holiday::isWorkday($date);
     }
 }

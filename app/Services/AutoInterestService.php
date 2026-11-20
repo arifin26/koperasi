@@ -49,6 +49,40 @@ class AutoInterestService
     }
 
     /**
+     * Akrual bunga simpanan harian.
+     *
+     * WAJIB dipanggil tiap hari, dan TIDAK boleh lewat
+     * runMonthlySavingsPostingIfNeeded: guard bulanan di sana mengunci seluruh
+     * bulan, sehingga akrual bisa berhenti berminggu-minggu (pernah terjadi:
+     * tidak ada akrual sama sekali antara 2026-10-31 dan 2026-11-20).
+     * Posting ke buku nasabah tetap ditahan SavingsInterestService sampai
+     * bulannya tutup, jadi memanggil ini tiap hari aman.
+     *
+     * @param string|null $processDateStr Format YYYY-MM-DD
+     * @return array
+     */
+    public function runDailyAccrual(?string $processDateStr = null): array
+    {
+        $today = $processDateStr ?? now()->format('Y-m-d');
+        try {
+            return [
+                'success' => true,
+                'date' => $today,
+                'savings' => $this->processSavingsInterest($today),
+            ];
+        } catch (\Exception $e) {
+            Log::error("Daily savings interest accrual failed for {$today}: {$e->getMessage()}", [
+                'exception' => $e,
+            ]);
+            return [
+                'success' => false,
+                'date' => $today,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Run monthly savings interest posting for the given period (default: last month)
      *
      * @param string|null $period Period in Y-m format (e.g., '2026-08')
@@ -60,11 +94,14 @@ class AutoInterestService
         $period = $period ?? self::getLastMonthPeriod();
 
         try {
-            // Check if already posted in InterestPostingLog or AutoInterestRunLog
-            $alreadyLogged = !$force && (
-                InterestPostingLog::where('period', $period)->where('status', 'success')->exists() ||
-                AutoInterestRunLog::isProcessedFor($period)
-            );
+            // Guard-nya HANYA InterestPostingLog, yang ditulis per periode dan hanya
+            // kalau bunga benar-benar dibukukan. AutoInterestRunLog sengaja tidak
+            // dipakai di sini: ia mencatat "sudah dijalankan", bukan "sudah
+            // diposting", sehingga run tanggal 1 yang jatuh hari Minggu (belum
+            // waktunya posting) akan mengunci periode itu selamanya. Run log tetap
+            // ditulis di bawah sebagai jejak audit.
+            $alreadyLogged = !$force
+                && InterestPostingLog::where('period', $period)->where('status', 'success')->exists();
 
             if ($alreadyLogged) {
                 return ['already_done' => true, 'period' => $period];
@@ -72,10 +109,12 @@ class AutoInterestService
 
             $log = AutoInterestRunLog::getOrCreatePending($period);
 
-            $periodDate = \Carbon\Carbon::createFromFormat('Y-m', $period);
+            // Hari wajib disebut: createFromFormat('Y-m', ...) memakai tanggal hari
+            // ini, jadi tiap tanggal 31 ia luber ke bulan berikutnya.
+            $periodDate = \Carbon\Carbon::createFromFormat('Y-m-d', $period . '-01')->startOfMonth();
             $endOfPeriod = $periodDate->endOfMonth()->format('Y-m-d');
 
-            $savingsResult = $this->processSavingsInterest($endOfPeriod);
+            $savingsResult = $this->processSavingsInterest($endOfPeriod, $force);
             $today = now()->format('Y-m-d');
             $depositResult = $this->processDepositInterest($today);
 
@@ -115,10 +154,10 @@ class AutoInterestService
     /**
      * Process savings interest posting for a date
      */
-    protected function processSavingsInterest(string $processDateStr): array
+    protected function processSavingsInterest(string $processDateStr, bool $force = false): array
     {
         try {
-            $result = $this->savingsService->processSavingsInterest($processDateStr);
+            $result = $this->savingsService->processSavingsInterest($processDateStr, null, $force);
             return [
                 'processed' => true,
                 'date' => $processDateStr,
@@ -148,6 +187,13 @@ class AutoInterestService
 
     /**
      * Check for missed periods and run catch-up
+     *
+     * TIDAK lagi dipanggil dari AutoPostInterest: memutar 3 bulan ke belakang di
+     * setiap request terlalu mahal, dan sudah tidak perlu. runDailyAccrual
+     * mengakrual balik dari interest_engine_logs terakhir, dan posting di
+     * SavingsInterestService mengelompokkan SEMUA akumulasi yang belum diposting
+     * per bulan, jadi bulan lama yang terlewat ikut terbukukan sendiri.
+     * Disediakan untuk pemakaian manual/command.
      */
     public function runCatchUp(): array
     {
@@ -159,8 +205,9 @@ class AutoInterestService
             $checkDate = $now->copy()->subMonths($i);
             $period = $checkDate->format('Y-m');
 
-            if (InterestPostingLog::where('period', $period)->where('status', 'success')->exists() ||
-                AutoInterestRunLog::isProcessedFor($period)) {
+            // Sama seperti runMonthlySavingsPostingIfNeeded: hanya InterestPostingLog
+            // yang menandakan bunga sudah benar-benar dibukukan.
+            if (InterestPostingLog::where('period', $period)->where('status', 'success')->exists()) {
                 continue;
             }
 

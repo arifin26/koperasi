@@ -18,7 +18,7 @@ class DepositInterestService
      * @param int|null $userId
      * @return array
      */
-    public function processDepositInterest(?string $processDateStr = null, ?int $userId = null): array
+    public function processDepositInterest(?string $processDateStr = null, ?int $userId = null, bool $dryRun = false): array
     {
         $targetDate = $processDateStr ? Carbon::parse($processDateStr) : Carbon::today();
         $dateStr = $targetDate->format('Y-m-d');
@@ -38,6 +38,7 @@ class DepositInterestService
             $duplicateCount = 0;
             $errorCount = 0;
             $totalInterestAmount = 0;
+            $paid = [];
 
             foreach ($deposits as $deposit) {
                 // Cek apakah deposito sudah mencapai tanggal jatuh tempo (keseluruhan)
@@ -51,8 +52,14 @@ class DepositInterestService
                     }
                 }
 
-                // Bunga deposito diperhitungkan per bulan sesuai milestone tanggal pendaftaran (start_date)
-                // Atau jika sudah jatuh tempo.
+                // Bunga hanya jadi hak nasabah selama masa deposito: bulan pertama
+                // dibayar satu bulan setelah start_date, terakhir pada bulan jatuh
+                // tempo. Di luar rentang itu deposito tidak berbunga lagi.
+                if ($period <= $deposit->start_date->format('Y-m') || $period > $deposit->maturity_date->format('Y-m')) {
+                    $skippedCount++;
+                    continue;
+                }
+
                 // Cek apakah sudah pernah dibayar untuk periode bulan ini ($period)
                 $alreadyPaid = DepositInterestPayment::where('fixed_deposit_id', $deposit->id)
                     ->where('period', $period)
@@ -64,13 +71,13 @@ class DepositInterestService
                     continue;
                 }
 
-                // Cek apakah hari ini sudah mencapai atau melewati tanggal milestone bulanan deposito
-                // Contoh: start_date 15 Jan, maka tanggal 15 setiap bulan bunga berhak diproses
-                $startDay = (int) $deposit->start_date->format('d');
-                $targetDay = (int) $targetDate->format('d');
+                // Cek apakah hari ini sudah mencapai tanggal milestone bulanan deposito.
+                // Contoh: start_date 15 Jan, maka tanggal 15 setiap bulan bunga berhak diproses.
+                // Hari milestone dipangkas ke akhir bulan supaya deposito tanggal 29-31
+                // tetap terbayar di Februari atau bulan 30 hari.
+                $milestoneDay = min((int) $deposit->start_date->format('d'), $targetDate->daysInMonth);
 
-                // Jika belum mencapai milestone hari di bulan ini dan belum jatuh tempo, skip
-                if ($targetDay < $startDay && !$isMatured) {
+                if ((int) $targetDate->format('d') < $milestoneDay && !$isMatured) {
                     $skippedCount++;
                     continue;
                 }
@@ -78,6 +85,19 @@ class DepositInterestService
                 $interestAmount = (int) floor($deposit->amount * ($deposit->rate_percent / 100) / 12);
                 if ($interestAmount <= 0) {
                     $skippedCount++;
+                    continue;
+                }
+
+                $paid[] = [
+                    'number' => $deposit->number,
+                    'customer' => $deposit->customer->name ?? null,
+                    'period' => $period,
+                    'interest_amount' => $interestAmount,
+                ];
+
+                if ($dryRun) {
+                    $processedCount++;
+                    $totalInterestAmount += $interestAmount;
                     continue;
                 }
 
@@ -108,10 +128,12 @@ class DepositInterestService
                 $totalInterestAmount += $interestAmount;
             }
 
-            DB::commit();
+            $dryRun ? DB::rollBack() : DB::commit();
 
             return [
                 'success' => true,
+                'dry_run' => $dryRun,
+                'paid' => $paid,
                 'process_date' => $dateStr,
                 'total_checked' => $totalChecked,
                 'matured_count' => $maturedCount,

@@ -11,7 +11,10 @@ return new class extends Migration
         Schema::create('daily_interest_accumulations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('customer_id');
-            $table->enum('savings_type', ['sukarela', 'wajib']);
+            // Bukan enum: migrasi 2026_08_21_000001 melebur jenis simpanan jadi
+            // 'simpanan' dan hanya bisa mengubah definisi kolom di MySQL, sehingga
+            // enum di sini membuat CHECK constraint sqlite menolak nilai barunya.
+            $table->string('savings_type', 20);
             $table->date('calculation_date');
             $table->unsignedBigInteger('base_balance');
             $table->decimal('rate_percent', 5, 2);
