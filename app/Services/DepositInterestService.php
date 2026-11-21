@@ -108,7 +108,7 @@ class DepositInterestService
                     'amount' => $interestAmount,
                     'previous_balance' => 0,
                     'current_balance' => 0,
-                    'notes' => 'Bunga Deposito ' . $deposit->number . ' Periode ' . $period,
+                    'notes' => 'Bunga Deposito ' . ($deposit->account_number ?: $deposit->number) . ' Periode ' . $period,
                     'created_by' => $userId,
                     'created_at' => $targetDate->copy()->setTime(now()->hour, now()->minute, now()->second),
                 ]);
