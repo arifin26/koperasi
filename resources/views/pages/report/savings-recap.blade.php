@@ -23,9 +23,9 @@
                 <div class="info-box bg-warning">
                     <span class="info-box-icon"><i class="fas fa-coins text-white"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text text-white">Dana Simpanan</span>
+                        <span class="info-box-text text-white" id="card_dana_simpanan_label">Dana Simpanan (per {{ \Carbon\Carbon::now()->isoFormat('D MMM Y') }})</span>
                         <span class="info-box-number text-white" id="card_dana_simpanan">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span>
-                        <span class="progress-description text-white">hasil filter aktif</span>
+                        <span class="progress-description text-white" id="card_dana_simpanan_desc">saldo akhir rentang</span>
                     </div>
                 </div>
             </div>
@@ -439,6 +439,33 @@
             tanggal_sampai: today
         };
 
+        var namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        // 'YYYY-MM-DD' dipecah manual: new Date(iso) diparse sebagai UTC,
+        // jadi browser di timezone negatif menampilkan tanggal mundur sehari.
+        function formatTanggal(iso) {
+            var bagian = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+            if (!bagian) {
+                return '';
+            }
+            return parseInt(bagian[3], 10) + ' ' + namaBulan[parseInt(bagian[2], 10) - 1] + ' ' + bagian[1];
+        }
+
+        // Saldo adalah posisi satu titik waktu, jadi angkanya mengikuti
+        // "Tanggal Sampai" saja -- labelnya harus menyebut tanggal itu.
+        function updateSavingsSummary(json) {
+            if (!json || json.filtered_total_saldo_formatted === undefined) {
+                return;
+            }
+            var total = 'Rp ' + json.filtered_total_saldo_formatted;
+            $('#card_dana_simpanan').text(total);
+            $('#footer_total_saldo').text(total);
+
+            var labelTanggal = formatTanggal(activeFilter.tanggal_sampai) || 'semua periode';
+            $('#card_dana_simpanan_label').text('Dana Simpanan (per ' + labelTanggal + ')');
+            $('#card_dana_simpanan_desc').text('saldo akhir rentang - ' + json.recordsFiltered + ' nasabah');
+        }
+
         var table = $('#savings-recap-table').DataTable({
             processing: true,
             serverSide: true,
@@ -450,6 +477,10 @@
                     d.status = activeFilter.status;
                     d.tanggal_dari = activeFilter.tanggal_dari;
                     d.tanggal_sampai = activeFilter.tanggal_sampai;
+                },
+                dataSrc: function (json) {
+                    updateSavingsSummary(json);
+                    return json.data;
                 }
             },
             language: {
@@ -474,15 +505,6 @@
                 if (parseInt(data.saldo_raw) === 0) {
                     $(row).addClass('table-warning');
                 }
-            }
-        });
-
-        // Update card dan footer saat data diterima dari server
-        table.on('xhr', function () {
-            var json = table.ajax.json();
-            if (json && json.filtered_total_saldo_formatted !== undefined) {
-                $('#card_dana_simpanan').text('Rp ' + json.filtered_total_saldo_formatted);
-                $('#footer_total_saldo').text('Rp ' + json.filtered_total_saldo_formatted);
             }
         });
 
