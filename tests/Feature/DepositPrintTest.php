@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Deposit;
+use App\Models\DepositInterestPayment;
+use App\Models\FixedDeposit;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -205,12 +207,44 @@ class DepositPrintTest extends TestCase
         $this->assertStringContainsString('Keterangan Sandi: 1 = Setoran Simpanan | 2 = Penarikan | 3 = Bunga Deposito | 4 = Bunga Simpanan', $viewHtml);
     }
 
-    public function test_deposit_print_validates_customer_id(): void
+    public function test_deposit_interest_receipt_shows_fixed_deposit_account_number_in_notes(): void
     {
-        $response = $this->actingAs($this->teller)->post(route('transaction.deposit.print'), [
-            'customer_id' => 999999,
+        $fixedDeposit = FixedDeposit::create([
+            'number' => 'DEP-202610-00001',
+            'account_number' => 'REK-DEP-001',
+            'customer_id' => $this->customer->id,
+            'amount' => 10000000,
+            'tenor_months' => 6,
+            'rate_percent' => 6.0,
+            'start_date' => Carbon::parse('2026-05-01'),
+            'maturity_date' => Carbon::parse('2026-11-01'),
+            'status' => 'active',
+            'created_by' => $this->teller->id,
         ]);
 
-        $response->assertSessionHasErrors('customer_id');
+        $transaction = Deposit::create([
+            'customer_id' => $this->customer->id,
+            'type' => 'bunga',
+            'amount' => 50000,
+            'previous_balance' => 0,
+            'current_balance' => 50000,
+            'notes' => 'Bunga Deposito DEP-202610-00001 Periode 2026-11',
+            'created_by' => $this->teller->id,
+        ]);
+
+        DepositInterestPayment::create([
+            'fixed_deposit_id' => $fixedDeposit->id,
+            'period' => '2026-11',
+            'interest_amount' => 50000,
+            'savings_txn_id' => $transaction->id,
+        ]);
+
+        $response = $this->actingAs($this->teller)->get(
+            route('transaction.deposit.receipt', $transaction)
+        );
+
+        $response->assertStatus(200);
+        $response->assertSee('Bunga Deposito REK-DEP-001 Periode 2026-11');
+        $response->assertDontSee('Bunga Deposito DEP-202610-00001 Periode 2026-11');
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreDepositRequest;
 use App\Http\Requests\UpdateDepositRequest;
 use App\Models\Customer;
 use App\Models\Deposit;
+use App\Models\DepositInterestPayment;
 use App\Models\User;
 use App\Helpers\TerbilangHelper;
 use App\Helpers\ReceiptPrintHelper;
@@ -352,6 +353,14 @@ class DepositController extends Controller
     public function receipt(Deposit $simpanan)
     {
         $simpanan->load(['customer', 'creator', 'validator']);
+        $interestPayment = DepositInterestPayment::with('fixedDeposit')
+            ->where('savings_txn_id', $simpanan->id)
+            ->first();
+        $receiptNotes = $simpanan->notes;
+        if ($simpanan->type === 'bunga' && $interestPayment?->fixedDeposit) {
+            $receiptNotes = 'Bunga Deposito ' . $interestPayment->fixedDeposit->print_number
+                . ' Periode ' . $interestPayment->period;
+        }
         $code = $this->buildTransactionCode($simpanan->id);
         $terbilang = TerbilangHelper::make($simpanan->amount);
 
@@ -367,6 +376,7 @@ class DepositController extends Controller
             'code'          => $code,
             'terbilang'     => $terbilang,
             'latestBalance' => $latestBalance,
+            'receiptNotes'  => $receiptNotes,
         ]);
     }
 

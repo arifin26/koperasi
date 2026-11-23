@@ -54,11 +54,11 @@
         <td class="colon">:</td>
         <td class="value">{{ $deposit->created_at->isoFormat('D MMMM Y HH:mm') }} WIB</td>
     </tr>
-    @if($deposit->notes)
+    @if($receiptNotes)
     <tr>
         <td class="label">Keterangan</td>
         <td class="colon">:</td>
-        <td class="value">{{ $deposit->notes }}</td>
+        <td class="value">{{ $receiptNotes }}</td>
     </tr>
     @endif
 </table>
