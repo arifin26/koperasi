@@ -327,7 +327,7 @@ class FixedDepositController extends Controller
                 'maturity_date' => $startDate->copy()->addMonths((int)$request->tenor_months),
                 'status' => 'active',
                 'extended_from_id' => $fixed_deposit->id,
-                'notes' => 'Perpanjangan dari ' . $fixed_deposit->number,
+                'notes' => 'Perpanjangan dari ' . $fixed_deposit->print_number,
                 'created_by' => auth()->id(),
             ]);
         });
@@ -383,7 +383,7 @@ class FixedDepositController extends Controller
                 'amount' => $netAmount,
                 'previous_balance' => 0,
                 'current_balance' => 0,
-                'notes' => 'Pencairan Deposito ' . $fixed_deposit->number .
+                'notes' => 'Pencairan Deposito ' . $fixed_deposit->print_number .
                     ($isEarly ? ' (Penalti Rp ' . number_format($penalty) . ')' : ''),
                 'created_by' => auth()->id(),
             ]);
