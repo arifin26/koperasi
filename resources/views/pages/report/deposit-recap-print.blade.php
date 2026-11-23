@@ -6,7 +6,7 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: A4 portrait;
+            size: A4 landscape;
             margin: 0;
         }
         * {
@@ -28,7 +28,7 @@
             font-size: 8pt;
             color: #000;
             background-color: #fff;
-            padding: 15mm 15mm 15mm 25mm;
+            padding: 10mm;
         }
         .header-table {
             width: 100%;
@@ -98,11 +98,11 @@
             table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 7.5pt;
+            font-size: 7pt;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 4px;
             vertical-align: middle;
             overflow-wrap: anywhere;
             color: #000;
@@ -112,7 +112,7 @@
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7pt;
         }
         .data-table thead {
             display: table-header-group;

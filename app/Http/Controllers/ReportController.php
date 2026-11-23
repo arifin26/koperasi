@@ -518,7 +518,7 @@ class ReportController extends Controller
             'statusFilter' => $statusFilter,
             'periodeLabel' => $periodeLabel,
         ]);
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper('A4', 'landscape');
 
         $filename = date('Y-m-d') . '_laporan_rekap_deposito_' . time() . '.pdf';
         return $pdf->download($filename);
