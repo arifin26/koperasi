@@ -20,7 +20,6 @@
         html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
             height: 100%;
         }
         body {
@@ -245,14 +244,14 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 15%;">Rekening Deposito</th>
+                <th style="width: 11%;">Rekening Deposito</th>
                 <th style="width: 13%;">Nama Nasabah</th>
                 <th style="width: 11%;">Alamat</th>
                 <th style="width: 8%;">Tenor</th>
                 <th style="width: 12%;">Jatuh Tempo</th>
                 <th style="width: 17%;">Nominal (Rp)</th>
                 <th style="width: 8%;">Bunga (%)</th>
-                <th style="width: 12%;">Bunga/Bulan</th>
+                <th style="width: 16%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
