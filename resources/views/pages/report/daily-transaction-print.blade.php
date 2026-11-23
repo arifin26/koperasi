@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm 8mm;
+            margin: 0;
         }
         * {
             box-sizing: border-box;
@@ -25,10 +25,10 @@
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.25;
+            font-size: 8pt;
             color: #000;
             background-color: #fff;
+            padding: 15mm 15mm 15mm 25mm;
         }
         .header-table {
             width: 100%;
@@ -72,7 +72,7 @@
         .meta-table {
             width: 100%;
             margin-bottom: 8px;
-            font-size: 14px;
+            font-size: 7.5pt;
             border-collapse: collapse;
         }
         .meta-table td {
@@ -82,7 +82,7 @@
             color: #000;
         }
         .meta-label {
-            width: 10%;
+            width: 12%;
             font-weight: bold;
             color: #000;
         }
@@ -91,37 +91,47 @@
             text-align: center;
         }
         .meta-value {
-            width: 39%;
+            width: 37%;
         }
         .data-table {
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 9px;
+            font-size: 7.5pt;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
-            padding: 1px 2px;
+            padding: 4px 6px;
             vertical-align: middle;
-            word-wrap: break-word;
+            overflow-wrap: anywhere;
             color: #000;
         }
         .data-table th {
-            background-color: #f4f8f5;
+            background-color: #f2f2f2;
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 9px;
-            letter-spacing: 0.2px;
+            font-size: 7.5pt;
+        }
+        .data-table thead {
+            display: table-header-group;
+        }
+        .data-table tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .summary-row th, .summary-row td {
+        .summary-row td {
             font-weight: bold;
-            background-color: #f4f8f5;
+            background-color: #f2f2f2;
             color: #000;
-            border-top: 2px solid #000;
+            border: 1px solid #000;
+            padding: 6px;
+        }
+        .summary-section {
+            page-break-inside: avoid;
         }
         .signature-table {
             width: 100%;
@@ -133,7 +143,7 @@
             width: 50%;
             text-align: center;
             vertical-align: top;
-            font-size: 14px;
+            font-size: 7.5pt;
             line-height: 1.2;
             border: none !important;
             color: #000;
@@ -144,20 +154,20 @@
         .sign-name {
             font-weight: bold;
             text-decoration: underline;
-            font-size: 14px;
+            font-size: 8pt;
             line-height: 1.2;
             color: #000;
         }
         .sign-title {
-            font-size: 14px;
+            font-size: 7pt;
             color: #000;
             margin-top: 2px;
         }
         .footer-note {
             margin-top: 15px;
-            font-size: 14px;
+            font-size: 6.5pt;
             color: #000;
-            border-top: 0.5px dotted #ccc;
+            border-top: 0.5px dotted #000;
             padding-top: 2px;
             line-height: 1.1;
         }
@@ -171,19 +181,19 @@
                 <img src="{{ public_path('image/LOGO KOPERASI.png') }}" alt="Logo Koperasi" style="width: 58px; height: 58px;">
             </td>
             <td style="vertical-align: middle; text-align: center; padding: 0 10px;">
-                <div style="font-size: 14px; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
-                <div style="font-size: 14px; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
-                <div style="font-size: 14px; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
-                <div style="font-size: 14px; line-height: 1.2; color: #000; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
-                <div style="font-size: 14px; line-height: 1.2; color: #000; margin-top: 1px;">Telp. (0354) 393063</div>
+                <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.15; color: #000; font-family: 'Times New Roman', Times, serif;">KOPERASI UNIT DESA &ldquo; TANI JAYA &rdquo;</div>
+                <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 0.5px; line-height: 1.2; color: #000; margin-top: 2px; font-family: 'Times New Roman', Times, serif;">UNIT SIMPAN PINJAM</div>
+                <div style="font-size: 8.5pt; font-weight: bold; line-height: 1.2; color: #000; margin-top: 2px;">Di Gadungan - Kec. Puncu - Kediri Propinsi Jawa Timur</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Badan Hukum No. 4428/BH/II/80. Tanggal 23 September 1996</div>
+                <div style="font-size: 7.5pt; line-height: 1.2; color: #000; margin-top: 1px;">Telp. (0354) 393063</div>
             </td>
             <td style="width: 65px; vertical-align: middle; padding: 0;"></td>
         </tr>
     </table>
 
     <div style="text-align: center; margin-bottom: 8px;">
-        <div style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #000;">LAPORAN TRANSAKSI HARIAN</div>
-        <div style="font-size: 14px; font-weight: bold; color: #000; margin-top: 2px;">Tanggal: {{ $date }}</div>
+        <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #000;">LAPORAN TRANSAKSI HARIAN</div>
+        <div style="font-size: 8pt; font-weight: bold; color: #000; margin-top: 2px;">Tanggal: {{ $date }}</div>
     </div>
 
     <!-- Meta Info -->
@@ -242,15 +252,18 @@
             </tr>
             @endforelse
         </tbody>
-        <tfoot>
-            <tr class="summary-row">
-                <th colspan="7" class="text-right">TOTAL TRANSAKSI</th>
-                <th class="text-right">{{ number_format($totalMasuk, 0, ',', '.') }}</th>
-                <th class="text-right">{{ number_format($totalKeluar, 0, ',', '.') }}</th>
-                <th class="text-right">Selisih: {{ number_format($totalMasuk - $totalKeluar, 0, ',', '.') }}</th>
-            </tr>
-        </tfoot>
     </table>
+
+    <div class="summary-section">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+            <tr class="summary-row">
+                <td colspan="7" class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">TOTAL TRANSAKSI</td>
+                <td class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">{{ number_format($totalMasuk, 0, ',', '.') }}</td>
+                <td class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">{{ number_format($totalKeluar, 0, ',', '.') }}</td>
+                <td class="text-right" style="border: 1px solid #000; padding: 6px; background-color: #f2f2f2; font-weight: bold; color: #000;">Selisih: {{ number_format($totalMasuk - $totalKeluar, 0, ',', '.') }}</td>
+            </tr>
+        </table>
+    </div>
 
     <!-- Signatures -->
     <table class="signature-table">
