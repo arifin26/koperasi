@@ -28,7 +28,7 @@
             font-size: 8pt;
             color: #000;
             background-color: #fff;
-            padding: 15mm 15mm 15mm 25mm;
+            padding: 10mm;
         }
         .header-table {
             width: 100%;
@@ -98,11 +98,11 @@
             table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 7.5pt;
+            font-size: 6.5pt;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 2px 2px;
             vertical-align: middle;
             overflow-wrap: anywhere;
             color: #000;
@@ -112,7 +112,7 @@
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 6.5pt;
         }
         .data-table thead {
             display: table-header-group;
@@ -220,16 +220,16 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 3%;">No</th>
-                <th style="width: 5%;">Waktu</th>
-                <th style="width: 10%;">No. Rekening</th>
-                <th style="width: 14%;">Nama Nasabah</th>
-                <th style="width: 18%;">Alamat</th>
+                <th style="width: 4%;">No</th>
+                <th style="width: 8%;">Waktu</th>
+                <th style="width: 12%;">No. Rekening</th>
+                <th style="width: 13%;">Nama Nasabah</th>
+                <th style="width: 15%;">Alamat</th>
                 <th style="width: 7%;">Jenis</th>
-                <th style="width: 9%;">Keterangan</th>
+                <th style="width: 8%;">Keterangan</th>
                 <th style="width: 11%;">Masuk (Rp)</th>
                 <th style="width: 11%;">Keluar (Rp)</th>
-                <th style="width: 12%;">Saldo (Rp)</th>
+                <th style="width: 11%;">Saldo (Rp)</th>
             </tr>
         </thead>
         <tbody>

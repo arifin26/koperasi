@@ -6,7 +6,7 @@
     <title>{{ $title }}</title>
     <style>
         @page {
-            size: A4 landscape;
+            size: A4 portrait;
             margin: 0;
         }
         * {
@@ -98,11 +98,11 @@
             table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 7pt;
+            font-size: 6.5pt;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
-            padding: 3px 4px;
+            padding: 2px 3px;
             vertical-align: middle;
             overflow-wrap: anywhere;
             color: #000;
@@ -112,7 +112,7 @@
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 7pt;
+            font-size: 6.5pt;
         }
         .data-table thead {
             display: table-header-group;
@@ -245,14 +245,14 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 14%;">Rekening Deposito</th>
-                <th style="width: 17%;">Nama Nasabah</th>
-                <th style="width: 16%;">Alamat</th>
-                <th style="width: 7%;">Tenor</th>
-                <th style="width: 9%;">Jatuh Tempo</th>
-                <th style="width: 11%;">Nominal (Rp)</th>
-                <th style="width: 5%;">Bunga (%)</th>
-                <th style="width: 8%;">Bunga/Bulan</th>
+                <th style="width: 15%;">Rekening Deposito</th>
+                <th style="width: 13%;">Nama Nasabah</th>
+                <th style="width: 11%;">Alamat</th>
+                <th style="width: 8%;">Tenor</th>
+                <th style="width: 12%;">Jatuh Tempo</th>
+                <th style="width: 17%;">Nominal (Rp)</th>
+                <th style="width: 8%;">Bunga (%)</th>
+                <th style="width: 12%;">Bunga/Bulan</th>
             </tr>
         </thead>
         <tbody>
