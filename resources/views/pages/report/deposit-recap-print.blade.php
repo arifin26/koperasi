@@ -98,7 +98,7 @@
             table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 7px;
+            font-size: 9px;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
@@ -112,7 +112,7 @@
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 7px;
+            font-size: 9px;
             letter-spacing: 0.2px;
         }
         .text-right { text-align: right; }
@@ -235,13 +235,11 @@
         <thead>
             <tr>
                 <th style="width: 4%;">No</th>
-                <th style="width: 11%;">Rekening Deposito</th>
-                <th style="width: 10%;">No. Deposito</th>
-                <th style="width: 15%;">Nama Nasabah</th>
-                <th style="width: 14%;">Alamat</th>
-                <th style="width: 6%;">Tenor</th>
-                <th style="width: 8%;">Tgl Mulai</th>
-                <th style="width: 8%;">Jatuh Tempo</th>
+                <th style="width: 14%;">Rekening Deposito</th>
+                <th style="width: 17%;">Nama Nasabah</th>
+                <th style="width: 16%;">Alamat</th>
+                <th style="width: 7%;">Tenor</th>
+                <th style="width: 9%;">Jatuh Tempo</th>
                 <th style="width: 11%;">Nominal (Rp)</th>
                 <th style="width: 5%;">Bunga (%)</th>
                 <th style="width: 8%;">Bunga/Bulan</th>
@@ -252,11 +250,9 @@
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
                 <td class="text-center">{{ $row->account_number ?? '-' }}</td>
-                <td class="text-center">{{ $row->number ?? '-' }}</td>
                 <td><strong>{{ $row->customer->name ?? '-' }}</strong></td>
                 <td>{{ $row->customer->address ?? '-' }}</td>
                 <td class="text-center">{{ $row->tenor_months }} Bulan</td>
-                <td class="text-center">{{ $row->start_date ? $row->start_date->isoFormat('DD/MM/Y') : '-' }}</td>
                 <td class="text-center">{{ $row->maturity_date ? $row->maturity_date->isoFormat('DD/MM/Y') : '-' }}</td>
                 <td class="text-right"><strong>{{ number_format($row->amount, 0, ',', '.') }}</strong></td>
                 <td class="text-center">{{ $row->rate_percent }}%</td>
@@ -264,17 +260,17 @@
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center" style="padding: 15px; color: #000;">Tidak ada data deposito yang sesuai.</td>
+                <td colspan="9" class="text-center" style="padding: 15px; color: #000;">Tidak ada data deposito yang sesuai.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="summary-row">
-                <th colspan="8" class="text-right">TOTAL DANA DEPOSITO</th>
+                <th colspan="6" class="text-right">TOTAL DANA DEPOSITO</th>
                 <th class="text-right" colspan="3">Rp {{ number_format($totalNominal, 0, ',', '.') }}</th>
             </tr>
             <tr class="summary-row">
-                <th colspan="8" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
+                <th colspan="6" class="text-right">TOTAL BUNGA DALAM 1 BULAN</th>
                 <th colspan="3" class="text-right">Rp {{ number_format($data->sum('monthly_interest'), 0, ',', '.') }}</th>
             </tr>
         </tfoot>
