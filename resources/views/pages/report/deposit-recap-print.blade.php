@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 18mm 15mm 15mm 25mm;
+            margin: 10mm 8mm;
         }
         * {
             box-sizing: border-box;
@@ -95,14 +95,16 @@
         }
         .data-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 14px;
+            font-size: 7px;
         }
         .data-table th, .data-table td {
             border: 1px solid #000;
-            padding: 4px 5px;
+            padding: 1px 2px;
             vertical-align: middle;
+            word-wrap: break-word;
             color: #000;
         }
         .data-table th {
@@ -110,7 +112,7 @@
             color: #000;
             font-weight: bold;
             text-align: center;
-            font-size: 14px;
+            font-size: 7px;
             letter-spacing: 0.2px;
         }
         .text-right { text-align: right; }
